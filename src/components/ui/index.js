@@ -14,3 +14,11 @@ export { default as Textarea } from './Textarea';
 export { Alert, AlertDescription } from './Alert';
 export { ChartContainer, ChartTooltip, ChartTooltipContent } from './ChartComponents';
 export { default as Copy } from './Copy';
+export { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from './DropdownMenu';
