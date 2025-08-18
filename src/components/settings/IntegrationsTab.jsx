@@ -207,41 +207,15 @@ const IntegrationsTab = ({
 
       {/* Integration Grid */}
       {filteredIntegrations.length > 0 ? (
-        selectedCategory === 'all' && searchQuery === '' ? (
-          // Group by category when showing all
-          <div className="space-y-8">
-            {Object.entries(integrationsByCategory).map(([category, integrations]) => (
-              <div key={category}>
-                <h4 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  {categoryNames[category]}
-                  <span className="text-sm font-normal text-muted-foreground">
-                    ({integrations.length})
-                  </span>
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {integrations.map((integration) => (
-                    <IntegrationCard
-                      key={integration.id}
-                      integration={integration}
-                      onConfigure={handleConfigureIntegration}
-                      onToggleStatus={handleToggleIntegrationStatus}
-                    />
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          // Flat grid when filtering
+        selectedCategory !== 'all' ? (
+          // Show category header only when specific category is selected
           <div className="space-y-4">
-            {selectedCategory !== 'all' && (
-              <h4 className="text-lg font-semibold flex items-center gap-2">
-                {categoryNames[selectedCategory]}
-                <span className="text-sm font-normal text-muted-foreground">
-                  ({filteredIntegrations.length})
-                </span>
-              </h4>
-            )}
+            <h4 className="text-lg font-semibold flex items-center gap-2">
+              {categoryNames[selectedCategory]}
+              <span className="text-sm font-normal text-muted-foreground">
+                ({filteredIntegrations.length})
+              </span>
+            </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredIntegrations.map((integration) => (
                 <IntegrationCard
@@ -252,6 +226,18 @@ const IntegrationsTab = ({
                 />
               ))}
             </div>
+          </div>
+        ) : (
+          // Flat grid for "All" - no category headers, just all cards mixed together
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredIntegrations.map((integration) => (
+              <IntegrationCard
+                key={integration.id}
+                integration={integration}
+                onConfigure={handleConfigureIntegration}
+                onToggleStatus={handleToggleIntegrationStatus}
+              />
+            ))}
           </div>
         )
       ) : (
