@@ -11,15 +11,21 @@ import Analytics from './components/analytics/Analytics';
 import Knowledge from './components/knowledge/Knowledge';
 import Automations from './components/automations/Automations';
 import Settings from './components/settings/Settings';
+import SuperAdmin from './components/superadmin/SuperAdmin';
 import './styles/globals.css';
 
 const AppContent = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user, isRole } = useAuth();
   const { role, activeMenu, setActiveMenu } = useRole();
 
   // Show login page if not authenticated
   if (!isAuthenticated && !isLoading) {
     return <Login />;
+  }
+
+  // Show SuperAdmin interface for superadmin role
+  if (isRole('superadmin')) {
+    return <SuperAdmin />;
   }
 
   const renderContent = () => {
