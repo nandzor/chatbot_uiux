@@ -73,11 +73,27 @@ export const chatMessages = [
 ];
 
 export const knowledgeArticles = [
-  { id: 1, title: "Getting Started Guide", category: "Basics", tags: ["onboarding", "setup"], views: 1234, helpful: 892, status: "published" },
-  { id: 2, title: "How to Process Refunds", category: "Operations", tags: ["refund", "payment"], views: 567, helpful: 423, status: "published" },
-  { id: 3, title: "Shipping Policy", category: "Policies", tags: ["shipping", "delivery"], views: 890, helpful: 678, status: "published" },
-  { id: 4, title: "Account Management", category: "Account", tags: ["profile", "settings"], views: 345, helpful: 289, status: "draft" },
-  { id: 5, title: "Troubleshooting Common Issues", category: "Support", tags: ["troubleshoot", "issues"], views: 2345, helpful: 1890, status: "published" }
+  { 
+    id: 1, 
+    title: "Base knowledge utama", 
+    content: "Selamat datang di platform kami! Panduan ini akan membantu Anda memahami cara menggunakan fitur-fitur utama. Pertama, pastikan Anda telah login ke akun Anda. Kemudian, navigasi ke dashboard utama untuk melihat ringkasan aktivitas. Menu sidebar kiri berisi semua fitur yang tersedia seperti Inbox untuk mengelola percakapan, Analytics untuk melihat performa, dan Knowledge Base untuk mengelola informasi. Untuk memulai, cobalah mengeksplorasi setiap menu dan familiarkan diri dengan antarmuka pengguna.", 
+    status: "active", 
+    updated_at: "2024-03-20 14:30:00" 
+  },
+  { 
+    id: 2, 
+    title: "Base knowledge 2", 
+    content: "Kami memahami bahwa terkadang produk atau layanan yang diterima mungkin tidak sesuai harapan. Oleh karena itu, kami menyediakan kebijakan pengembalian dana yang jelas dan mudah dipahami. Pengembalian dana dapat diajukan dalam waktu 30 hari sejak pembelian dengan syarat produk masih dalam kondisi asli. Untuk mengajukan pengembalian, silakan hubungi tim customer service kami melalui chat atau email dengan menyertakan nomor pesanan dan alasan pengembalian. Tim kami akan memproses permintaan Anda dalam waktu 3-5 hari kerja.", 
+    status: "inactive", 
+    updated_at: "2024-03-19 10:15:00" 
+  },
+  { 
+    id: 3, 
+    title: "Base knowledge 99 ", 
+    content: "Pengaturan profil akun yang lengkap dan akurat sangat penting untuk pengalaman yang optimal. Untuk mengakses pengaturan profil, klik pada avatar Anda di pojok kanan atas, kemudian pilih 'Pengaturan Akun'. Di halaman ini, Anda dapat memperbarui informasi personal seperti nama, email, nomor telepon, dan alamat. Pastikan juga untuk mengatur preferensi notifikasi sesuai kebutuhan Anda. Jangan lupa untuk menyimpan perubahan yang telah dibuat dengan mengklik tombol 'Simpan' di bagian bawah halaman.", 
+    status: "inactive", 
+    updated_at: "2024-03-18 16:45:00" 
+  }
 ];
 
 export const agentsData = [
