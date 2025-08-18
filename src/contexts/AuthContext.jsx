@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { getUserAvatarData } from '../utils/avatarUtils';
 
 // Test users dengan 3 role berbeda
 export const testUsers = [
@@ -9,7 +10,7 @@ export const testUsers = [
     name: 'Super Administrator',
     email: 'superadmin@system.com',
     role: 'superadmin',
-    avatar: '/avatars/superadmin.jpg',
+    avatar: getUserAvatarData('superadmin@system.com', 'Super Administrator').avatar,
     permissions: ['*'], // All permissions
     description: 'Full system access across all organizations'
   },
@@ -22,7 +23,7 @@ export const testUsers = [
     role: 'organization_admin',
     organizationId: 'org-001',
     organizationName: 'PT Teknologi Nusantara',
-    avatar: '/avatars/ahmad.jpg',
+    avatar: getUserAvatarData('ahmad.rahman@company.com', 'Ahmad Rahman').avatar,
     permissions: ['manage_users', 'manage_agents', 'manage_settings', 'view_analytics', 'manage_billing'],
     description: 'Organization administrator with full org management access'
   },
@@ -35,7 +36,7 @@ export const testUsers = [
     role: 'agent',
     organizationId: 'org-001',
     organizationName: 'PT Teknologi Nusantara',
-    avatar: '/avatars/sari.jpg',
+    avatar: getUserAvatarData('sari.dewi@company.com', 'Sari Dewi').avatar,
     specialization: 'Customer Support',
     permissions: ['handle_chats', 'view_conversations', 'update_profile'],
     description: 'Customer support agent with chat handling capabilities'

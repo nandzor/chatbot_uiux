@@ -1,4 +1,6 @@
 import React from 'react';
+import { useAuth } from '../../contexts/AuthContext';
+import UserAvatar from '../common/UserAvatar';
 import { 
   Home, 
   Building2, 
@@ -17,6 +19,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui';
 
 const Sidebar = ({ role, activeMenu, setActiveMenu }) => {
+  const { user } = useAuth();
   const getSidebarItems = () => {
     switch(role) {
       case 'super_admin':
@@ -85,12 +88,9 @@ const Sidebar = ({ role, activeMenu, setActiveMenu }) => {
       
       <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border">
         <div className="flex items-center gap-3">
-          <Avatar className="w-8 h-8">
-            <AvatarImage src="https://placehold.co/32x32" />
-            <AvatarFallback>AD</AvatarFallback>
-          </Avatar>
+          <UserAvatar user={user} size="default" />
           <div className="flex-1">
-            <p className="text-sm font-medium text-foreground">Admin User</p>
+            <p className="text-sm font-medium text-foreground">{user?.name || 'Admin User'}</p>
             <Select defaultValue="online">
               <SelectTrigger className="h-6 text-xs border-0 p-0">
                 <SelectValue />

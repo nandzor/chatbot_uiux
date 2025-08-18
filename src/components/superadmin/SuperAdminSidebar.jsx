@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import UserAvatar from '../common/UserAvatar';
 import { 
   Home, 
   Building2, 
@@ -169,12 +170,7 @@ const SuperAdminSidebar = ({ activeMenu, setActiveMenu }) => {
       {/* User Profile Footer */}
       <div className="mt-auto p-4 border-t border-border">
         <div className="flex items-center gap-3">
-          <Avatar className="w-8 h-8">
-            <AvatarImage src={user?.avatar} />
-            <AvatarFallback className="bg-red-100 text-red-600 font-semibold">
-              {getInitials()}
-            </AvatarFallback>
-          </Avatar>
+          <UserAvatar user={user} size="default" />
           <div className="flex-1">
             <p className="text-sm font-medium text-foreground">
               {user?.name || 'Super Admin'}

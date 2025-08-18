@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import UserAvatar from '../common/UserAvatar';
 import { 
   Card, 
   CardContent, 
@@ -40,9 +41,9 @@ const TeamTab = ({
 
   // Sample data untuk Users
   const users = [
-    { id: 1, name: 'Ahmad Rahman', email: 'ahmad@company.com', role: 'Admin', status: 'online', lastSeen: 'Sekarang', avatar: '/avatars/ahmad.jpg' },
-    { id: 2, name: 'Sari Dewi', email: 'sari@company.com', role: 'Agent', status: 'busy', lastSeen: '5 menit lalu', avatar: '/avatars/sari.jpg' },
-    { id: 3, name: 'Budi Santoso', email: 'budi@company.com', role: 'Agent', status: 'offline', lastSeen: '2 jam lalu', avatar: '/avatars/budi.jpg' },
+    { id: 1, name: 'Ahmad Rahman', email: 'ahmad.rahman@company.com', role: 'Admin', status: 'online', lastSeen: 'Sekarang' },
+    { id: 2, name: 'Sari Dewi', email: 'sari.dewi@company.com', role: 'Agent', status: 'busy', lastSeen: '5 menit lalu' },
+    { id: 3, name: 'Budi Santoso', email: 'budi.santoso@company.com', role: 'Agent', status: 'offline', lastSeen: '2 jam lalu' },
   ];
 
   // Sample data untuk Agents
@@ -115,10 +116,7 @@ const TeamTab = ({
                     <TableRow key={user.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <Avatar>
-                            <AvatarImage src={user.avatar} />
-                            <AvatarFallback>{user.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                          </Avatar>
+                          <UserAvatar user={user} size="default" showOnlineStatus={true} status={user.status} />
                           <div>
                             <p className="font-medium">{user.name}</p>
                           </div>

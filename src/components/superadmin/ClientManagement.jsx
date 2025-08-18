@@ -127,9 +127,9 @@ const ClientManagement = () => {
         }
       },
       users: [
-        { id: 1, name: 'Ahmad Rahman', email: 'ahmad@abccorp.com', role: 'org_admin', lastLogin: '2024-03-20 10:30:00' },
-        { id: 2, name: 'Sari Dewi', email: 'sari@abccorp.com', role: 'agent', lastLogin: '2024-03-20 14:15:00' },
-        { id: 3, name: 'Budi Santoso', email: 'budi@abccorp.com', role: 'agent', lastLogin: '2024-03-19 16:45:00' }
+        { id: 1, name: 'Ahmad Rahman', email: 'ahmad.rahman@abccorp.com', role: 'org_admin', lastLogin: '2024-03-20 10:30:00' },
+        { id: 2, name: 'Sari Dewi', email: 'sari.dewi@abccorp.com', role: 'agent', lastLogin: '2024-03-20 14:15:00' },
+        { id: 3, name: 'Budi Santoso', email: 'budi.santoso@abccorp.com', role: 'agent', lastLogin: '2024-03-19 16:45:00' }
       ],
       billing: [
         { id: 1, date: '2024-03-15', amount: '$299.00', status: 'paid', description: 'Enterprise Plan - March' },

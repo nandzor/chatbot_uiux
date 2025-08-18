@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import UserAvatar from '../common/UserAvatar';
 import { 
   Avatar, 
   AvatarFallback, 
@@ -97,10 +98,7 @@ const UserProfile = ({ showFullProfile = false }) => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center gap-4">
-            <Avatar className="w-16 h-16">
-              <AvatarImage src={user.avatar} />
-              <AvatarFallback>{getInitials()}</AvatarFallback>
-            </Avatar>
+            <UserAvatar user={user} size="xl" />
             <div className="flex-1">
               <h3 className="font-semibold text-lg">{user.name}</h3>
               <p className="text-muted-foreground">{user.email}</p>
@@ -154,10 +152,7 @@ const UserProfile = ({ showFullProfile = false }) => {
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="flex items-center gap-2 h-auto p-2">
-          <Avatar className="w-8 h-8">
-            <AvatarImage src={user.avatar} />
-            <AvatarFallback>{getInitials()}</AvatarFallback>
-          </Avatar>
+          <UserAvatar user={user} size="default" />
           <div className="flex flex-col items-start">
             <span className="text-sm font-medium">{user.name}</span>
             <span className="text-xs text-muted-foreground">{getRoleLabel()}</span>
