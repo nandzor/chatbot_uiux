@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
+import { getMenuByRole } from '../data/userConfig';
 
 const RoleContext = createContext();
 
@@ -11,14 +13,36 @@ export const useRole = () => {
 };
 
 export const RoleProvider = ({ children }) => {
-  const [role, setRole] = useState('org_admin'); // Default role
-  const [activeMenu, setActiveMenu] = useState('dashboard');
+  const { currentUser } = useAuth();
+  const [activeMenu, setActiveMenu] = useState('');
+  const [menuItems, setMenuItems] = useState([]);
+
+  useEffect(() => {
+    if (currentUser) {
+      const userMenu = getMenuByRole(currentUser.role);
+      setMenuItems(userMenu);
+      
+      // Set default active menu based on role
+      if (userMenu.length > 0) {
+        setActiveMenu(userMenu[0].id);
+      }
+    } else {
+      setMenuItems([]);
+      setActiveMenu('');
+    }
+  }, [currentUser]);
+
+  const getCurrentMenu = () => {
+    return menuItems.find(item => item.id === activeMenu);
+  };
 
   const value = {
-    role,
-    setRole,
+    role: currentUser?.role || null,
     activeMenu,
     setActiveMenu,
+    menuItems,
+    getCurrentMenu,
+    currentUser
   };
 
   return (

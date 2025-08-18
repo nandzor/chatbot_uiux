@@ -1,122 +1,122 @@
 import React from 'react';
-import { 
-  Home, 
-  Building2, 
-  Users, 
-  CreditCard, 
-  Activity, 
-  Shield,
-  MessageSquare, 
-  BarChart3, 
-  BookOpen, 
-  Workflow, 
-  Settings, 
-  User,
-  Bot
-} from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui';
+import { useRole } from '../../contexts/RoleContext';
+import { useAuth } from '../../contexts/AuthContext';
 
-const Sidebar = ({ role, activeMenu, setActiveMenu }) => {
-  const getSidebarItems = () => {
-    switch(role) {
+const Sidebar = () => {
+  const { role, activeMenu, setActiveMenu, menuItems, currentUser } = useRole();
+  const { logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+  };
+
+  const getRoleDisplayName = (role) => {
+    switch (role) {
       case 'super_admin':
-        return [
-          { id: 'dashboard', label: 'Platform Dashboard', icon: Home },
-          { id: 'organizations', label: 'Organizations', icon: Building2 },
-          { id: 'subscriptions', label: 'Subscription Plans', icon: CreditCard },
-          { id: 'system', label: 'System Health', icon: Activity },
-          { id: 'audit', label: 'Audit Logs', icon: Shield }
-        ];
+        return 'Super Admin';
       case 'org_admin':
-        return [
-          { id: 'dashboard', label: 'Dashboard', icon: Home },
-          { id: 'inbox', label: 'Inbox', icon: MessageSquare },
-          { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-          { id: 'knowledge', label: 'Knowledge Base', icon: BookOpen },
-          { id: 'automations', label: 'Automations', icon: Workflow },
-          { id: 'settings', label: 'Settings', icon: Settings }
-        ];
+        return 'Admin Organisasi';
       case 'agent':
-        return [
-          { id: 'dashboard', label: 'My Dashboard', icon: Home },
-          { id: 'inbox', label: 'Inbox', icon: MessageSquare },
-          { id: 'profile', label: 'My Profile', icon: User }
-        ];
+        return 'Agent';
       default:
-        return [];
+        return 'User';
     }
   };
 
-  const sidebarItems = getSidebarItems();
+  const getRoleColor = (role) => {
+    switch (role) {
+      case 'super_admin':
+        return 'bg-red-100 text-red-800';
+      case 'org_admin':
+        return 'bg-blue-100 text-blue-800';
+      case 'agent':
+        return 'bg-green-100 text-green-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  if (!currentUser) {
+    return null;
+  }
 
   return (
-    <div className="w-64 h-full bg-card border-r border-border">
-      <div className="p-6">
-        <div className="flex items-center gap-3 mb-8">
-          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-            <Bot className="w-6 h-6 text-white" />
+    <div className="w-64 bg-white border-r border-gray-200 flex flex-col h-screen">
+      {/* Header */}
+      <div className="p-4 border-b border-gray-200">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+            <span className="text-white text-lg">🤖</span>
           </div>
           <div>
-            <h1 className="text-lg font-bold text-foreground">ChatBot Pro</h1>
-            <p className="text-xs text-muted-foreground capitalize">{role.replace('_', ' ')}</p>
+            <h1 className="font-bold text-lg text-gray-900">ChatBot</h1>
+            <p className="text-xs text-gray-500">Platform</p>
           </div>
         </div>
         
-        <nav className="space-y-2">
-          {sidebarItems.map(item => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setActiveMenu(item.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${
-                  activeMenu === item.id 
-                    ? 'bg-gradient-to-r from-blue-500/10 to-purple-500/10 text-primary border-l-4 border-primary' 
-                    : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-                }`}
-              >
-                <Icon className="w-5 h-5" />
-                <span className="text-sm font-medium">{item.label}</span>
-              </button>
-            );
-          })}
-        </nav>
-      </div>
-      
-      <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-border">
-        <div className="flex items-center gap-3">
-          <Avatar className="w-8 h-8">
-            <AvatarImage src="https://placehold.co/32x32" />
-            <AvatarFallback>AD</AvatarFallback>
-          </Avatar>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-foreground">Admin User</p>
-            <Select defaultValue="online">
-              <SelectTrigger className="h-6 text-xs border-0 p-0">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="online">
-                  <div className="flex items-center gap-1">
-                    <div className="w-2 h-2 rounded-full bg-green-500" />
-                    Online
-                  </div>
-                </SelectItem>
-                <SelectItem value="busy">
-                  <div className="flex items-center gap-1">
-                    <div className="w-2 h-2 rounded-full bg-yellow-500" />
-                    Busy
-                  </div>
-                </SelectItem>
-                <SelectItem value="offline">
-                  <div className="flex items-center gap-1">
-                    <div className="w-2 h-2 rounded-full bg-gray-500" />
-                    Offline
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
+        {/* User Info */}
+        <div className="bg-gray-50 rounded-lg p-3">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+              <span className="text-gray-600 text-sm font-medium">
+                {currentUser.fullName?.split(' ').map(n => n[0]).join('')}
+              </span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-900 truncate">
+                {currentUser.fullName}
+              </p>
+              <span className={`inline-block px-2 py-1 text-xs rounded-full ${getRoleColor(role)}`}>
+                {getRoleDisplayName(role)}
+              </span>
+            </div>
           </div>
+          {currentUser.organizationName && (
+            <div className="mt-2 text-xs text-gray-500">
+              🏢 {currentUser.organizationName}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Navigation Menu */}
+      <nav className="flex-1 px-4 py-4 space-y-2 overflow-y-auto">
+        {menuItems.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => setActiveMenu(item.id)}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 text-left ${
+              activeMenu === item.id
+                ? "bg-blue-50 text-blue-700 border border-blue-200"
+                : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+            }`}
+          >
+            <span className="text-lg">📋</span>
+            <div className="flex-1">
+              <div className="font-medium">{item.label}</div>
+              <div className="text-xs text-gray-500 font-normal">
+                {item.description}
+              </div>
+            </div>
+          </button>
+        ))}
+      </nav>
+
+      {/* Footer */}
+      <div className="p-4 border-t border-gray-200">
+        <div className="space-y-2">
+          <button
+            className="w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg"
+            onClick={() => setActiveMenu('profile')}
+          >
+            👤 Profile
+          </button>
+          <button
+            className="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg"
+            onClick={handleLogout}
+          >
+            🚪 Logout
+          </button>
         </div>
       </div>
     </div>

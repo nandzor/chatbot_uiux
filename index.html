@@ -2,15 +2,43 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ChatBot Pro - Modern UI/UX Dashboard</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <title>ChatBot Platform - Test</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 20px;
+        font-family: Arial, sans-serif;
+        background-color: #f0f0f0;
+      }
+      .test-info {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+      .loading {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+      }
+    </style>
   </head>
   <body>
-    <div id="root"></div>
+    <div class="test-info">
+      <h1>🧪 Testing ChatBot Platform</h1>
+      <p>Jika Anda melihat ini, HTML berhasil dimuat.</p>
+      <p>React app akan dimuat di bawah ini:</p>
+    </div>
+    
+    <div id="root">
+      <div class="loading">
+        <h2>Loading React App...</h2>
+        <p>Jika ini tidak berubah, ada masalah dengan React</p>
+      </div>
+    </div>
+    
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
