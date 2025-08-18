@@ -151,6 +151,368 @@ export const agentsData = [
   }
 ];
 
+// Data untuk Session Manager
+export const channelConfigsData = [
+  {
+    id: 1,
+    name: "Website Chat",
+    channel: "webchat",
+    channel_type: "web",
+    settings: {
+      widget_color: "#2563eb",
+      greeting_message: "Halo! Ada yang bisa kami bantu?",
+      offline_message: "Maaf, kami sedang offline. Silakan tinggalkan pesan."
+    },
+    is_active: true
+  },
+  {
+    id: 2,
+    name: "WhatsApp Business",
+    channel: "whatsapp",
+    channel_type: "whatsapp",
+    settings: {
+      phone_number: "+6281234567890",
+      webhook_url: "https://api.whatsapp.com/webhook",
+      verify_token: "whatsapp_verify_token"
+    },
+    is_active: true
+  },
+  {
+    id: 3,
+    name: "Telegram Bot",
+    channel: "telegram",
+    channel_type: "telegram",
+    settings: {
+      bot_token: "123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11",
+      webhook_url: "https://api.telegram.org/webhook"
+    },
+    is_active: true
+  },
+  {
+    id: 4,
+    name: "Facebook Messenger",
+    channel: "facebook",
+    channel_type: "facebook",
+    settings: {
+      page_id: "123456789",
+      app_secret: "facebook_app_secret",
+      verify_token: "facebook_verify_token"
+    },
+    is_active: false
+  }
+];
+
+export const customersData = [
+  {
+    id: 1,
+    name: "John Doe",
+    email: "john.doe@email.com",
+    phone: "+6281234567890",
+    created_at: "2024-03-15T08:30:00Z",
+    last_seen: "2024-03-20T14:25:00Z",
+    metadata: {
+      location: "Jakarta",
+      source: "website",
+      customer_since: "2023-01-15"
+    }
+  },
+  {
+    id: 2,
+    name: "Emma Smith",
+    email: "emma.smith@email.com",
+    phone: "+6281234567891",
+    created_at: "2024-02-10T10:15:00Z",
+    last_seen: "2024-03-20T14:20:00Z",
+    metadata: {
+      location: "Bandung",
+      source: "whatsapp",
+      customer_since: "2024-02-10"
+    }
+  },
+  {
+    id: 3,
+    name: "Michael Brown",
+    email: "michael.brown@email.com",
+    phone: "+6281234567892",
+    created_at: "2024-01-20T16:45:00Z",
+    last_seen: "2024-03-20T14:15:00Z",
+    metadata: {
+      location: "Surabaya",
+      source: "facebook",
+      customer_since: "2024-01-20"
+    }
+  },
+  {
+    id: 4,
+    name: "Lisa Johnson",
+    email: "lisa.johnson@email.com",
+    phone: "+6281234567893",
+    created_at: "2024-03-01T09:20:00Z",
+    last_seen: "2024-03-20T13:30:00Z",
+    metadata: {
+      location: "Medan",
+      source: "website",
+      customer_since: "2024-03-01"
+    }
+  },
+  {
+    id: 5,
+    name: "Robert Taylor",
+    email: "robert.taylor@email.com",
+    phone: "+6281234567894",
+    created_at: "2024-02-28T11:10:00Z",
+    last_seen: "2024-03-20T14:10:00Z",
+    metadata: {
+      location: "Yogyakarta",
+      source: "telegram",
+      customer_since: "2024-02-28"
+    }
+  }
+];
+
+export const chatSessionsData = [
+  {
+    id: 1,
+    customer_id: 1,
+    channel_config_id: 1,
+    agent_id: 1,
+    status: "active",
+    started_at: "2024-03-20T14:23:00Z",
+    ended_at: null,
+    is_active: true,
+    tags: ["urgent", "order_issue"],
+    handover_reason: "Customer requested human agent",
+    metadata: {
+      session_source: "bot_escalation",
+      initial_intent: "order_help"
+    }
+  },
+  {
+    id: 2,
+    customer_id: 2,
+    channel_config_id: 2,
+    agent_id: null,
+    status: "bot_handled",
+    started_at: "2024-03-20T14:18:00Z",
+    ended_at: null,
+    is_active: true,
+    tags: ["info_request"],
+    handover_reason: null,
+    metadata: {
+      session_source: "direct_message",
+      initial_intent: "business_hours"
+    }
+  },
+  {
+    id: 3,
+    customer_id: 3,
+    channel_config_id: 4,
+    agent_id: 2,
+    status: "completed",
+    started_at: "2024-03-20T14:05:00Z",
+    ended_at: "2024-03-20T14:13:00Z",
+    is_active: false,
+    tags: ["satisfied", "product_help"],
+    handover_reason: null,
+    metadata: {
+      session_source: "direct_contact",
+      initial_intent: "product_inquiry"
+    }
+  },
+  {
+    id: 4,
+    customer_id: 4,
+    channel_config_id: 1,
+    agent_id: 1,
+    status: "completed",
+    started_at: "2024-03-20T13:30:00Z",
+    ended_at: "2024-03-20T13:45:00Z",
+    is_active: false,
+    tags: ["resolved"],
+    handover_reason: null,
+    metadata: {
+      session_source: "website_widget",
+      initial_intent: "general_inquiry"
+    }
+  },
+  {
+    id: 5,
+    customer_id: 5,
+    channel_config_id: 3,
+    agent_id: 3,
+    status: "active",
+    started_at: "2024-03-20T14:10:00Z",
+    ended_at: null,
+    is_active: true,
+    tags: ["refund", "urgent"],
+    handover_reason: "Complex refund request",
+    metadata: {
+      session_source: "bot_escalation",
+      initial_intent: "refund_request"
+    }
+  }
+];
+
+export const sessionsMessagesData = [
+  // Session 1 messages
+  {
+    id: 1,
+    session_id: 1,
+    sender_type: "customer",
+    sender_id: 1,
+    message_type: "text",
+    content: "Hi, I need help with my recent order",
+    media_url: null,
+    quick_replies: null,
+    created_at: "2024-03-20T14:23:15Z"
+  },
+  {
+    id: 2,
+    session_id: 1,
+    sender_type: "bot",
+    sender_id: null,
+    message_type: "text",
+    content: "Hello! I'd be happy to help you with your order. Could you please provide your order number?",
+    media_url: null,
+    quick_replies: ["Check Order Status", "Track Package", "Cancel Order"],
+    created_at: "2024-03-20T14:23:20Z"
+  },
+  {
+    id: 3,
+    session_id: 1,
+    sender_type: "customer",
+    sender_id: 1,
+    message_type: "text",
+    content: "It's order #12345",
+    media_url: null,
+    quick_replies: null,
+    created_at: "2024-03-20T14:24:00Z"
+  },
+  {
+    id: 4,
+    session_id: 1,
+    sender_type: "bot",
+    sender_id: null,
+    message_type: "text",
+    content: "Thank you! I can see your order #12345 was placed on March 15th. Let me transfer you to an agent who can assist you better.",
+    media_url: null,
+    quick_replies: null,
+    created_at: "2024-03-20T14:24:10Z"
+  },
+  {
+    id: 5,
+    session_id: 1,
+    sender_type: "agent",
+    sender_id: 1,
+    message_type: "text",
+    content: "Hi John! This is Sarah from customer support. I can see you have an issue with order #12345. How can I help you today?",
+    media_url: null,
+    quick_replies: null,
+    created_at: "2024-03-20T14:25:00Z"
+  },
+  {
+    id: 6,
+    session_id: 1,
+    sender_type: "customer",
+    sender_id: 1,
+    message_type: "text",
+    content: "The product arrived damaged. I need a replacement.",
+    media_url: null,
+    quick_replies: null,
+    created_at: "2024-03-20T14:26:00Z"
+  },
+  {
+    id: 7,
+    session_id: 1,
+    sender_type: "customer",
+    sender_id: 1,
+    message_type: "image",
+    content: "Here's the photo of the damaged product",
+    media_url: "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=300&h=200&fit=crop",
+    quick_replies: null,
+    created_at: "2024-03-20T14:26:30Z"
+  },
+  {
+    id: 8,
+    session_id: 1,
+    sender_type: "agent",
+    sender_id: 1,
+    message_type: "text",
+    content: "I'm sorry to hear that! I can see the damage in the photo. I'll immediately process a replacement for you. You should receive it within 2-3 business days.",
+    media_url: null,
+    quick_replies: null,
+    created_at: "2024-03-20T14:27:00Z"
+  },
+  // Session 2 messages
+  {
+    id: 9,
+    session_id: 2,
+    sender_type: "customer",
+    sender_id: 2,
+    message_type: "text",
+    content: "What are your business hours?",
+    media_url: null,
+    quick_replies: null,
+    created_at: "2024-03-20T14:18:15Z"
+  },
+  {
+    id: 10,
+    session_id: 2,
+    sender_type: "bot",
+    sender_id: null,
+    message_type: "text",
+    content: "Our business hours are Monday-Friday 9AM-6PM WIB, and Saturday 9AM-3PM WIB. We're closed on Sundays and public holidays.",
+    media_url: null,
+    quick_replies: ["Contact Support", "Visit Store", "More Info"],
+    created_at: "2024-03-20T14:18:20Z"
+  },
+  // Session 3 messages
+  {
+    id: 11,
+    session_id: 3,
+    sender_type: "customer",
+    sender_id: 3,
+    message_type: "text",
+    content: "Hi, I'm looking for information about your latest products",
+    media_url: null,
+    quick_replies: null,
+    created_at: "2024-03-20T14:05:15Z"
+  },
+  {
+    id: 12,
+    session_id: 3,
+    sender_type: "agent",
+    sender_id: 2,
+    message_type: "text",
+    content: "Hello! I'd be happy to help you with product information. What specific products are you interested in?",
+    media_url: null,
+    quick_replies: null,
+    created_at: "2024-03-20T14:06:00Z"
+  },
+  {
+    id: 13,
+    session_id: 3,
+    sender_type: "agent",
+    sender_id: 2,
+    message_type: "document",
+    content: "Here's our latest product catalog",
+    media_url: "https://example.com/catalog.pdf",
+    quick_replies: null,
+    created_at: "2024-03-20T14:07:00Z"
+  },
+  {
+    id: 14,
+    session_id: 3,
+    sender_type: "customer",
+    sender_id: 3,
+    message_type: "text",
+    content: "Thank you for your help! This is exactly what I needed.",
+    media_url: null,
+    quick_replies: null,
+    created_at: "2024-03-20T14:12:00Z"
+  }
+];
+
 export const channelPerformanceData = [
   { channel: 'WhatsApp', sessions: 450, satisfaction: 4.8, avgDuration: '5m 23s', fill: "hsl(var(--chart-1))" },
   { channel: 'WebChat', sessions: 380, satisfaction: 4.6, avgDuration: '4m 15s', fill: "hsl(var(--chart-2))" },
@@ -169,12 +531,8 @@ export const sessionsData = [
 ];
 
 export const intentsData = [
-  { name: "Order Status", count: 342, percentage: 28, trending: "up" },
-  { name: "Product Information", count: 289, percentage: 24, trending: "stable" },
+  { name: "Customer Service", count: 289, percentage: 24, trending: "stable" },
   { name: "Technical Support", count: 198, percentage: 16, trending: "down" },
-  { name: "Billing Issues", count: 156, percentage: 13, trending: "up" },
-  { name: "Account Management", count: 134, percentage: 11, trending: "stable" },
-  { name: "General Inquiry", count: 98, percentage: 8, trending: "down" }
 ];
 
 export const workflowsData = [

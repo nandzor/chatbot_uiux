@@ -67,12 +67,8 @@ const Dashboard = () => {
   ];
 
   const intentsData = [
-    { name: "Order Status", count: 342, percentage: 28, trending: "up" },
-    { name: "Product Information", count: 289, percentage: 24, trending: "stable" },
+    { name: "Customer Support", count: 289, percentage: 24, trending: "stable" },
     { name: "Technical Support", count: 198, percentage: 16, trending: "down" },
-    { name: "Billing Issues", count: 156, percentage: 13, trending: "up" },
-    { name: "Account Management", count: 134, percentage: 11, trending: "stable" },
-    { name: "General Inquiry", count: 98, percentage: 8, trending: "down" }
   ];
   
   return (

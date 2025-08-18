@@ -2,7 +2,7 @@ import React from 'react';
 import { RoleProvider, useRole } from './contexts/RoleContext';
 import Sidebar from './components/layout/Sidebar';
 import Dashboard from './components/dashboard/Dashboard';
-import Inbox from './components/inbox/Inbox';
+import SessionManager from './components/inbox/SessionManager';
 import Analytics from './components/analytics/Analytics';
 import Knowledge from './components/knowledge/Knowledge';
 import Automations from './components/automations/Automations';
@@ -17,7 +17,7 @@ const AppContent = () => {
       case 'dashboard':
         return <Dashboard />;
       case 'inbox':
-        return <Inbox />;
+        return <SessionManager />;
       case 'analytics':
         return <Analytics />;
       case 'knowledge':
