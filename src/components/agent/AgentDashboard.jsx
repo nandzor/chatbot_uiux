@@ -93,17 +93,17 @@ const AgentDashboard = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6 max-w-full overflow-hidden">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-foreground">My Dashboard</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-2xl lg:text-3xl font-bold text-foreground">My Dashboard</h1>
+        <p className="text-sm lg:text-base text-muted-foreground">
           Hai {user?.name}! Berikut adalah performa kerja dan metrik personal Anda.
         </p>
       </div>
 
       {/* Key Metrics - Real-time */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6">
         {/* Active Chats */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -161,7 +161,7 @@ const AgentDashboard = () => {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6">
         {/* Performance Graphs */}
         <Card className="lg:col-span-1">
           <CardHeader>
@@ -313,7 +313,7 @@ const AgentDashboard = () => {
       </div>
 
       {/* Additional Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Produktivitas Minggu Ini</CardTitle>

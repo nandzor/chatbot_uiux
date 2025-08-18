@@ -292,19 +292,20 @@ const AgentInbox = () => {
   const currentHistory = selectedChat ? interactionHistory[selectedChat.id] || [] : [];
 
   return (
-    <div className="h-[calc(100vh-8rem)] flex gap-4">
-      {/* Panel Kiri - Queue & Navigation */}
-      <div className="w-80 flex flex-col">
+    <div className="max-w-full overflow-hidden">
+      <div className="flex flex-col lg:flex-row gap-4 h-[calc(100vh-8rem)]">
+        {/* Panel Kiri - Queue & Navigation */}
+        <div className="w-full lg:w-80 flex flex-col order-1 lg:order-1">
         <Card className="flex-1">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg">Inbox</CardTitle>
           </CardHeader>
           <CardContent className="p-0 flex-1">
             <Tabs value={activeQueueTab} onValueChange={setActiveQueueTab}>
-              <TabsList className="grid w-full grid-cols-3 mx-3">
-                <TabsTrigger value="my-queue" className="text-xs">My Queue</TabsTrigger>
-                <TabsTrigger value="unassigned" className="text-xs">Unassigned</TabsTrigger>
-                <TabsTrigger value="closed" className="text-xs">Closed</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-3 mx-3 text-xs">
+                <TabsTrigger value="my-queue" className="text-xs px-2">My Queue</TabsTrigger>
+                <TabsTrigger value="unassigned" className="text-xs px-2">Unassigned</TabsTrigger>
+                <TabsTrigger value="closed" className="text-xs px-2">Closed</TabsTrigger>
               </TabsList>
 
               {Object.entries(chatQueue).map(([queueType, chats]) => (
@@ -343,7 +344,7 @@ const AgentInbox = () => {
                               {getPriorityBadge(chat.priority)}
                             </div>
                             
-                            <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
+                            <p className="text-xs text-muted-foreground line-clamp-2 mb-2 break-words">
                               {chat.lastMessage}
                             </p>
                             
@@ -370,8 +371,8 @@ const AgentInbox = () => {
         </Card>
       </div>
 
-      {/* Panel Tengah - Chat Window */}
-      <div className="flex-1 flex flex-col">
+        {/* Panel Tengah - Chat Window */}
+        <div className="w-full lg:flex-1 flex flex-col order-3 lg:order-2 min-h-0">
         {selectedChat ? (
           <Card className="flex-1 flex flex-col">
             {/* Chat Header */}
@@ -404,20 +405,20 @@ const AgentInbox = () => {
               </div>
             </CardHeader>
 
-            {/* Messages Area */}
-            <CardContent className="flex-1 flex flex-col">
-              <div className="flex-1 overflow-y-auto space-y-4 mb-4">
+                          {/* Messages Area */}
+            <CardContent className="flex-1 flex flex-col min-h-0">
+              <div className="flex-1 overflow-y-auto space-y-4 mb-4 min-h-0">
                 {currentMessages.map((message) => (
                   <div
                     key={message.id}
                     className={`flex ${message.senderId === user?.id ? 'justify-end' : 'justify-start'}`}
                   >
-                    <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                    <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg break-words ${
                       message.senderId === user?.id
                         ? 'bg-primary text-primary-foreground'
                         : 'bg-muted'
                     }`}>
-                      <p className="text-sm">{message.message}</p>
+                      <p className="text-sm break-words">{message.message}</p>
                       <div className="flex items-center gap-1 mt-1">
                         <span className="text-xs opacity-70">
                           {message.timestamp.split(' ')[1]}
@@ -487,15 +488,15 @@ const AgentInbox = () => {
         )}
       </div>
 
-      {/* Panel Kanan - Context & Management */}
-      <div className="w-80 flex flex-col">
+        {/* Panel Kanan - Context & Management */}
+        <div className="w-full lg:w-80 flex flex-col order-2 lg:order-3">
         <Card className="flex-1">
           <CardContent className="p-0 h-full">
             <Tabs value={activeContextTab} onValueChange={setActiveContextTab} className="h-full flex flex-col">
-              <TabsList className="grid w-full grid-cols-3 m-3">
-                <TabsTrigger value="customer-info" className="text-xs">Customer</TabsTrigger>
-                <TabsTrigger value="knowledge" className="text-xs">Knowledge</TabsTrigger>
-                <TabsTrigger value="history" className="text-xs">History</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-3 m-3 text-xs">
+                <TabsTrigger value="customer-info" className="text-xs px-2">Customer</TabsTrigger>
+                <TabsTrigger value="knowledge" className="text-xs px-2">Knowledge</TabsTrigger>
+                <TabsTrigger value="history" className="text-xs px-2">History</TabsTrigger>
               </TabsList>
 
               {/* Customer Info Tab */}
@@ -513,17 +514,17 @@ const AgentInbox = () => {
                     </div>
 
                     <div className="space-y-3">
-                      <div className="flex items-center gap-2">
-                        <Mail className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-sm">{currentCustomer.email}</span>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Mail className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                        <span className="text-sm truncate">{currentCustomer.email}</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Phone className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-sm">{currentCustomer.phone}</span>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Phone className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                        <span className="text-sm truncate">{currentCustomer.phone}</span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-sm">{currentCustomer.location}</span>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                        <span className="text-sm truncate">{currentCustomer.location}</span>
                       </div>
                     </div>
 
@@ -638,6 +639,7 @@ const AgentInbox = () => {
             </Tabs>
           </CardContent>
         </Card>
+        </div>
       </div>
     </div>
   );

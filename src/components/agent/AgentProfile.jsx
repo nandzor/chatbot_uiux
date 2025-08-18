@@ -164,12 +164,12 @@ const AgentProfile = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 lg:space-y-6 max-w-full overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">My Profile & Settings</h1>
-          <p className="text-muted-foreground">Kelola akun, preferensi, dan status kerja Anda</p>
+          <h1 className="text-2xl lg:text-3xl font-bold text-foreground">My Profile & Settings</h1>
+          <p className="text-sm lg:text-base text-muted-foreground">Kelola akun, preferensi, dan status kerja Anda</p>
         </div>
         <div className="flex items-center gap-3">
           <Label htmlFor="availability">Status:</Label>
@@ -210,8 +210,8 @@ const AgentProfile = () => {
         </TabsList>
 
         {/* Profile Tab */}
-        <TabsContent value="profile" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <TabsContent value="profile" className="space-y-4 lg:space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
             {/* Profile Picture */}
             <Card>
               <CardHeader>
@@ -348,8 +348,8 @@ const AgentProfile = () => {
         </TabsContent>
 
         {/* Notifications Tab */}
-        <TabsContent value="notifications" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <TabsContent value="notifications" className="space-y-4 lg:space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
             {/* Sound Notifications */}
             <Card>
               <CardHeader>
@@ -501,8 +501,8 @@ const AgentProfile = () => {
         </TabsContent>
 
         {/* Canned Responses Tab */}
-        <TabsContent value="templates" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <TabsContent value="templates" className="space-y-4 lg:space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
             {/* Add New Response */}
             <Card>
               <CardHeader>
