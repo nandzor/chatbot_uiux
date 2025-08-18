@@ -12,6 +12,7 @@ import Knowledge from './components/knowledge/Knowledge';
 import Automations from './components/automations/Automations';
 import Settings from './components/settings/Settings';
 import SuperAdmin from './components/superadmin/SuperAdmin';
+import Agent from './components/agent/Agent';
 import './styles/globals.css';
 
 const AppContent = () => {
@@ -26,6 +27,11 @@ const AppContent = () => {
   // Show SuperAdmin interface for superadmin role
   if (isRole('superadmin')) {
     return <SuperAdmin />;
+  }
+
+  // Show Agent interface for agent role
+  if (isRole('agent')) {
+    return <Agent />;
   }
 
   const renderContent = () => {

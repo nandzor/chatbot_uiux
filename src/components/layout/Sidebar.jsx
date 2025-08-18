@@ -41,9 +41,9 @@ const Sidebar = ({ role, activeMenu, setActiveMenu }) => {
         ];
       case 'agent':
         return [
-          { id: 'dashboard', label: 'My Dashboard', icon: Home },
-          { id: 'inbox', label: 'Inbox', icon: MessageSquare },
-          { id: 'profile', label: 'My Profile', icon: User }
+          { id: 'my-dashboard', label: 'My Dashboard', icon: Home },
+          { id: 'inbox', label: 'Inbox (Percakapan)', icon: MessageSquare },
+          { id: 'my-profile', label: 'My Profile & Settings', icon: User }
         ];
       default:
         return [];
