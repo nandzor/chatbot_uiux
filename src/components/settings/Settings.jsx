@@ -67,11 +67,14 @@ import {
   CheckCircle,
   XCircle
 } from 'lucide-react';
+import { agentsData } from '../../data/sampleData';
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState('channels');
   const [showApiKey, setShowApiKey] = useState(false);
   const [teamTab, setTeamTab] = useState('users');
+  const [editingAgent, setEditingAgent] = useState(null);
+  const [agentsList, setAgentsList] = useState(agentsData);
 
   // Sample data
   const channels = [
@@ -81,9 +84,9 @@ const Settings = () => {
   ];
 
   const botPersonalities = [
-    { id: 1, name: 'Ramah & Profesional', language: 'Indonesia', tone: 'Formal', greetingMessage: 'Halo! Selamat datang, bagaimana saya bisa membantu Anda?', errorMessage: 'Maaf, saya tidak mengerti. Bisakah Anda mengulangi dengan kata lain?' },
-    { id: 2, name: 'Casual & Bersahabat', language: 'Indonesia', tone: 'Informal', greetingMessage: 'Hai! Ada yang bisa saya bantu?', errorMessage: 'Ups, saya belum paham. Coba tanya dengan cara lain ya!' },
-    { id: 3, name: 'Professional English', language: 'English', tone: 'Professional', greetingMessage: 'Hello! How may I assist you today?', errorMessage: 'I apologize, but I didn\'t understand. Could you please rephrase?' },
+    { id: 1, name: 'Bahasa Inggris Professional', language: 'English', tone: 'Formal', greetingMessage: 'Halo! Selamat datang, bagaimana saya bisa membantu Anda?', errorMessage: 'Maaf, saya tidak mengerti. Bisakah Anda mengulangi dengan kata lain?' },
+    { id: 2, name: 'Bahasa Jawa', language: 'Indonesia', tone: 'Informal', greetingMessage: 'Hai! Ada yang bisa saya bantu?', errorMessage: 'Ups, saya belum paham. Coba tanya dengan cara lain ya!' },
+    { id: 3, name: 'Bahasa Sunda ramah dan cerdas', language: 'Bahasa Sunda', tone: 'Ramag', greetingMessage: 'Hello! How may I assist you today?', errorMessage: 'I apologize, but I didn\'t understand. Could you please rephrase?' },
   ];
 
   const users = [
@@ -92,10 +95,29 @@ const Settings = () => {
     { id: 3, name: 'Budi Santoso', email: 'budi.santoso@company.com', role: 'viewer', avatar: 'BS', status: 'Nonaktif', lastLogin: '1 hari lalu' },
   ];
 
-  const agents = [
-    { id: 1, name: 'Sari Dewi', specialization: 'Customer Support', maxConcurrentChats: 5, currentChats: 3, totalChats: 245, avgResponseTime: '2 menit' },
-    { id: 2, name: 'Riko Pratama', specialization: 'Technical Support', maxConcurrentChats: 3, currentChats: 2, totalChats: 189, avgResponseTime: '3 menit' },
-  ];
+  // Gunakan data agents dari state dengan mapping bot personalities
+  const agents = agentsList.map(agent => {
+    const personality = botPersonalities.find(p => p.id === agent.botPersonalityId);
+    return {
+      ...agent,
+      personalityName: personality ? personality.name : 'No Personality',
+      currentChats: agent.activeChats,
+      totalChats: agent.totalHandled,
+      avgResponseTime: agent.avgHandlingTime
+    };
+  });
+
+  // Fungsi untuk update bot personality agent
+  const updateAgentPersonality = (agentId, newPersonalityId) => {
+    setAgentsList(prevAgents =>
+      prevAgents.map(agent =>
+        agent.id === agentId
+          ? { ...agent, botPersonalityId: newPersonalityId }
+          : agent
+      )
+    );
+    setEditingAgent(null);
+  };
 
   const apiKeys = [
     { id: 1, name: 'Production API', prefix: 'pk_live_', created: '15 Mar 2024', lastUsed: '2 jam lalu', status: 'Aktif' },
@@ -474,7 +496,7 @@ const Settings = () => {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Agent</TableHead>
-                        <TableHead>Specialization</TableHead>
+                        <TableHead>Bot Personality</TableHead>
                         <TableHead>Max Concurrent</TableHead>
                         <TableHead>Current Chats</TableHead>
                         <TableHead>Total Chats</TableHead>
@@ -485,9 +507,20 @@ const Settings = () => {
                     <TableBody>
                       {agents.map((agent) => (
                         <TableRow key={agent.id}>
-                          <TableCell className="font-medium">{agent.name}</TableCell>
+                          <TableCell className="font-medium">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-2 h-2 rounded-full ${
+                                agent.status === 'online' ? 'bg-green-500' : 
+                                agent.status === 'busy' ? 'bg-yellow-500' : 'bg-gray-400'
+                              }`}></div>
+                              {agent.name}
+                            </div>
+                          </TableCell>
                           <TableCell>
-                            <Badge variant="outline">{agent.specialization}</Badge>
+                            <div className="flex items-center gap-2">
+                              <Bot className="w-4 h-4 text-primary" />
+                              <Badge variant="secondary">{agent.personalityName}</Badge>
+                            </div>
                           </TableCell>
                           <TableCell>{agent.maxConcurrentChats}</TableCell>
                           <TableCell>
@@ -502,7 +535,11 @@ const Settings = () => {
                           <TableCell>{agent.avgResponseTime}</TableCell>
                           <TableCell>
                             <div className="flex gap-2">
-                              <Button variant="outline" size="sm">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => setEditingAgent(agent)}
+                              >
                                 <Edit className="w-4 h-4" />
                               </Button>
                               <Button variant="outline" size="sm">
@@ -848,6 +885,102 @@ const Settings = () => {
           Save Changes
         </Button>
       </div>
+
+      {/* Edit Agent Bot Personality Modal */}
+      {editingAgent && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <Card className="w-full max-w-2xl">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bot className="w-5 h-5" />
+                Setup Bot Personality untuk {editingAgent.name}
+              </CardTitle>
+              <CardDescription>
+                Pilih personality yang akan digunakan oleh agent ini dalam berinteraksi dengan pelanggan
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Current Agent Info */}
+              <div className="p-4 bg-muted rounded-lg">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className={`w-3 h-3 rounded-full ${
+                    editingAgent.status === 'online' ? 'bg-green-500' : 
+                    editingAgent.status === 'busy' ? 'bg-yellow-500' : 'bg-gray-400'
+                  }`}></div>
+                  <div>
+                    <h4 className="font-semibold">{editingAgent.name}</h4>
+                    <p className="text-sm text-muted-foreground">{editingAgent.specialization}</p>
+                  </div>
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  <strong>Current Personality:</strong> {editingAgent.personalityName}
+                </div>
+              </div>
+
+              {/* Personality Selection */}
+              <div className="space-y-3">
+                <Label>Pilih Bot Personality</Label>
+                <div className="space-y-3">
+                  {botPersonalities.map((personality) => (
+                    <div 
+                      key={personality.id}
+                      className={`p-4 border rounded-lg cursor-pointer transition-all ${
+                        editingAgent.botPersonalityId === personality.id 
+                          ? 'border-primary bg-primary/5' 
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                      onClick={() => setEditingAgent({...editingAgent, botPersonalityId: personality.id})}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h4 className="font-medium">{personality.name}</h4>
+                            <Badge variant="outline">{personality.language}</Badge>
+                            <Badge variant="secondary">{personality.tone}</Badge>
+                          </div>
+                          <div className="space-y-2 text-sm">
+                            <div>
+                              <strong>Greeting:</strong> 
+                              <p className="text-muted-foreground mt-1">{personality.greetingMessage}</p>
+                            </div>
+                            <div>
+                              <strong>Error Message:</strong> 
+                              <p className="text-muted-foreground mt-1">{personality.errorMessage}</p>
+                            </div>
+                          </div>
+                        </div>
+                        {editingAgent.botPersonalityId === personality.id && (
+                          <div className="ml-3">
+                            <div className="w-4 h-4 rounded-full bg-primary flex items-center justify-center">
+                              <div className="w-2 h-2 rounded-full bg-white"></div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end gap-2 pt-4 border-t">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setEditingAgent(null)}
+                >
+                  Batal
+                </Button>
+                <Button 
+                  onClick={() => updateAgentPersonality(editingAgent.id, editingAgent.botPersonalityId)}
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  Simpan Personality
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 };

@@ -97,10 +97,58 @@ export const knowledgeArticles = [
 ];
 
 export const agentsData = [
-  { id: 1, name: "Sarah Wilson", email: "sarah@company.com", status: "online", activeChats: 3, satisfaction: 4.8, avgHandlingTime: "4m 32s", totalHandled: 152, specialization: "Technical Support" },
-  { id: 2, name: "John Davis", email: "john@company.com", status: "busy", activeChats: 5, satisfaction: 4.6, avgHandlingTime: "5m 12s", totalHandled: 98, specialization: "Billing" },
-  { id: 3, name: "Mike Chen", email: "mike@company.com", status: "offline", activeChats: 0, satisfaction: 4.9, avgHandlingTime: "3m 45s", totalHandled: 203, specialization: "General Support" },
-  { id: 4, name: "Emily Rodriguez", email: "emily@company.com", status: "online", activeChats: 2, satisfaction: 4.7, avgHandlingTime: "4m 10s", totalHandled: 176, specialization: "Product Expert" }
+  { 
+    id: 1, 
+    name: "Sarah Wilson", 
+    email: "sarah@company.com", 
+    status: "online", 
+    activeChats: 3, 
+    satisfaction: 4.8, 
+    avgHandlingTime: "4m 32s", 
+    totalHandled: 152, 
+    specialization: "Technical Support",
+    botPersonalityId: 1,
+    maxConcurrentChats: 5
+  },
+  { 
+    id: 2, 
+    name: "John Davis", 
+    email: "john@company.com", 
+    status: "busy", 
+    activeChats: 5, 
+    satisfaction: 4.6, 
+    avgHandlingTime: "5m 12s", 
+    totalHandled: 98, 
+    specialization: "Billing",
+    botPersonalityId: 2,
+    maxConcurrentChats: 6
+  },
+  { 
+    id: 3, 
+    name: "Mike Chen", 
+    email: "mike@company.com", 
+    status: "offline", 
+    activeChats: 0, 
+    satisfaction: 4.9, 
+    avgHandlingTime: "3m 45s", 
+    totalHandled: 203, 
+    specialization: "General Support",
+    botPersonalityId: 3,
+    maxConcurrentChats: 4
+  },
+  { 
+    id: 4, 
+    name: "Emily Rodriguez", 
+    email: "emily@company.com", 
+    status: "online", 
+    activeChats: 2, 
+    satisfaction: 4.7, 
+    avgHandlingTime: "4m 10s", 
+    totalHandled: 176, 
+    specialization: "Product Expert",
+    botPersonalityId: 1,
+    maxConcurrentChats: 3
+  }
 ];
 
 export const channelPerformanceData = [
