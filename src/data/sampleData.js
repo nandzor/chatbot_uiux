@@ -548,3 +548,520 @@ export const auditLogsData = [
   { id: 3, timestamp: "2024-03-20 12:18:30", user: "system", action: "DELETE", resource: "api_key", details: "Expired API key removed", ip: "system" },
   { id: 4, timestamp: "2024-03-20 11:22:45", user: "john@company.com", action: "LOGIN", resource: "auth", details: "Successful login", ip: "192.168.1.102" }
 ];
+
+// Data untuk Integrations
+export const integrationsData = [
+  {
+    id: 1,
+    name: "Google Sheets",
+    description: "Hubungkan ke Google Sheets untuk membaca dan menulis data pelanggan secara otomatis",
+    icon: "Sheet",
+    category: "productivity",
+    status: "active",
+    configRequired: true,
+    config: {
+      googleAccountConnected: true,
+      sheetId: "1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms",
+      sheetName: "Customers",
+      permissions: ["read", "write"]
+    },
+    features: [
+      "Sinkronisasi data pelanggan",
+      "Export chat history",
+      "Real-time updates"
+    ],
+    setupSteps: [
+      "Hubungkan akun Google",
+      "Pilih Google Sheet",
+      "Konfigurasi permissions"
+    ]
+  },
+  {
+    id: 2,
+    name: "WhatsApp Business API",
+    description: "Integrasi resmi dengan WhatsApp Business API untuk fitur lanjutan dan analytics",
+    icon: "MessageSquare",
+    category: "communication",
+    status: "active",
+    configRequired: true,
+    config: {
+      businessAccountId: "123456789",
+      phoneNumberId: "987654321",
+      accessToken: "EAABwzLixnjYBOZB...",
+      webhookVerifyToken: "your_verify_token"
+    },
+    features: [
+      "Verified business badge",
+      "Template messages",
+      "Rich media support",
+      "Advanced analytics"
+    ],
+    setupSteps: [
+      "Verifikasi Business Account",
+      "Konfigurasi webhook",
+      "Setup templates"
+    ]
+  },
+  {
+    id: 3,
+    name: "Cek Ongkos Kirim",
+    description: "Integrasi dengan API pengiriman untuk cek ongkos kirim otomatis (JNE, TIKI, POS)",
+    icon: "Truck",
+    category: "shipping",
+    status: "inactive",
+    configRequired: true,
+    config: {
+      jneApiKey: "",
+      tikiApiKey: "",
+      posApiKey: "",
+      defaultOriginCity: "Jakarta"
+    },
+    features: [
+      "Multi-carrier support",
+      "Real-time pricing",
+      "Weight calculation",
+      "Distance estimation"
+    ],
+    setupSteps: [
+      "Daftar API key carrier",
+      "Set origin location",
+      "Test connection"
+    ]
+  },
+  {
+    id: 4,
+    name: "Kirim Notifikasi Pribadi",
+    description: "Kirim notifikasi push atau email ke admin ketika ada percakapan prioritas tinggi",
+    icon: "Bell",
+    category: "notification",
+    status: "active",
+    configRequired: true,
+    config: {
+      pushNotificationApiKey: "fcm_server_key_...",
+      emailProvider: "smtp",
+      smtpConfig: {
+        host: "smtp.gmail.com",
+        port: 587,
+        username: "admin@company.com",
+        password: "app_password"
+      },
+      notificationRules: [
+        {
+          trigger: "high_priority_conversation",
+          enabled: true,
+          pushNotification: true,
+          emailNotification: true
+        },
+        {
+          trigger: "escalation_to_human",
+          enabled: true,
+          pushNotification: true,
+          emailNotification: false
+        }
+      ]
+    },
+    features: [
+      "Push notifications",
+      "Email alerts",
+      "Custom rules",
+      "Priority filtering"
+    ],
+    setupSteps: [
+      "Konfigurasi FCM",
+      "Setup SMTP",
+      "Set notification rules"
+    ]
+  },
+  {
+    id: 5,
+    name: "Allow List (Whitelist Numbers)",
+    description: "Batasi akses chatbot hanya untuk nomor telepon yang terdaftar dalam whitelist",
+    icon: "Shield",
+    category: "security",
+    status: "inactive",
+    configRequired: true,
+    config: {
+      enabled: false,
+      allowedNumbers: [
+        "+6281234567890",
+        "+6281234567891",
+        "+6281234567892"
+      ],
+      blockMessage: "Maaf, nomor Anda tidak terdaftar untuk menggunakan layanan ini.",
+      adminNumbers: ["+6281234567890"]
+    },
+    features: [
+      "Number verification",
+      "Admin bypass",
+      "Custom block message",
+      "Bulk import"
+    ],
+    setupSteps: [
+      "Enable whitelist mode",
+      "Add allowed numbers",
+      "Set block message"
+    ]
+  },
+  {
+    id: 6,
+    name: "Zapier Integration",
+    description: "Hubungkan dengan 5000+ aplikasi melalui Zapier untuk automasi workflow",
+    icon: "Zap",
+    category: "automation",
+    status: "inactive",
+    configRequired: true,
+    config: {
+      zapierApiKey: "",
+      webhookUrl: "https://hooks.zapier.com/hooks/catch/...",
+      activeZaps: []
+    },
+    features: [
+      "5000+ app connections",
+      "Custom triggers",
+      "Multi-step workflows",
+      "Real-time sync"
+    ],
+    setupSteps: [
+      "Connect Zapier account",
+      "Create webhook trigger",
+      "Build workflows"
+    ]
+  },
+  {
+    id: 7,
+    name: "CRM Integration",
+    description: "Sinkronisasi otomatis dengan sistem CRM untuk tracking customer journey",
+    icon: "Users",
+    category: "crm",
+    status: "inactive",
+    configRequired: true,
+    config: {
+      crmProvider: "salesforce", // salesforce, hubspot, pipedrive
+      apiEndpoint: "",
+      apiKey: "",
+      syncFields: ["name", "email", "phone", "notes"],
+      autoCreateContacts: true
+    },
+    features: [
+      "Contact sync",
+      "Lead tracking",
+      "Activity logging",
+      "Custom field mapping"
+    ],
+    setupSteps: [
+      "Select CRM provider",
+      "Configure API access",
+      "Map data fields"
+    ]
+  },
+  {
+    id: 8,
+    name: "Payment Gateway",
+    description: "Terima pembayaran langsung dalam chat menggunakan payment gateway",
+    icon: "CreditCard",
+    category: "payment",
+    status: "inactive",
+    configRequired: true,
+    config: {
+      provider: "midtrans", // midtrans, xendit, stripe
+      merchantId: "",
+      clientKey: "",
+      serverKey: "",
+      environment: "sandbox", // sandbox, production
+      supportedMethods: ["credit_card", "bank_transfer", "e_wallet"]
+    },
+    features: [
+      "In-chat payments",
+      "Multiple methods",
+      "Transaction tracking",
+      "Refund processing"
+    ],
+    setupSteps: [
+      "Choose payment provider",
+      "Configure merchant account",
+      "Test transactions"
+    ]
+  },
+  {
+    id: 9,
+    name: "Auto Reminder",
+    description: "Buat reminder untuk melakukan tugas tertentu pada waktu tertentu",
+    icon: "Calendar",
+    category: "automation",
+    status: "inactive",
+    configRequired: true,
+    config: {
+      timezone: "Asia/Jakarta",
+      defaultReminderTime: "09:00",
+      maxRemindersPerUser: 10,
+      reminderTypes: ["appointment", "follow_up", "task", "custom"],
+      notificationChannels: ["chat", "email", "sms"]
+    },
+    features: [
+      "Scheduled reminders",
+      "Multiple reminder types",
+      "Timezone support",
+      "Recurring reminders"
+    ],
+    setupSteps: [
+      "Set default timezone",
+      "Configure notification channels",
+      "Test reminder delivery"
+    ]
+  },
+  {
+    id: 10,
+    name: "Nearest Location",
+    description: "Mencari lokasi terdekat dari customer",
+    icon: "MapPin",
+    category: "location",
+    status: "inactive",
+    configRequired: true,
+    config: {
+      mapProvider: "google_maps", // google_maps, mapbox, here
+      apiKey: "",
+      searchRadius: 5000, // meters
+      maxResults: 10,
+      locationTypes: ["store", "atm", "service_center", "distributor"],
+      enableDirections: true
+    },
+    features: [
+      "Real-time location search",
+      "Distance calculation",
+      "Turn-by-turn directions",
+      "Store locator"
+    ],
+    setupSteps: [
+      "Choose map provider",
+      "Configure API access",
+      "Add business locations"
+    ]
+  },
+  {
+    id: 11,
+    name: "Netzme",
+    description: "Pembayaran transaksi melalui dompet digital Netzme",
+    icon: "Wallet",
+    category: "payment",
+    status: "inactive",
+    configRequired: true,
+    config: {
+      merchantId: "",
+      apiKey: "",
+      secretKey: "",
+      environment: "sandbox", // sandbox, production
+      supportedCurrencies: ["IDR"],
+      webhookUrl: ""
+    },
+    features: [
+      "Digital wallet payments",
+      "QR code generation",
+      "Transaction verification",
+      "Instant settlement"
+    ],
+    setupSteps: [
+      "Register merchant account",
+      "Configure API credentials",
+      "Setup webhook notifications"
+    ]
+  },
+  {
+    id: 12,
+    name: "Email Marketing",
+    description: "Integrasi dengan platform email marketing untuk campaign otomatis",
+    icon: "Mail",
+    category: "marketing",
+    status: "inactive",
+    configRequired: true,
+    config: {
+      provider: "mailchimp", // mailchimp, sendgrid, mailerlite
+      apiKey: "",
+      defaultListId: "",
+      autoSubscribe: true,
+      segmentationRules: [],
+      campaignTriggers: ["new_customer", "abandoned_cart", "purchase"]
+    },
+    features: [
+      "Auto-subscribe customers",
+      "Triggered campaigns",
+      "Segmentation",
+      "Analytics tracking"
+    ],
+    setupSteps: [
+      "Connect email provider",
+      "Configure subscriber lists",
+      "Setup campaign triggers"
+    ]
+  },
+  {
+    id: 13,
+    name: "Social Media Analytics",
+    description: "Pantau mention brand dan sentiment analysis dari media sosial",
+    icon: "TrendingUp",
+    category: "analytics",
+    status: "inactive",
+    configRequired: true,
+    config: {
+      platforms: ["twitter", "instagram", "facebook", "tiktok"],
+      keywords: [],
+      brandNames: [],
+      sentimentAnalysis: true,
+      reportFrequency: "daily", // daily, weekly, monthly
+      alertThreshold: -0.3 // negative sentiment threshold
+    },
+    features: [
+      "Multi-platform monitoring",
+      "Sentiment analysis",
+      "Brand mention alerts",
+      "Competitor tracking"
+    ],
+    setupSteps: [
+      "Connect social accounts",
+      "Setup monitoring keywords",
+      "Configure alert thresholds"
+    ]
+  },
+  {
+    id: 14,
+    name: "Live Chat Handover",
+    description: "Transfer chat ke agent manusia dengan konteks lengkap",
+    icon: "UserCheck",
+    category: "communication",
+    status: "active",
+    configRequired: true,
+    config: {
+      handoverTriggers: ["escalation_keyword", "sentiment_negative", "human_request"],
+      availableAgents: [],
+      workingHours: {
+        start: "09:00",
+        end: "17:00",
+        timezone: "Asia/Jakarta",
+        workingDays: [1, 2, 3, 4, 5] // Monday to Friday
+      },
+      queueManagement: true,
+      contextTransfer: true
+    },
+    features: [
+      "Smart routing",
+      "Context preservation",
+      "Queue management",
+      "Working hours support"
+    ],
+    setupSteps: [
+      "Configure handover triggers",
+      "Setup agent routing",
+      "Test handover flow"
+    ]
+  },
+  {
+    id: 15,
+    name: "Survey & Feedback",
+    description: "Kumpulkan feedback pelanggan melalui survey interaktif",
+    icon: "ClipboardCheck",
+    category: "feedback",
+    status: "inactive",
+    configRequired: true,
+    config: {
+      surveyTypes: ["satisfaction", "nps", "product_feedback", "custom"],
+      triggerEvents: ["conversation_end", "purchase_complete", "manual"],
+      questionFormats: ["multiple_choice", "rating", "text", "yes_no"],
+      responseAnalysis: true,
+      exportFormats: ["csv", "pdf", "excel"]
+    },
+    features: [
+      "Interactive surveys",
+      "NPS tracking",
+      "Response analytics",
+      "Export capabilities"
+    ],
+    setupSteps: [
+      "Create survey templates",
+      "Configure trigger events",
+      "Setup analytics dashboard"
+    ]
+  },
+  {
+    id: 16,
+    name: "Inventory Checker",
+    description: "Cek stok produk real-time dan notifikasi ketersediaan",
+    icon: "Package",
+    category: "inventory",
+    status: "inactive",
+    configRequired: true,
+    config: {
+      inventorySystem: "custom", // custom, shopify, woocommerce, magento
+      apiEndpoint: "",
+      apiKey: "",
+      autoUpdate: true,
+      lowStockThreshold: 10,
+      notifyOnLowStock: true,
+      updateInterval: 300 // seconds
+    },
+    features: [
+      "Real-time stock check",
+      "Low stock alerts",
+      "Multi-location inventory",
+      "Auto-sync with POS"
+    ],
+    setupSteps: [
+      "Connect inventory system",
+      "Configure stock thresholds",
+      "Test stock queries"
+    ]
+  },
+  {
+    id: 17,
+    name: "Voice to Text",
+    description: "Konversi pesan suara menjadi teks menggunakan AI",
+    icon: "Mic",
+    category: "ai",
+    status: "inactive",
+    configRequired: true,
+    config: {
+      provider: "google_cloud", // google_cloud, aws_transcribe, azure
+      apiKey: "",
+      supportedLanguages: ["id-ID", "en-US", "ms-MY"],
+      autoTranslate: false,
+      confidenceThreshold: 0.8,
+      maxDuration: 60 // seconds
+    },
+    features: [
+      "Multi-language support",
+      "High accuracy",
+      "Real-time processing",
+      "Confidence scoring"
+    ],
+    setupSteps: [
+      "Choose speech provider",
+      "Configure language settings",
+      "Test voice recognition"
+    ]
+  },
+  {
+    id: 18,
+    name: "QR Code Generator",
+    description: "Generate QR code untuk berbagai keperluan (payment, link, contact)",
+    icon: "QrCode",
+    category: "utility",
+    status: "inactive",
+    configRequired: false,
+    config: {
+      defaultSize: 256,
+      errorCorrection: "M", // L, M, Q, H
+      logoSupport: true,
+      formats: ["png", "jpeg", "svg"],
+      qrTypes: ["url", "text", "payment", "contact", "wifi"]
+    },
+    features: [
+      "Multiple QR types",
+      "Custom branding",
+      "High resolution",
+      "Batch generation"
+    ],
+    setupSteps: [
+      "Configure default settings",
+      "Upload brand logo",
+      "Test QR generation"
+    ]
+  }
+];

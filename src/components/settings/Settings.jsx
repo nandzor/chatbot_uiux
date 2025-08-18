@@ -65,9 +65,13 @@ import {
   Activity,
   AlertTriangle,
   CheckCircle,
-  XCircle
+  XCircle,
+  Search,
+  Filter
 } from 'lucide-react';
-import { agentsData } from '../../data/sampleData';
+import { agentsData, integrationsData } from '../../data/sampleData';
+import IntegrationCard from './IntegrationCard';
+import IntegrationModal from './IntegrationModal';
 
 const Settings = () => {
   const [activeTab, setActiveTab] = useState('channels');
@@ -75,6 +79,13 @@ const Settings = () => {
   const [teamTab, setTeamTab] = useState('users');
   const [editingAgent, setEditingAgent] = useState(null);
   const [agentsList, setAgentsList] = useState(agentsData);
+  
+  // Integrations state
+  const [integrationsState, setIntegrationsState] = useState(integrationsData);
+  const [selectedIntegration, setSelectedIntegration] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Sample data
   const channels = [
@@ -119,6 +130,76 @@ const Settings = () => {
     setEditingAgent(null);
   };
 
+  // Fungsi untuk integrations
+  const handleConfigureIntegration = (integration) => {
+    setSelectedIntegration(integration);
+    setIsModalOpen(true);
+  };
+
+  const handleSaveIntegrationConfig = (integrationId, config) => {
+    setIntegrationsState(prev => 
+      prev.map(integration => 
+        integration.id === integrationId 
+          ? { ...integration, config }
+          : integration
+      )
+    );
+  };
+
+  const handleToggleIntegrationStatus = (integrationId) => {
+    setIntegrationsState(prev => 
+      prev.map(integration => {
+        if (integration.id === integrationId) {
+          const newStatus = integration.status === 'active' ? 'inactive' : 'active';
+          return { ...integration, status: newStatus };
+        }
+        return integration;
+      })
+    );
+  };
+
+  // Filter integrations based on selected category and search query
+  const filteredIntegrations = integrationsState.filter(integration => {
+    // Filter by category
+    const categoryMatch = selectedCategory === 'all' || integration.category === selectedCategory;
+    
+    // Filter by search query
+    const searchMatch = searchQuery === '' || 
+      integration.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      integration.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      integration.features.some(feature => feature.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    return categoryMatch && searchMatch;
+  });
+
+  // Group integrations by category
+  const integrationsByCategory = integrationsState.reduce((acc, integration) => {
+    const category = integration.category;
+    if (!acc[category]) {
+      acc[category] = [];
+    }
+    acc[category].push(integration);
+    return acc;
+  }, {});
+
+  const categoryNames = {
+    productivity: 'Productivity',
+    communication: 'Communication',
+    shipping: 'Shipping & Logistics',
+    notification: 'Notifications',
+    security: 'Security',
+    automation: 'Automation',
+    crm: 'CRM & Sales',
+    payment: 'Payment & Billing',
+    location: 'Location & Maps',
+    marketing: 'Marketing & Campaigns',
+    analytics: 'Analytics & Insights',
+    feedback: 'Feedback & Surveys',
+    inventory: 'Inventory & Stock',
+    ai: 'AI & Machine Learning',
+    utility: 'Utilities & Tools'
+  };
+
   const apiKeys = [
     { id: 1, name: 'Production API', prefix: 'pk_live_', created: '15 Mar 2024', lastUsed: '2 jam lalu', status: 'Aktif' },
     { id: 2, name: 'Development API', prefix: 'pk_test_', created: '10 Mar 2024', lastUsed: '1 hari lalu', status: 'Aktif' },
@@ -145,9 +226,10 @@ const Settings = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="channels">Channels</TabsTrigger>
           <TabsTrigger value="bot-personalities">Bot Personalities</TabsTrigger>
+          <TabsTrigger value="integrations">Integrations</TabsTrigger>
           <TabsTrigger value="team-management">Team Management</TabsTrigger>
           <TabsTrigger value="billing">Billing & Subscription</TabsTrigger>
           <TabsTrigger value="developer">Developer</TabsTrigger>
@@ -403,6 +485,259 @@ const Settings = () => {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* Integrations Tab */}
+        <TabsContent value="integrations" className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-semibold mb-2">Connected Apps</h3>
+              <p className="text-muted-foreground">
+                Connect your chatbot with third-party applications to extend its functionality.
+              </p>
+            </div>
+            
+            {/* Filters */}
+            <div className="flex gap-3">
+              {/* Search Box */}
+              <div className="relative w-64">
+                <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search integrations..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              
+              {/* Category Filter */}
+              <div className="w-64">
+                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Filter by category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories ({integrationsState.length})</SelectItem>
+                    {Object.entries(integrationsByCategory).map(([category, integrations]) => (
+                      <SelectItem key={category} value={category}>
+                        {categoryNames[category]} ({integrations.length})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          {/* Integration Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                    <CheckCircle className="w-4 h-4 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">{filteredIntegrations.filter(i => i.status === 'active').length}</p>
+                    <p className="text-sm text-muted-foreground">Active</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                    <XCircle className="w-4 h-4 text-gray-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">{filteredIntegrations.filter(i => i.status === 'inactive').length}</p>
+                    <p className="text-sm text-muted-foreground">Inactive</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                    <Zap className="w-4 h-4 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">{filteredIntegrations.length}</p>
+                    <p className="text-sm text-muted-foreground">{selectedCategory === 'all' ? 'Total' : 'In Category'}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                    <Settings className="w-4 h-4 text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">
+                      {filteredIntegrations.filter(i => 
+                        i.configRequired && Object.keys(i.config).length > 0
+                      ).length}
+                    </p>
+                    <p className="text-sm text-muted-foreground">Configured</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Quick Filters */}
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              variant={selectedCategory === 'all' ? 'default' : 'outline'} 
+              size="sm"
+              onClick={() => setSelectedCategory('all')}
+            >
+              All ({integrationsState.length})
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setSelectedCategory('communication')}
+              className={selectedCategory === 'communication' ? 'bg-primary text-primary-foreground' : ''}
+            >
+              Communication ({integrationsByCategory.communication?.length || 0})
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setSelectedCategory('payment')}
+              className={selectedCategory === 'payment' ? 'bg-primary text-primary-foreground' : ''}
+            >
+              Payment ({integrationsByCategory.payment?.length || 0})
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setSelectedCategory('automation')}
+              className={selectedCategory === 'automation' ? 'bg-primary text-primary-foreground' : ''}
+            >
+              Automation ({integrationsByCategory.automation?.length || 0})
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setSelectedCategory('productivity')}
+              className={selectedCategory === 'productivity' ? 'bg-primary text-primary-foreground' : ''}
+            >
+              Productivity ({integrationsByCategory.productivity?.length || 0})
+            </Button>
+          </div>
+
+          {/* Results Info */}
+          {(searchQuery || selectedCategory !== 'all') && (
+            <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+              <div className="flex items-center gap-2">
+                <Filter className="w-4 h-4 text-muted-foreground" />
+                <span className="text-sm">
+                  Showing {filteredIntegrations.length} of {integrationsState.length} integrations
+                  {searchQuery && ` matching "${searchQuery}"`}
+                  {selectedCategory !== 'all' && ` in ${categoryNames[selectedCategory]}`}
+                </span>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => {
+                  setSearchQuery('');
+                  setSelectedCategory('all');
+                }}
+              >
+                Clear filters
+              </Button>
+            </div>
+          )}
+
+          {/* No Results */}
+          {filteredIntegrations.length === 0 && (
+            <div className="text-center py-12">
+              <Database className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No integrations found</h3>
+              <p className="text-muted-foreground mb-4">
+                {searchQuery 
+                  ? `No integrations match your search "${searchQuery}"` 
+                  : `No integrations found in ${categoryNames[selectedCategory]}`
+                }
+              </p>
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  setSearchQuery('');
+                  setSelectedCategory('all');
+                }}
+              >
+                Show all integrations
+              </Button>
+            </div>
+          )}
+
+          {/* Integrations Grid */}
+          {filteredIntegrations.length > 0 && (
+            <div className="space-y-4">
+              {selectedCategory === 'all' && !searchQuery ? (
+                // Show by categories when viewing all and no search
+                Object.entries(integrationsByCategory).map(([category, integrations]) => {
+                  const categoryFiltered = integrations.filter(integration => 
+                    filteredIntegrations.includes(integration)
+                  );
+                  
+                  if (categoryFiltered.length === 0) return null;
+                  
+                  return (
+                    <div key={category} className="space-y-4">
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-lg font-semibold">{categoryNames[category]}</h4>
+                        <Badge variant="outline">{categoryFiltered.length}</Badge>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {categoryFiltered.map((integration) => (
+                          <IntegrationCard
+                            key={integration.id}
+                            integration={integration}
+                            onConfigure={handleConfigureIntegration}
+                            onToggleStatus={handleToggleIntegrationStatus}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                // Show flat grid when filtering by category or searching
+                <div className="space-y-4">
+                  {selectedCategory !== 'all' && (
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-lg font-semibold">{categoryNames[selectedCategory]}</h4>
+                      <Badge variant="outline">{filteredIntegrations.length}</Badge>
+                    </div>
+                  )}
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filteredIntegrations.map((integration) => (
+                      <IntegrationCard
+                        key={integration.id}
+                        integration={integration}
+                        onConfigure={handleConfigureIntegration}
+                        onToggleStatus={handleToggleIntegrationStatus}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </TabsContent>
 
         {/* Team Management Tab */}
@@ -981,6 +1316,17 @@ const Settings = () => {
           </Card>
         </div>
       )}
+
+      {/* Integration Configuration Modal */}
+      <IntegrationModal
+        integration={selectedIntegration}
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedIntegration(null);
+        }}
+        onSave={handleSaveIntegrationConfig}
+      />
     </div>
   );
 };
