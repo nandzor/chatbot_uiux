@@ -24,7 +24,7 @@ export const testUsers = [
     organizationId: 'org-001',
     organizationName: 'PT Teknologi Nusantara',
     avatar: getUserAvatarData('ahmad.rahman@company.com', 'Ahmad Rahman').avatar,
-    permissions: ['manage_users', 'manage_agents', 'manage_settings', 'view_analytics', 'manage_billing'],
+    permissions: ['handle_chats', 'manage_users', 'manage_agents', 'manage_settings', 'view_analytics', 'manage_billing'],
     description: 'Organization administrator with full org management access'
   },
   {

@@ -36,7 +36,7 @@ const Sidebar = ({ role, activeMenu, setActiveMenu }) => {
           { id: 'inbox', label: 'Inbox', icon: MessageSquare },
           { id: 'analytics', label: 'Analytics', icon: BarChart3 },
           { id: 'knowledge', label: 'Knowledge Base', icon: BookOpen },
-          { id: 'automations', label: 'Automations', icon: Workflow },
+          // { id: 'automations', label: 'Automations', icon: Workflow },
           { id: 'settings', label: 'Settings', icon: Settings }
         ];
       case 'agent':
