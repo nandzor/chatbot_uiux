@@ -8,6 +8,7 @@ const Select = React.forwardRef(({
   onValueChange, 
   defaultValue,
   className,
+  placeholder = "Select option",
   ...props 
 }, ref) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -25,39 +26,71 @@ const Select = React.forwardRef(({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    if (value !== undefined) {
+      setSelectedValue(value);
+    }
+  }, [value]);
+
   const handleSelect = (value) => {
     setSelectedValue(value);
     onValueChange?.(value);
     setIsOpen(false);
   };
 
+  const toggleOpen = () => {
+    setIsOpen(!isOpen);
+  };
+
+  // Find the selected item's display text
+  const getDisplayText = () => {
+    if (!selectedValue) return placeholder;
+    
+    // Look through children to find the selected value
+    let displayText = selectedValue;
+    React.Children.forEach(children, (child) => {
+      if (React.isValidElement(child) && child.type === SelectItem && child.props.value === selectedValue) {
+        displayText = child.props.children;
+      }
+    });
+    
+    return displayText;
+  };
+
   return (
     <div ref={selectRef} className="relative">
-      <SelectTrigger 
-        ref={ref}
-        onClick={() => setIsOpen(!isOpen)}
-        className={className}
+      <button
+        type="button"
+        onClick={toggleOpen}
+        className={cn(
+          "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+          className
+        )}
         {...props}
       >
-        <SelectValue value={selectedValue} />
-        <ChevronDown className="h-4 w-4 opacity-50" />
-      </SelectTrigger>
+        <span className="text-left">
+          {getDisplayText()}
+        </span>
+        <ChevronDown className={cn("h-4 w-4 transition-transform", isOpen && "rotate-180")} />
+      </button>
       
       {isOpen && (
-        <SelectContent>
-          {React.Children.map(children, (child) => {
-            if (React.isValidElement(child) && child.type === SelectItem) {
-              return React.cloneElement(child, {
-                onClick: () => handleSelect(child.props.value),
-                className: cn(
-                  child.props.className,
-                  "cursor-pointer"
-                )
-              });
-            }
-            return child;
-          })}
-        </SelectContent>
+        <div className="absolute top-full z-50 mt-1 w-full rounded-md border bg-popover text-popover-foreground shadow-md">
+          <div className="p-1">
+            {React.Children.map(children, (child) => {
+              if (React.isValidElement(child) && child.type === SelectItem) {
+                return React.cloneElement(child, {
+                  onClick: () => handleSelect(child.props.value),
+                  className: cn(
+                    child.props.className,
+                    "cursor-pointer"
+                  )
+                });
+              }
+              return child;
+            })}
+          </div>
+        </div>
       )}
     </div>
   );
@@ -65,48 +98,11 @@ const Select = React.forwardRef(({
 
 Select.displayName = "Select";
 
-const SelectTrigger = React.forwardRef(({ className, children, ...props }, ref) => (
-  <button
-    ref={ref}
-    className={cn(
-      "flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-      className
-    )}
-    {...props}
-  >
-    {children}
-  </button>
-));
-SelectTrigger.displayName = "SelectTrigger";
-
-const SelectValue = React.forwardRef(({ value, placeholder = "Select option", ...props }, ref) => (
-  <span ref={ref} className="text-left" {...props}>
-    {value || placeholder}
-  </span>
-));
-SelectValue.displayName = "SelectValue";
-
-const SelectContent = React.forwardRef(({ className, children, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      "absolute top-full z-50 mt-1 w-full rounded-md border bg-popover text-popover-foreground shadow-md",
-      className
-    )}
-    {...props}
-  >
-    <div className="p-1">
-      {children}
-    </div>
-  </div>
-));
-SelectContent.displayName = "SelectContent";
-
 const SelectItem = React.forwardRef(({ className, value, children, ...props }, ref) => (
   <div
     ref={ref}
     className={cn(
-      "relative flex w-full cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      "relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       className
     )}
     {...props}
@@ -115,5 +111,10 @@ const SelectItem = React.forwardRef(({ className, value, children, ...props }, r
   </div>
 ));
 SelectItem.displayName = "SelectItem";
+
+// Export komponen yang diperlukan untuk kompatibilitas
+const SelectTrigger = Select;
+const SelectValue = ({ children }) => children;
+const SelectContent = ({ children }) => children;
 
 export { Select, SelectTrigger, SelectValue, SelectContent, SelectItem };
