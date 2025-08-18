@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import InboxManagement from './InboxManagement';
 import { 
   Search, 
   Send, 
@@ -60,6 +61,9 @@ import {
 import { formatTimeAgo, formatTime } from '../../utils/dateUtils';
 
 const SessionManager = () => {
+  // Main view state
+  const [activeView, setActiveView] = useState('sessions'); // 'sessions' or 'manage-inbox'
+  
   // State untuk panel kiri
   const [selectedSession, setSelectedSession] = useState(null);
   const [filterChannel, setFilterChannel] = useState('all');
@@ -291,6 +295,11 @@ const SessionManager = () => {
     );
   };
 
+  // Conditional rendering based on activeView
+  if (activeView === 'manage-inbox') {
+    return <InboxManagement />;
+  }
+
   return (
     <div className="h-[calc(100vh-6rem)] flex gap-4">
       {/* Panel Kiri - Daftar Sesi */}
@@ -298,9 +307,18 @@ const SessionManager = () => {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg">Session Manager</CardTitle>
-            <Badge variant="secondary">
-              {filteredSessions.filter(s => s.status === 'active').length} Aktif
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary">
+                {filteredSessions.filter(s => s.status === 'active').length} Aktif
+              </Badge>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => setActiveView('manage-inbox')}
+              >
+                <Settings className="w-4 h-4" />
+              </Button>
+            </div>
           </div>
           
           {/* Pencarian */}

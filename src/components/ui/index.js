@@ -22,3 +22,4 @@ export {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from './DropdownMenu';
+export { Progress } from './Progress';
