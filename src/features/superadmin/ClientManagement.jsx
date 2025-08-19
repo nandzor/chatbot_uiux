@@ -5,44 +5,49 @@ import {
   CardDescription, 
   CardHeader, 
   CardTitle,
-  Button,
-  Badge,
-  Input,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
+  Badge,
+  Button,
+  Input,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger
+  Progress
 } from '@/components/ui';
 import { 
-  Building2,
-  Search,
-  Filter,
-  Eye,
-  MoreHorizontal,
-  UserCheck,
-  Ban,
-  KeyRound,
+  Search, 
+  Filter, 
+  MoreHorizontal, 
+  Eye, 
+  Play,
+  Pause,
   LogIn,
+  KeyRound,
+  Ban,
   Plus,
+  TrendingUp,
   Users,
-  CreditCard,
+  MessageSquare,
+  Calendar,
   Activity,
-  Calendar
+  AlertCircle,
+  CheckCircle,
+  Clock
 } from 'lucide-react';
 
 const ClientManagement = () => {
@@ -50,7 +55,7 @@ const ClientManagement = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedOrg, setSelectedOrg] = useState(null);
 
-  // Sample organizations data
+  // Sample organizations data with Client Health Score
   const [organizations] = useState([
     {
       id: 'org-001',
@@ -64,7 +69,9 @@ const ClientManagement = () => {
       userCount: 25,
       agentCount: 8,
       messagesThisMonth: 4520,
-      lastLogin: '2024-03-19 14:30:25'
+      lastLogin: '2024-03-19 14:30:25',
+      healthScore: 92,
+      tags: ['VIP', 'High Usage']
     },
     {
       id: 'org-002',
@@ -78,7 +85,9 @@ const ClientManagement = () => {
       userCount: 5,
       agentCount: 2,
       messagesThisMonth: 850,
-      lastLogin: '2024-03-20 09:15:42'
+      lastLogin: '2024-03-20 09:15:42',
+      healthScore: 78,
+      tags: ['Beta Tester', 'Growing']
     },
     {
       id: 'org-003',
@@ -92,7 +101,9 @@ const ClientManagement = () => {
       userCount: 12,
       agentCount: 4,
       messagesThisMonth: 0,
-      lastLogin: '2024-02-28 16:45:12'
+      lastLogin: '2024-02-28 16:45:12',
+      healthScore: 45,
+      tags: ['At-Risk', 'Low Usage']
     },
     {
       id: 'org-004',
@@ -106,7 +117,9 @@ const ClientManagement = () => {
       userCount: 15,
       agentCount: 6,
       messagesThisMonth: 2890,
-      lastLogin: '2024-03-20 11:22:18'
+      lastLogin: '2024-03-20 11:22:18',
+      healthScore: 85,
+      tags: ['Stable', 'Medium Usage']
     }
   ]);
 
@@ -121,25 +134,35 @@ const ClientManagement = () => {
           amount: '$299/month'
         },
         usage: {
-          users: { current: 25, limit: 50 },
-          agents: { current: 8, limit: 20 },
-          messages: { current: 4520, limit: 10000 }
+          users: { current: 25, limit: 50, percentage: 50 },
+          agents: { current: 8, limit: 20, percentage: 40 },
+          messages: { current: 4520, limit: 10000, percentage: 45.2 },
+          storage: { current: 15.5, limit: 100, percentage: 15.5 }
+        },
+        adoption: {
+          features: {
+            'AI Chatbot': { used: true, usage: 'High' },
+            'Workflow Automation': { used: true, usage: 'Medium' },
+            'Analytics Dashboard': { used: true, usage: 'High' },
+            'Multi-language Support': { used: false, usage: 'Not Used' }
+          }
         }
       },
       users: [
-        { id: 1, name: 'Ahmad Rahman', email: 'ahmad.rahman@abccorp.com', role: 'org_admin', lastLogin: '2024-03-20 10:30:00' },
-        { id: 2, name: 'Sari Dewi', email: 'sari.dewi@abccorp.com', role: 'agent', lastLogin: '2024-03-20 14:15:00' },
-        { id: 3, name: 'Budi Santoso', email: 'budi.santoso@abccorp.com', role: 'agent', lastLogin: '2024-03-19 16:45:00' }
+        { id: 1, name: 'Ahmad Rahman', email: 'ahmad.rahman@abccorp.com', role: 'org_admin', lastLogin: '2024-03-20 10:30:00', status: 'active' },
+        { id: 2, name: 'Sari Dewi', email: 'sari.dewi@abccorp.com', role: 'agent', lastLogin: '2024-03-20 14:15:00', status: 'active' },
+        { id: 3, name: 'Budi Santoso', email: 'budi.santoso@abccorp.com', role: 'agent', lastLogin: '2024-03-19 16:45:00', status: 'active' },
+        { id: 4, name: 'Diana Putri', email: 'diana.putri@abccorp.com', role: 'viewer', lastLogin: '2024-03-18 11:20:00', status: 'inactive' }
       ],
       billing: [
-        { id: 1, date: '2024-03-15', amount: '$299.00', status: 'paid', description: 'Enterprise Plan - March' },
-        { id: 2, date: '2024-02-15', amount: '$299.00', status: 'paid', description: 'Enterprise Plan - February' },
-        { id: 3, date: '2024-01-15', amount: '$299.00', status: 'paid', description: 'Enterprise Plan - January' }
+        { id: 1, date: '2024-03-15', amount: '$299.00', status: 'paid', description: 'Enterprise Plan - March', invoice: 'INV-2024-001' },
+        { id: 2, date: '2024-02-15', amount: '$299.00', status: 'paid', description: 'Enterprise Plan - February', invoice: 'INV-2024-002' },
+        { id: 3, date: '2024-01-15', amount: '$299.00', status: 'paid', description: 'Enterprise Plan - January', invoice: 'INV-2024-003' }
       ],
       workflows: [
-        { id: 1, name: 'Customer Onboarding', status: 'active', executions: 245, lastRun: '2024-03-20 13:45:00' },
-        { id: 2, name: 'Lead Qualification', status: 'active', executions: 189, lastRun: '2024-03-20 12:30:00' },
-        { id: 3, name: 'Support Escalation', status: 'paused', executions: 67, lastRun: '2024-03-18 09:15:00' }
+        { id: 1, name: 'Customer Onboarding', status: 'active', executions: 245, lastRun: '2024-03-20 13:45:00', successRate: 98.5 },
+        { id: 2, name: 'Lead Qualification', status: 'active', executions: 189, lastRun: '2024-03-20 12:30:00', successRate: 95.2 },
+        { id: 3, name: 'Support Escalation', status: 'paused', executions: 67, lastRun: '2024-03-18 09:15:00', successRate: 87.3 }
       ]
     }
   });
@@ -172,6 +195,34 @@ const ClientManagement = () => {
     );
   };
 
+  const getHealthScoreBadge = (score) => {
+    let variant = 'default';
+    let color = 'text-gray-600';
+    
+    if (score >= 90) {
+      variant = 'green';
+      color = 'text-green-600';
+    } else if (score >= 70) {
+      variant = 'blue';
+      color = 'text-blue-600';
+    } else if (score >= 50) {
+      variant = 'yellow';
+      color = 'text-yellow-600';
+    } else {
+      variant = 'red';
+      color = 'text-red-600';
+    }
+
+    return (
+      <div className="flex items-center gap-2">
+        <Badge variant={variant}>{score}</Badge>
+        <span className={`text-xs ${color}`}>
+          {score >= 90 ? 'Excellent' : score >= 70 ? 'Good' : score >= 50 ? 'Fair' : 'Poor'}
+        </span>
+      </div>
+    );
+  };
+
   const handleViewDetails = (org) => {
     setSelectedOrg(org);
   };
@@ -201,6 +252,7 @@ const ClientManagement = () => {
           <div className="ml-auto flex gap-2">
             {getStatusBadge(selectedOrg.status)}
             <Badge variant="outline">{selectedOrg.planName}</Badge>
+            {getHealthScoreBadge(selectedOrg.healthScore)}
           </div>
         </div>
 
@@ -208,7 +260,7 @@ const ClientManagement = () => {
         <Tabs defaultValue="overview" className="w-full">
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="users">Users</TabsTrigger>
+            <TabsTrigger value="users">Users & Agents</TabsTrigger>
             <TabsTrigger value="billing">Subscription & Billing</TabsTrigger>
             <TabsTrigger value="workflows">N8N Workflows</TabsTrigger>
           </TabsList>
@@ -228,7 +280,7 @@ const ClientManagement = () => {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Status</span>
-                    <Badge>{details?.overview.subscription.status}</Badge>
+                    <Badge variant="green">{details?.overview.subscription.status}</Badge>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Next Billing</span>
@@ -253,24 +305,43 @@ const ClientManagement = () => {
                         <span className="text-muted-foreground capitalize">{key}</span>
                         <span className="text-sm">{usage.current}/{usage.limit}</span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-blue-500 h-2 rounded-full" 
-                          style={{width: `${(usage.current / usage.limit) * 100}%`}}
-                        ></div>
-                      </div>
+                      <Progress value={usage.percentage} className="h-2" />
                     </div>
                   ))}
                 </CardContent>
               </Card>
             </div>
+
+            {/* Feature Adoption */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Feature Adoption</CardTitle>
+                <CardDescription>How the organization is using platform features</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {details?.overview.adoption?.features && Object.entries(details.overview.adoption.features).map(([feature, data]) => (
+                    <div key={feature} className="flex items-center justify-between p-3 border rounded-lg">
+                      <span className="font-medium">{feature}</span>
+                      <div className="flex items-center gap-2">
+                        {data.used ? (
+                          <Badge variant={data.usage === 'High' ? 'green' : 'blue'}>{data.usage}</Badge>
+                        ) : (
+                          <Badge variant="default">Not Used</Badge>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Users Tab */}
           <TabsContent value="users">
             <Card>
               <CardHeader>
-                <CardTitle>Organization Users</CardTitle>
+                <CardTitle>Organization Users & Agents</CardTitle>
                 <CardDescription>Manage users within this organization</CardDescription>
               </CardHeader>
               <CardContent>
@@ -280,6 +351,7 @@ const ClientManagement = () => {
                       <TableHead>Name</TableHead>
                       <TableHead>Email</TableHead>
                       <TableHead>Role</TableHead>
+                      <TableHead>Status</TableHead>
                       <TableHead>Last Login</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -290,6 +362,11 @@ const ClientManagement = () => {
                         <TableCell>{user.email}</TableCell>
                         <TableCell>
                           <Badge variant="outline">{user.role}</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={user.status === 'active' ? 'green' : 'default'}>
+                            {user.status}
+                          </Badge>
                         </TableCell>
                         <TableCell className="text-muted-foreground">{user.lastLogin}</TableCell>
                       </TableRow>
@@ -313,6 +390,7 @@ const ClientManagement = () => {
                     <TableRow>
                       <TableHead>Date</TableHead>
                       <TableHead>Description</TableHead>
+                      <TableHead>Invoice</TableHead>
                       <TableHead>Amount</TableHead>
                       <TableHead>Status</TableHead>
                     </TableRow>
@@ -322,9 +400,10 @@ const ClientManagement = () => {
                       <TableRow key={transaction.id}>
                         <TableCell>{transaction.date}</TableCell>
                         <TableCell>{transaction.description}</TableCell>
+                        <TableCell className="font-mono text-sm">{transaction.invoice}</TableCell>
                         <TableCell className="font-medium">{transaction.amount}</TableCell>
                         <TableCell>
-                          <Badge variant={transaction.status === 'paid' ? 'default' : 'secondary'}>
+                          <Badge variant={transaction.status === 'paid' ? 'green' : 'default'}>
                             {transaction.status}
                           </Badge>
                         </TableCell>
@@ -350,6 +429,7 @@ const ClientManagement = () => {
                       <TableHead>Workflow Name</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead>Total Executions</TableHead>
+                      <TableHead>Success Rate</TableHead>
                       <TableHead>Last Run</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -358,11 +438,16 @@ const ClientManagement = () => {
                       <TableRow key={workflow.id}>
                         <TableCell className="font-medium">{workflow.name}</TableCell>
                         <TableCell>
-                          <Badge variant={workflow.status === 'active' ? 'default' : 'secondary'}>
+                          <Badge variant={workflow.status === 'active' ? 'green' : 'default'}>
                             {workflow.status}
                           </Badge>
                         </TableCell>
                         <TableCell>{workflow.executions}</TableCell>
+                        <TableCell>
+                          <Badge variant={workflow.successRate >= 95 ? 'green' : workflow.successRate >= 85 ? 'blue' : 'yellow'}>
+                            {workflow.successRate}%
+                          </Badge>
+                        </TableCell>
                         <TableCell className="text-muted-foreground">{workflow.lastRun}</TableCell>
                       </TableRow>
                     ))}
@@ -381,8 +466,8 @@ const ClientManagement = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Client Management</h1>
-          <p className="text-muted-foreground">Manage organizations and their subscriptions</p>
+          <h1 className="text-3xl font-bold text-foreground">Client Success & Management</h1>
+          <p className="text-muted-foreground">Manage entire client lifecycle proactively, from onboarding to retention</p>
         </div>
         <Button>
           <Plus className="w-4 h-4 mr-2" />
@@ -426,10 +511,9 @@ const ClientManagement = () => {
               <TableRow>
                 <TableHead>Organization</TableHead>
                 <TableHead>Code</TableHead>
+                <TableHead>Health Score</TableHead>
                 <TableHead>Plan</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Users</TableHead>
-                <TableHead>Messages</TableHead>
                 <TableHead>Created</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -441,20 +525,23 @@ const ClientManagement = () => {
                     <div>
                       <div className="font-medium">{org.name}</div>
                       <div className="text-sm text-muted-foreground">{org.email}</div>
+                      {org.tags && org.tags.length > 0 && (
+                        <div className="flex gap-1 mt-1">
+                          {org.tags.map((tag, index) => (
+                            <Badge key={index} variant="outline" className="text-xs">
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell className="font-mono text-sm">{org.orgCode}</TableCell>
+                  <TableCell>{getHealthScoreBadge(org.healthScore)}</TableCell>
                   <TableCell>
                     <Badge variant="outline">{org.planName}</Badge>
                   </TableCell>
                   <TableCell>{getStatusBadge(org.status)}</TableCell>
-                  <TableCell>
-                    <div className="text-sm">
-                      <div>{org.userCount} users</div>
-                      <div className="text-muted-foreground">{org.agentCount} agents</div>
-                    </div>
-                  </TableCell>
-                  <TableCell>{org.messagesThisMonth.toLocaleString()}</TableCell>
                   <TableCell className="text-muted-foreground">{org.createdAt}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">

@@ -22,7 +22,18 @@ const SuperAdminLayout = () => {
   const navigation = [
     { name: 'Dashboard', href: '/superadmin', icon: BarChart3 },
     { name: 'Financials', href: '/superadmin/financials', icon: DollarSign },
-    { name: 'Client Management', href: '/superadmin/clients', icon: Users },
+    { 
+      name: 'Client Success & Management', 
+      href: '/superadmin/clients', 
+      icon: Users,
+      submenu: [
+        { name: 'Client Health Dashboard', href: '/superadmin/client-health' },
+        { name: 'Organizations', href: '/superadmin/clients' },
+        { name: 'Onboarding Pipeline', href: '/superadmin/onboarding' },
+        { name: 'Automation & Playbooks', href: '/superadmin/automation' },
+        { name: 'Communication Center', href: '/superadmin/communication' }
+      ]
+    },
     { name: 'System Settings', href: '/superadmin/system', icon: Settings },
   ];
 

@@ -10,6 +10,7 @@ export { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFoo
 export { Avatar, AvatarFallback, AvatarImage } from './Avatar';
 export { default as Separator } from './Separator';
 export { default as Switch } from './Switch';
+export { default as Checkbox } from './Checkbox';
 export { default as Textarea } from './Textarea';
 export { Alert, AlertDescription } from './Alert';
 export { ChartContainer, ChartTooltip, ChartTooltipContent } from './ChartComponents';
@@ -31,6 +32,7 @@ export {
   DialogDescription, 
   DialogClose, 
   DialogBody, 
-  DialogFooter 
+  DialogFooter,
+  DialogTrigger
 } from './Dialog';
 export { default as Breadcrumb } from './Breadcrumb';

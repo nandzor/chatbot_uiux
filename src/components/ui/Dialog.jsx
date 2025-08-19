@@ -147,6 +147,29 @@ const DialogFooter = React.forwardRef(({
 ));
 DialogFooter.displayName = "DialogFooter";
 
+const DialogTrigger = React.forwardRef(({ 
+  asChild = false,
+  children, 
+  ...props 
+}, ref) => {
+  if (asChild) {
+    return React.cloneElement(children, {
+      ref,
+      ...props
+    });
+  }
+  
+  return (
+    <div
+      ref={ref}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+});
+DialogTrigger.displayName = "DialogTrigger";
+
 export { 
   Dialog, 
   DialogContent, 
@@ -155,5 +178,6 @@ export {
   DialogDescription, 
   DialogClose, 
   DialogBody, 
-  DialogFooter 
+  DialogFooter,
+  DialogTrigger
 };

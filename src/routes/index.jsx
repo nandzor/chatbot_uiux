@@ -36,6 +36,22 @@ import AgentProfile from '@/pages/agent/Profile';
 // UI Components Demo
 import BadgeDemo from '@/components/ui/BadgeDemo';
 
+// Client Success & Management
+import ClientHealthDashboard from '@/features/superadmin/ClientHealthDashboard';
+import OnboardingPipeline from '@/features/superadmin/OnboardingPipeline';
+import AutomationPlaybooks from '@/features/superadmin/AutomationPlaybooks';
+import ClientCommunicationCenter from '@/features/superadmin/ClientCommunicationCenter';
+
+// Client Layout and Components
+import ClientLayout from '@/layouts/ClientLayout';
+import ClientOverview from '@/features/client/ClientOverview';
+import ClientCommunication from '@/features/client/ClientCommunication';
+import ClientUsers from '@/features/client/ClientUsers';
+import ClientBilling from '@/features/client/ClientBilling';
+import ClientWorkflows from '@/features/client/ClientWorkflows';
+import ClientNotes from '@/features/client/ClientNotes';
+import ClientSuccessPlays from '@/features/client/ClientSuccessPlays';
+
 // Error Pages
 import NotFound from '@/pages/errors/NotFound';
 import Unauthorized from '@/pages/errors/Unauthorized';
@@ -144,6 +160,21 @@ export const router = createBrowserRouter([
 
       // UI Demo Routes
       { path: '/demo/badge', element: <BadgeDemo /> },
+
+      // Client Success & Management Routes
+      { path: '/superadmin/client-health', element: <ClientHealthDashboard /> },
+      { path: '/superadmin/onboarding', element: <OnboardingPipeline /> },
+      { path: '/superadmin/automation', element: <AutomationPlaybooks /> },
+      { path: '/superadmin/communication', element: <ClientCommunicationCenter /> },
+
+      // Nested Client Routes - Inside SuperAdmin Layout
+      { path: '/superadmin/clients/:clientId', element: <ClientLayout /> },
+      { path: '/superadmin/clients/:clientId/users', element: <ClientLayout /> },
+      { path: '/superadmin/clients/:clientId/billing', element: <ClientLayout /> },
+      { path: '/superadmin/clients/:clientId/workflows', element: <ClientLayout /> },
+      { path: '/superadmin/clients/:clientId/communication', element: <ClientLayout /> },
+      { path: '/superadmin/clients/:clientId/notes', element: <ClientLayout /> },
+      { path: '/superadmin/clients/:clientId/success-plays', element: <ClientLayout /> },
 
       // Error Routes
       { path: '/unauthorized', element: <Unauthorized /> },
