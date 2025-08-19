@@ -109,8 +109,8 @@ const SuperAdminDashboard = () => {
           <CardContent>
             <div className="space-y-3">
               <button className="w-full text-left p-3 rounded-lg border hover:bg-gray-50 transition-colors">
-                <div className="font-medium">Manage Users</div>
-                <div className="text-sm text-gray-500">Add, edit, or remove user accounts</div>
+                <div className="font-medium">Client Management</div>
+                <div className="text-sm text-gray-500">Manage organizations and clients</div>
               </button>
               <button className="w-full text-left p-3 rounded-lg border hover:bg-gray-50 transition-colors">
                 <div className="font-medium">View Financials</div>

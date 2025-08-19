@@ -28,7 +28,7 @@ const Sidebar = ({ role }) => {
       case 'superadmin':
         return [
           { id: 'dashboard', label: 'Platform Dashboard', icon: Home, href: '/superadmin' },
-          { id: 'organizations', label: 'Organizations', icon: Building2, href: '/superadmin/organizations' },
+          { id: 'clients', label: 'Client Management', icon: Building2, href: '/superadmin/clients' },
           { id: 'subscriptions', label: 'Subscription Plans', icon: CreditCard, href: '/superadmin/financials' },
           { id: 'system', label: 'System Health', icon: Activity, href: '/superadmin/system' },
           { id: 'audit', label: 'Audit Logs', icon: Shield, href: '/superadmin/audit' }

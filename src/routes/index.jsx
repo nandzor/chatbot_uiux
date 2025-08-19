@@ -25,7 +25,7 @@ import Settings from '@/pages/settings/Settings';
 // Super Admin Pages
 import SuperAdminDashboard from '@/pages/superadmin/Dashboard';
 import Financials from '@/pages/superadmin/Financials';
-import UserManagement from '@/pages/superadmin/UserManagement';
+import ClientManagement from '@/pages/superadmin/ClientManagement';
 import SystemSettings from '@/pages/superadmin/SystemSettings';
 
 // Agent Pages
@@ -119,7 +119,7 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <SuperAdminDashboard /> },
           { path: 'financials', element: <Financials /> },
-          { path: 'users', element: <UserManagement /> },
+          { path: 'clients', element: <ClientManagement /> },
           { path: 'system', element: <SystemSettings /> },
         ],
       },
