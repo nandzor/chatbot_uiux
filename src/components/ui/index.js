@@ -33,3 +33,4 @@ export {
   DialogBody, 
   DialogFooter 
 } from './Dialog';
+export { default as Breadcrumb } from './Breadcrumb';

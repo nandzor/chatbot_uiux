@@ -284,19 +284,19 @@ const Financials = () => {
 
         {/* Subscription Plans Tab */}
         <TabsContent value="plans" className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Subscription Plans</h2>
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-semibold">Subscription Plans</h2>
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => subscriptionPlansService.exportToJSON()}>
                 <Download className="w-4 h-4 mr-2" />
                 Export Data
               </Button>
               <Button onClick={handleCreatePlan}>
-                <Plus className="w-4 h-4 mr-2" />
-                Create New Plan
-              </Button>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create New Plan
+                </Button>
             </div>
-          </div>
+              </div>
 
               {isLoading ? (
                 <div className="flex justify-center items-center py-12">
@@ -304,7 +304,7 @@ const Financials = () => {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                  {subscriptionPlans.map((plan) => (
+                {subscriptionPlans.map((plan) => (
                   <Card key={plan.id} className={`relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105 ${
                     plan.tier === 'enterprise' ? 'border-2 border-purple-500 shadow-lg' :
                     plan.tier === 'professional' ? 'border-2 border-blue-500 shadow-md' :
@@ -444,8 +444,8 @@ const Financials = () => {
                     </CardContent>
                   </Card>
                 ))}
-                </div>
-              )}
+              </div>
+          )}
         </TabsContent>
 
         {/* Transactions Tab */}

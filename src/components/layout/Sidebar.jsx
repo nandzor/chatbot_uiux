@@ -1,4 +1,5 @@
 import React from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import UserAvatar from '../common/UserAvatar';
 import { 
@@ -18,32 +19,34 @@ import {
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui';
 
-const Sidebar = ({ role, activeMenu, setActiveMenu }) => {
+const Sidebar = ({ role }) => {
   const { user } = useAuth();
+  const location = useLocation();
+  
   const getSidebarItems = () => {
     switch(role) {
-      case 'super_admin':
+      case 'superadmin':
         return [
-          { id: 'dashboard', label: 'Platform Dashboard', icon: Home },
-          { id: 'organizations', label: 'Organizations', icon: Building2 },
-          { id: 'subscriptions', label: 'Subscription Plans', icon: CreditCard },
-          { id: 'system', label: 'System Health', icon: Activity },
-          { id: 'audit', label: 'Audit Logs', icon: Shield }
+          { id: 'dashboard', label: 'Platform Dashboard', icon: Home, href: '/superadmin' },
+          { id: 'organizations', label: 'Organizations', icon: Building2, href: '/superadmin/organizations' },
+          { id: 'subscriptions', label: 'Subscription Plans', icon: CreditCard, href: '/superadmin/financials' },
+          { id: 'system', label: 'System Health', icon: Activity, href: '/superadmin/system' },
+          { id: 'audit', label: 'Audit Logs', icon: Shield, href: '/superadmin/audit' }
         ];
-      case 'org_admin':
+      case 'organization_admin':
         return [
-          { id: 'dashboard', label: 'Dashboard', icon: Home },
-          { id: 'inbox', label: 'Inbox', icon: MessageSquare },
-          { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-          { id: 'knowledge', label: 'Knowledge Base', icon: BookOpen },
-          // { id: 'automations', label: 'Automations', icon: Workflow },
-          { id: 'settings', label: 'Settings', icon: Settings }
+          { id: 'dashboard', label: 'Dashboard', icon: Home, href: '/dashboard' },
+          { id: 'inbox', label: 'Inbox', icon: MessageSquare, href: '/dashboard/inbox' },
+          { id: 'analytics', label: 'Analytics', icon: BarChart3, href: '/dashboard/analytics' },
+          { id: 'knowledge', label: 'Knowledge Base', icon: BookOpen, href: '/dashboard/knowledge' },
+          { id: 'automations', label: 'Automations', icon: Workflow, href: '/dashboard/automations' },
+          { id: 'settings', label: 'Settings', icon: Settings, href: '/dashboard/settings' }
         ];
       case 'agent':
         return [
-          { id: 'my-dashboard', label: 'My Dashboard', icon: Home },
-          { id: 'inbox', label: 'Inbox (Percakapan)', icon: MessageSquare },
-          { id: 'my-profile', label: 'My Profile & Settings', icon: User }
+          { id: 'dashboard', label: 'My Dashboard', icon: Home, href: '/agent' },
+          { id: 'inbox', label: 'Inbox (Percakapan)', icon: MessageSquare, href: '/agent/inbox' },
+          { id: 'profile', label: 'My Profile & Settings', icon: User, href: '/agent/profile' }
         ];
       default:
         return [];
@@ -61,26 +64,33 @@ const Sidebar = ({ role, activeMenu, setActiveMenu }) => {
           </div>
           <div>
             <h1 className="text-lg font-bold text-foreground">ChatBot Pro</h1>
-            <p className="text-xs text-muted-foreground capitalize">{role.replace('_', ' ')}</p>
+            <p className="text-xs text-muted-foreground capitalize">
+              {role === 'superadmin' ? 'Super Admin' : 
+               role === 'organization_admin' ? 'Organization Admin' : 
+               role === 'agent' ? 'Agent' : role.replace('_', ' ')}
+            </p>
           </div>
         </div>
         
         <nav className="space-y-2">
           {sidebarItems.map(item => {
             const Icon = item.icon;
+            const isActive = location.pathname === item.href || 
+                           (item.href !== '/dashboard' && location.pathname.startsWith(item.href));
+            
             return (
-              <button
+              <NavLink
                 key={item.id}
-                onClick={() => setActiveMenu(item.id)}
+                to={item.href}
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all ${
-                  activeMenu === item.id 
+                  isActive
                     ? 'bg-gradient-to-r from-blue-500/10 to-purple-500/10 text-primary border-l-4 border-primary' 
                     : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
                 }`}
               >
                 <Icon className="w-5 h-5" />
                 <span className="text-sm font-medium">{item.label}</span>
-              </button>
+              </NavLink>
             );
           })}
         </nav>
