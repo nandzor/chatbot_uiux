@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
 import { 
   Card, 
   CardContent, 
@@ -8,384 +7,529 @@ import {
   CardTitle,
   Badge,
   Button,
+  Progress,
   Tabs,
   TabsContent,
   TabsList,
-  TabsTrigger
+  TabsTrigger,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '@/components/ui';
 import { 
   MessageSquare,
-  Star,
   Clock,
   TrendingUp,
-  Trophy,
+  TrendingDown,
   Target,
-  BarChart3,
+  Star,
   Users,
-  Zap,
+  BarChart3,
+  Calendar,
+  CheckCircle,
+  AlertCircle,
+  ArrowUp,
+  ArrowDown,
+  Minus,
+  Activity,
+  Bell,
   Award,
+  Zap,
   Timer,
-  CheckCircle
+  MessageCircle,
+  ThumbsUp,
+  Coffee
 } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 
 const AgentDashboard = () => {
-  const { user } = useAuth();
-  const [timeRange, setTimeRange] = useState('7days');
+  const [timeFrame, setTimeFrame] = useState('7d');
+  const [currentTime, setCurrentTime] = useState(new Date());
 
-  // Sample data untuk Agent Performance
-  const [agentMetrics] = useState({
-    currentActiveChats: 3,
-    csat: 4.7,
-    aht: '2m 34s',
-    totalChatsToday: 12,
-    totalChatsThisWeek: 67,
-    resolvedChats: 89,
-    avgFirstResponseTime: '45s'
-  });
-
-  // Sample data untuk Historical Performance
-  const [performanceData] = useState({
-    '7days': {
-      csat: [4.2, 4.5, 4.3, 4.6, 4.8, 4.7, 4.7],
-      aht: [180, 165, 150, 145, 160, 154, 150], // in seconds
-      chatsHandled: [8, 12, 15, 11, 14, 16, 12],
-      labels: ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min']
+  // Mock data untuk agent performance
+  const [agentMetrics, setAgentMetrics] = useState({
+    realtime: {
+      activeChats: 5,
+      pendingChats: 2,
+      avgResponseTime: '2.3 menit',
+      currentCSAT: 4.7,
+      todayResolved: 12,
+      onlineTime: '6h 45m'
     },
-    '30days': {
-      csat: [4.1, 4.3, 4.2, 4.4, 4.6, 4.5, 4.7],
-      aht: [200, 185, 170, 165, 160, 155, 150],
-      chatsHandled: [45, 52, 48, 55, 62, 58, 67],
-      labels: ['Minggu 1', 'Minggu 2', 'Minggu 3', 'Minggu 4', 'Minggu 5', 'Minggu 6', 'Minggu 7']
-    }
+    goals: {
+      monthly: {
+        targetCSAT: 4.5,
+        currentCSAT: 4.7,
+        targetResolutions: 100,
+        currentResolutions: 78,
+        targetAHT: '5 menit',
+        currentAHT: '4.2 menit'
+      }
+    },
+    followUps: [
+      {
+        id: 1,
+        customer: 'PT Maju Jaya',
+        issue: 'Masalah integrasi API',
+        priority: 'high',
+        dueDate: '2024-01-26T14:00:00Z',
+        tags: ['technical', 'api']
+      },
+      {
+        id: 2,
+        customer: 'CV Digital Solution',
+        issue: 'Follow-up training user',
+        priority: 'medium',
+        dueDate: '2024-01-27T10:00:00Z',
+        tags: ['training', 'onboarding']
+      },
+      {
+        id: 3,
+        customer: 'StartupXYZ',
+        issue: 'Konfirmasi upgrade plan',
+        priority: 'low',
+        dueDate: '2024-01-28T16:00:00Z',
+        tags: ['sales', 'upgrade']
+      }
+    ]
   });
 
-  // Sample data untuk Leaderboard
-  const [leaderboard] = useState([
-    { id: 1, name: 'Sari Dewi', csat: 4.9, chatsHandled: 89, avatar: 'sari.dewi@company.com', isCurrentUser: true },
-    { id: 2, name: 'Rina Sari', csat: 4.8, chatsHandled: 82, avatar: 'rina.sari@company.com' },
-    { id: 3, name: 'Budi Santoso', csat: 4.6, chatsHandled: 76, avatar: 'budi.santoso@company.com' },
-    { id: 4, name: 'Maya Putri', csat: 4.5, chatsHandled: 71, avatar: 'maya.putri@company.com' },
-    { id: 5, name: 'Andi Pratama', csat: 4.4, chatsHandled: 68, avatar: 'andi.pratama@company.com' }
+  // Mock data untuk trend performance
+  const [performanceTrend, setPerformanceTrend] = useState([
+    { date: '19 Jan', csat: 4.2, aht: 5.1, resolved: 8 },
+    { date: '20 Jan', csat: 4.4, aht: 4.8, resolved: 12 },
+    { date: '21 Jan', csat: 4.3, aht: 5.2, resolved: 9 },
+    { date: '22 Jan', csat: 4.6, aht: 4.5, resolved: 15 },
+    { date: '23 Jan', csat: 4.5, aht: 4.7, resolved: 11 },
+    { date: '24 Jan', csat: 4.8, aht: 4.2, resolved: 14 },
+    { date: '25 Jan', csat: 4.7, aht: 4.3, resolved: 12 }
   ]);
 
-  const getPerformanceIcon = (metric) => {
-    switch (metric) {
-      case 'csat':
-        return <Star className="w-4 h-4 text-yellow-500" />;
-      case 'aht':
-        return <Clock className="w-4 h-4 text-blue-500" />;
-      case 'chats':
-        return <MessageSquare className="w-4 h-4 text-green-500" />;
-      default:
-        return <BarChart3 className="w-4 h-4 text-purple-500" />;
+  // Mock data untuk achievements
+  const [achievements, setAchievements] = useState([
+    {
+      id: 1,
+      title: 'Customer Hero',
+      description: 'Mencapai CSAT 4.5+ selama 7 hari berturut-turut',
+      icon: Award,
+      unlocked: true,
+      unlockedDate: '2024-01-20'
+    },
+    {
+      id: 2,
+      title: 'Speed Master',
+      description: 'Average Handle Time di bawah 5 menit',
+      icon: Zap,
+      unlocked: true,
+      unlockedDate: '2024-01-22'
+    },
+    {
+      id: 3,
+      title: 'Resolution Expert',
+      description: 'Menyelesaikan 50+ chat dalam sebulan',
+      icon: Target,
+      unlocked: false,
+      progress: 78
     }
+  ]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  const getMetricTrend = (current, previous) => {
+    if (current > previous) return { icon: TrendingUp, color: 'text-green-500', direction: 'up' };
+    if (current < previous) return { icon: TrendingDown, color: 'text-red-500', direction: 'down' };
+    return { icon: Minus, color: 'text-gray-500', direction: 'stable' };
   };
 
-  const getCurrentUserRank = () => {
-    const currentUserIndex = leaderboard.findIndex(agent => agent.isCurrentUser);
-    return currentUserIndex + 1;
+  const getPriorityBadge = (priority) => {
+    const config = {
+      high: { color: 'red', label: 'High' },
+      medium: { color: 'yellow', label: 'Medium' },
+      low: { color: 'green', label: 'Low' }
+    };
+    const priorityConfig = config[priority] || config.medium;
+    return <Badge variant={priorityConfig.color}>{priorityConfig.label}</Badge>;
   };
 
-  const formatTime = (seconds) => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}m ${remainingSeconds}s`;
+  const formatTimeRemaining = (dueDate) => {
+    const now = new Date();
+    const due = new Date(dueDate);
+    const diff = due - now;
+    
+    if (diff < 0) return 'Overdue';
+    
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (hours > 24) {
+      const days = Math.floor(hours / 24);
+      return `${days}d ${hours % 24}h`;
+    }
+    
+    return hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
   };
 
   return (
-    <div className="space-y-4 lg:space-y-6 max-w-full overflow-hidden">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl lg:text-3xl font-bold text-foreground">My Dashboard</h1>
-        <p className="text-sm lg:text-base text-muted-foreground">
-          Hai {user?.name}! Berikut adalah performa kerja dan metrik personal Anda.
-        </p>
+    <div className="space-y-6">
+      {/* Header dengan Real-time Status */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">My Dashboard</h1>
+          <div className="flex items-center space-x-4 mt-2">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+              <span className="text-sm text-gray-600">Online sejam {agentMetrics.realtime.onlineTime}</span>
+            </div>
+            <div className="text-sm text-gray-500">
+              {currentTime.toLocaleTimeString('id-ID')} WIB
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center space-x-3">
+          <Button variant="outline" size="sm">
+            <Calendar className="w-4 h-4 mr-2" />
+            {timeFrame === '7d' ? '7 Hari' : '30 Hari'}
+          </Button>
+          <Button variant="outline" size="sm">
+            <Coffee className="w-4 h-4 mr-2" />
+            Break
+          </Button>
+        </div>
       </div>
 
-      {/* Key Metrics - Real-time */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6">
-        {/* Active Chats */}
+      {/* Real-time Metrics */}
+      <div className="grid grid-cols-6 gap-6">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Obrolan Aktif</CardTitle>
-            <MessageSquare className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{agentMetrics.currentActiveChats}</div>
-            <p className="text-xs text-muted-foreground">
-              <span className="text-green-600">2 menunggu respon</span>
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* CSAT Score */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Skor CSAT Saya</CardTitle>
-            <Star className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{agentMetrics.csat}/5.0</div>
-            <p className="text-xs text-muted-foreground">
-              <span className="text-green-600">+0.2</span> dari minggu lalu
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Average Handling Time */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Rata-rata Waktu (AHT)</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{agentMetrics.aht}</div>
-            <p className="text-xs text-muted-foreground">
-              <span className="text-green-600">-15s</span> dari target
-            </p>
-          </CardContent>
-        </Card>
-
-        {/* Chats Today */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Chat Hari Ini</CardTitle>
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{agentMetrics.totalChatsToday}</div>
-            <p className="text-xs text-muted-foreground">
-              Target: <span className="text-blue-600">15 chat</span>
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6">
-        {/* Performance Graphs */}
-        <Card className="lg:col-span-1">
-          <CardHeader>
+          <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5" />
-                  Grafik Performa Historis
-                </CardTitle>
-                <CardDescription>Tren metrik CSAT dan AHT Anda</CardDescription>
+                <p className="text-sm text-gray-600">Obrolan Aktif</p>
+                <p className="text-3xl font-bold text-blue-600">{agentMetrics.realtime.activeChats}</p>
+                <p className="text-xs text-gray-500">+{agentMetrics.realtime.pendingChats} pending</p>
               </div>
-              <Tabs value={timeRange} onValueChange={setTimeRange}>
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="7days">7 Hari</TabsTrigger>
-                  <TabsTrigger value="30days">30 Hari</TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {/* CSAT Trend */}
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <Star className="w-4 h-4 text-yellow-500" />
-                  <span className="text-sm font-medium">CSAT Score</span>
-                </div>
-                <div className="h-16 flex items-end justify-between gap-1">
-                  {performanceData[timeRange].csat.map((score, index) => (
-                    <div
-                      key={index}
-                      className="bg-yellow-200 rounded-t flex-1"
-                      style={{ height: `${(score / 5) * 100}%` }}
-                      title={`${performanceData[timeRange].labels[index]}: ${score}`}
-                    />
-                  ))}
-                </div>
-                <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                  {performanceData[timeRange].labels.map((label, index) => (
-                    <span key={index}>{label}</span>
-                  ))}
-                </div>
-              </div>
-
-              {/* AHT Trend */}
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <Clock className="w-4 h-4 text-blue-500" />
-                  <span className="text-sm font-medium">Average Handling Time</span>
-                </div>
-                <div className="h-16 flex items-end justify-between gap-1">
-                  {performanceData[timeRange].aht.map((time, index) => {
-                    const maxTime = Math.max(...performanceData[timeRange].aht);
-                    return (
-                      <div
-                        key={index}
-                        className="bg-blue-200 rounded-t flex-1"
-                        style={{ height: `${(time / maxTime) * 100}%` }}
-                        title={`${performanceData[timeRange].labels[index]}: ${formatTime(time)}`}
-                      />
-                    );
-                  })}
-                </div>
-                <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                  {performanceData[timeRange].labels.map((label, index) => (
-                    <span key={index}>{label}</span>
-                  ))}
-                </div>
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <MessageSquare className="w-6 h-6 text-blue-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Leaderboard */}
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">CSAT Saya</p>
+                <div className="flex items-center space-x-1">
+                  <p className="text-3xl font-bold text-yellow-600">{agentMetrics.realtime.currentCSAT}</p>
+                  <Star className="w-5 h-5 text-yellow-500 fill-current" />
+                </div>
+                <p className="text-xs text-green-600">+0.2 dari kemarin</p>
+              </div>
+              <div className="p-3 bg-yellow-100 rounded-lg">
+                <ThumbsUp className="w-6 h-6 text-yellow-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Avg Handle Time</p>
+                <p className="text-3xl font-bold text-green-600">{agentMetrics.goals.monthly.currentAHT}</p>
+                <p className="text-xs text-green-600">Target: {agentMetrics.goals.monthly.targetAHT}</p>
+              </div>
+              <div className="p-3 bg-green-100 rounded-lg">
+                <Timer className="w-6 h-6 text-green-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Resolved Hari Ini</p>
+                <p className="text-3xl font-bold text-purple-600">{agentMetrics.realtime.todayResolved}</p>
+                <p className="text-xs text-purple-600">Target: 15/hari</p>
+              </div>
+              <div className="p-3 bg-purple-100 rounded-lg">
+                <CheckCircle className="w-6 h-6 text-purple-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Response Time</p>
+                <p className="text-3xl font-bold text-indigo-600">{agentMetrics.realtime.avgResponseTime}</p>
+                <p className="text-xs text-indigo-600">Avg minggu ini</p>
+              </div>
+              <div className="p-3 bg-indigo-100 rounded-lg">
+                <Clock className="w-6 h-6 text-indigo-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Follow-ups</p>
+                <p className="text-3xl font-bold text-orange-600">{agentMetrics.followUps.length}</p>
+                <p className="text-xs text-orange-600">Perlu ditindaklanjuti</p>
+              </div>
+              <div className="p-3 bg-orange-100 rounded-lg">
+                <Bell className="w-6 h-6 text-orange-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Performance Trends & Goals */}
+      <div className="grid grid-cols-2 gap-6">
+        {/* Performance Trend Chart */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Trophy className="w-5 h-5 text-yellow-500" />
-              Leaderboard Tim
+            <CardTitle className="flex items-center space-x-2">
+              <BarChart3 className="w-5 h-5" />
+              <span>Trend Performa</span>
             </CardTitle>
-            <CardDescription>Peringkat berdasarkan CSAT Score minggu ini</CardDescription>
+            <CardDescription>CSAT dan AHT 7 hari terakhir</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={performanceTrend}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis yAxisId="left" domain={[4, 5]} />
+                  <YAxis yAxisId="right" orientation="right" domain={[0, 8]} />
+                  <Tooltip />
+                  <Line 
+                    yAxisId="left"
+                    type="monotone" 
+                    dataKey="csat" 
+                    stroke="#fbbf24" 
+                    strokeWidth={3}
+                    name="CSAT"
+                  />
+                  <Line 
+                    yAxisId="right"
+                    type="monotone" 
+                    dataKey="aht" 
+                    stroke="#10b981" 
+                    strokeWidth={3}
+                    name="AHT (min)"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Monthly Goals */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Target className="w-5 h-5" />
+              <span>Target Bulanan</span>
+            </CardTitle>
+            <CardDescription>Progress pencapaian target Januari 2024</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium">CSAT Target</span>
+                <span className="text-sm text-gray-600">
+                  {agentMetrics.goals.monthly.currentCSAT}/{agentMetrics.goals.monthly.targetCSAT}
+                </span>
+              </div>
+              <Progress 
+                value={(agentMetrics.goals.monthly.currentCSAT / agentMetrics.goals.monthly.targetCSAT) * 100} 
+                className="h-3"
+              />
+              <p className="text-xs text-green-600 mt-1">
+                +{((agentMetrics.goals.monthly.currentCSAT / agentMetrics.goals.monthly.targetCSAT) * 100 - 100).toFixed(1)}% dari target
+              </p>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium">Resolusi</span>
+                <span className="text-sm text-gray-600">
+                  {agentMetrics.goals.monthly.currentResolutions}/{agentMetrics.goals.monthly.targetResolutions}
+                </span>
+              </div>
+              <Progress 
+                value={(agentMetrics.goals.monthly.currentResolutions / agentMetrics.goals.monthly.targetResolutions) * 100} 
+                className="h-3"
+              />
+              <p className="text-xs text-blue-600 mt-1">
+                78% tercapai • 22 lagi untuk target
+              </p>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium">Average Handle Time</span>
+                <span className="text-sm text-green-600">
+                  {agentMetrics.goals.monthly.currentAHT} (Target: {agentMetrics.goals.monthly.targetAHT})
+                </span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <CheckCircle className="w-4 h-4 text-green-500" />
+                <span className="text-sm text-green-600">Target tercapai!</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Follow-ups & Achievements */}
+      <div className="grid grid-cols-3 gap-6">
+        {/* Follow-up Tasks */}
+        <Card className="col-span-2">
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <AlertCircle className="w-5 h-5" />
+                <span>Daftar Follow-up</span>
+              </div>
+              <Badge variant="blue">{agentMetrics.followUps.length} aktif</Badge>
+            </CardTitle>
+            <CardDescription>Pelanggan yang perlu ditindaklanjuti</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {leaderboard.map((agent, index) => (
-                <div
-                  key={agent.id}
-                  className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
-                    agent.isCurrentUser 
-                      ? 'bg-gradient-to-r from-green-50 to-blue-50 border border-green-200' 
-                      : 'hover:bg-muted/50'
-                  }`}
-                >
-                  <div className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold ${
-                    index === 0 ? 'bg-yellow-100 text-yellow-700' :
-                    index === 1 ? 'bg-gray-100 text-gray-700' :
-                    index === 2 ? 'bg-orange-100 text-orange-700' :
-                    'bg-muted text-muted-foreground'
-                  }`}>
-                    {index + 1}
-                  </div>
-                  
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className={`font-medium ${agent.isCurrentUser ? 'text-green-700' : ''}`}>
-                        {agent.name}
-                      </span>
-                      {agent.isCurrentUser && (
-                        <Badge variant="outline" className="text-xs">You</Badge>
-                      )}
-                      {index < 3 && (
-                        <Award className={`w-4 h-4 ${
-                          index === 0 ? 'text-yellow-500' :
-                          index === 1 ? 'text-gray-500' :
-                          'text-orange-500'
-                        }`} />
-                      )}
+              {agentMetrics.followUps.map((followUp) => (
+                <div key={followUp.id} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-3">
+                      <h4 className="font-medium text-gray-900">{followUp.customer}</h4>
+                      {getPriorityBadge(followUp.priority)}
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      {agent.chatsHandled} chats • CSAT {agent.csat}
+                    <div className="text-sm text-gray-500">
+                      {formatTimeRemaining(followUp.dueDate)}
                     </div>
                   </div>
-
-                  <div className="text-right">
-                    <div className="flex items-center gap-1">
-                      <Star className="w-4 h-4 text-yellow-500" />
-                      <span className="font-medium">{agent.csat}</span>
+                  <p className="text-sm text-gray-600 mb-2">{followUp.issue}</p>
+                  <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap gap-1">
+                      {followUp.tags.map((tag) => (
+                        <Badge key={tag} variant="gray" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
                     </div>
+                    <Button size="sm" variant="outline">
+                      Tindak Lanjut
+                    </Button>
                   </div>
                 </div>
               ))}
             </div>
+          </CardContent>
+        </Card>
 
-            {getCurrentUserRank() > 5 && (
-              <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="flex items-center gap-2">
-                  <Target className="w-4 h-4 text-blue-600" />
-                  <span className="text-sm font-medium text-blue-700">
-                    Peringkat Anda: #{getCurrentUserRank()}
-                  </span>
+        {/* Achievements */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <Award className="w-5 h-5" />
+              <span>Pencapaian</span>
+            </CardTitle>
+            <CardDescription>Badge dan milestone Anda</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {achievements.map((achievement) => (
+              <div key={achievement.id} className={`p-3 border rounded-lg ${
+                achievement.unlocked ? 'bg-yellow-50 border-yellow-200' : 'bg-gray-50 border-gray-200'
+              }`}>
+                <div className="flex items-center space-x-3 mb-2">
+                  <div className={`p-2 rounded-lg ${
+                    achievement.unlocked ? 'bg-yellow-100' : 'bg-gray-100'
+                  }`}>
+                    <achievement.icon className={`w-4 h-4 ${
+                      achievement.unlocked ? 'text-yellow-600' : 'text-gray-400'
+                    }`} />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className={`font-medium text-sm ${
+                      achievement.unlocked ? 'text-yellow-800' : 'text-gray-600'
+                    }`}>
+                      {achievement.title}
+                    </h4>
+                  </div>
                 </div>
-                <p className="text-xs text-blue-600 mt-1">
-                  Tingkatkan CSAT untuk naik peringkat!
-                </p>
+                <p className="text-xs text-gray-600 mb-2">{achievement.description}</p>
+                
+                {achievement.unlocked ? (
+                  <div className="flex items-center space-x-1">
+                    <CheckCircle className="w-3 h-3 text-green-500" />
+                    <span className="text-xs text-green-600">
+                      Unlocked {new Date(achievement.unlockedDate).toLocaleDateString('id-ID')}
+                    </span>
+                  </div>
+                ) : (
+                  <div>
+                    <Progress value={achievement.progress} className="h-2 mb-1" />
+                    <span className="text-xs text-gray-500">{achievement.progress}% complete</span>
+                  </div>
+                )}
               </div>
-            )}
+            ))}
           </CardContent>
         </Card>
       </div>
 
-      {/* Additional Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Produktivitas Minggu Ini</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Total Chat</span>
-              <span className="font-medium">{agentMetrics.totalChatsThisWeek}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">Chat Selesai</span>
-              <span className="font-medium">{agentMetrics.resolvedChats}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-sm text-muted-foreground">First Response</span>
-              <span className="font-medium">{agentMetrics.avgFirstResponseTime}</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Target & Achievement</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div>
-              <div className="flex justify-between mb-1">
-                <span className="text-sm text-muted-foreground">Chat Harian</span>
-                <span className="text-sm">{agentMetrics.totalChatsToday}/15</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-green-500 h-2 rounded-full" 
-                  style={{width: `${(agentMetrics.totalChatsToday / 15) * 100}%`}}
-                ></div>
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between mb-1">
-                <span className="text-sm text-muted-foreground">CSAT Target</span>
-                <span className="text-sm">{agentMetrics.csat}/4.5</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-yellow-500 h-2 rounded-full" 
-                  style={{width: `${(agentMetrics.csat / 4.5) * 100}%`}}
-                ></div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Button variant="outline" size="sm" className="w-full justify-start">
-              <MessageSquare className="w-4 h-4 mr-2" />
-              Buka Inbox
+      {/* Quick Actions */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Quick Actions</CardTitle>
+          <CardDescription>Aksi cepat untuk meningkatkan produktivitas</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-5 gap-4">
+            <Button variant="outline" className="h-20 flex-col">
+              <MessageCircle className="w-6 h-6 mb-2" />
+              <span className="text-sm">Buka Inbox</span>
             </Button>
-            <Button variant="outline" size="sm" className="w-full justify-start">
-              <Users className="w-4 h-4 mr-2" />
-              Update Profile
+            <Button variant="outline" className="h-20 flex-col">
+              <Users className="w-6 h-6 mb-2" />
+              <span className="text-sm">Cari Customer</span>
             </Button>
-            <Button variant="outline" size="sm" className="w-full justify-start">
-              <BarChart3 className="w-4 h-4 mr-2" />
-              Performance Detail
+            <Button variant="outline" className="h-20 flex-col">
+              <Activity className="w-6 h-6 mb-2" />
+              <span className="text-sm">Knowledge Base</span>
             </Button>
-          </CardContent>
-        </Card>
-      </div>
+            <Button variant="outline" className="h-20 flex-col">
+              <Calendar className="w-6 h-6 mb-2" />
+              <span className="text-sm">Jadwal Follow-up</span>
+            </Button>
+            <Button variant="outline" className="h-20 flex-col">
+              <BarChart3 className="w-6 h-6 mb-2" />
+              <span className="text-sm">Lihat Laporan</span>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

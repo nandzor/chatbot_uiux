@@ -29,9 +29,9 @@ import ClientManagement from '@/pages/superadmin/ClientManagement';
 import SystemSettings from '@/pages/superadmin/SystemSettings';
 
 // Agent Pages
-import AgentDashboard from '@/pages/agent/Dashboard';
-import AgentInbox from '@/pages/agent/Inbox';
-import AgentProfile from '@/pages/agent/Profile';
+import AgentDashboard from '@/features/agent/AgentDashboard';
+import AgentInbox from '@/features/agent/AgentInbox';
+import AgentProfile from '@/features/agent/AgentProfile';
 
 // UI Components Demo
 import BadgeDemo from '@/components/ui/BadgeDemo';
