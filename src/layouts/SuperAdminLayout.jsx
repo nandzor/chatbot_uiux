@@ -34,7 +34,16 @@ const SuperAdminLayout = () => {
         { name: 'Communication Center', href: '/superadmin/communication' }
       ]
     },
-    { name: 'System Settings', href: '/superadmin/system', icon: Settings },
+    { 
+      name: 'Platform Engineering & DevOps', 
+      href: '/superadmin/platform/configuration', 
+      icon: Settings,
+      submenu: [
+        { name: 'Platform Configuration', href: '/superadmin/platform/configuration' },
+        { name: 'Service & Infrastructure Health', href: '/superadmin/platform/health' },
+        { name: 'Security & Compliance', href: '/superadmin/platform/security' }
+      ]
+    },
   ];
 
   return (

@@ -42,6 +42,11 @@ import OnboardingPipeline from '@/features/superadmin/OnboardingPipeline';
 import AutomationPlaybooks from '@/features/superadmin/AutomationPlaybooks';
 import ClientCommunicationCenter from '@/features/superadmin/ClientCommunicationCenter';
 
+// Platform Engineering & DevOps
+import PlatformConfiguration from '@/features/platform/PlatformConfiguration';
+import ServiceInfrastructureHealth from '@/features/platform/ServiceInfrastructureHealth';
+import SecurityCompliance from '@/features/platform/SecurityCompliance';
+
 // Client Layout and Components
 import ClientLayout from '@/layouts/ClientLayout';
 import ClientOverview from '@/features/client/ClientOverview';
@@ -146,6 +151,11 @@ export const router = createBrowserRouter([
           { path: 'onboarding', element: <OnboardingPipeline /> },
           { path: 'automation', element: <AutomationPlaybooks /> },
           { path: 'communication', element: <ClientCommunicationCenter /> },
+          
+          // Platform Engineering & DevOps Routes
+          { path: 'platform/configuration', element: <PlatformConfiguration /> },
+          { path: 'platform/health', element: <ServiceInfrastructureHealth /> },
+          { path: 'platform/security', element: <SecurityCompliance /> },
           
           // Nested Client Routes - Inside SuperAdmin Layout
           { path: 'clients/:clientId', element: <ClientLayout /> },
