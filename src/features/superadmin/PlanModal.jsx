@@ -6,8 +6,6 @@ import {
   DialogTitle,
   DialogDescription,
   DialogClose,
-  DialogBody,
-  DialogFooter,
   Button,
   Input,
   Label,
@@ -33,7 +31,10 @@ import {
   DollarSign,
   Users,
   MessageSquare,
-  Zap
+  Zap,
+  Star,
+  Crown,
+  Settings
 } from 'lucide-react';
 
 const PlanModal = ({ plan, isOpen, onClose, onSave }) => {
@@ -47,7 +48,9 @@ const PlanModal = ({ plan, isOpen, onClose, onSave }) => {
     features: [],
     isActive: true,
     description: '',
-    highlights: []
+    highlights: [],
+    isPopular: false,
+    sortOrder: 0
   });
 
   const [featureInput, setFeatureInput] = useState('');
@@ -68,7 +71,9 @@ const PlanModal = ({ plan, isOpen, onClose, onSave }) => {
         features: plan.features || [],
         isActive: plan.isActive !== undefined ? plan.isActive : true,
         description: plan.description || '',
-        highlights: plan.highlights || []
+        highlights: plan.highlights || [],
+        isPopular: plan.highlights?.includes('Terpopuler') || false,
+        sortOrder: plan.sortOrder || 0
       });
     } else {
       // Reset form for new plan
@@ -82,7 +87,9 @@ const PlanModal = ({ plan, isOpen, onClose, onSave }) => {
         features: [],
         isActive: true,
         description: '',
-        highlights: []
+        highlights: [],
+        isPopular: false,
+        sortOrder: 0
       });
     }
     setErrors({});
@@ -124,8 +131,16 @@ const PlanModal = ({ plan, isOpen, onClose, onSave }) => {
       // Calculate yearly price if not set
       const finalData = {
         ...formData,
-        priceYearly: formData.priceYearly || Math.round(formData.priceMonthly * 10) // 10 bulan bayar untuk 12 bulan
+        priceYearly: formData.priceYearly || Math.round(formData.priceMonthly * 10), // 10 bulan bayar untuk 12 bulan
+        highlights: formData.highlights || []
       };
+
+      // Add popular highlight if isPopular is true
+      if (formData.isPopular && !finalData.highlights.includes('Terpopuler')) {
+        finalData.highlights.push('Terpopuler');
+      } else if (!formData.isPopular) {
+        finalData.highlights = finalData.highlights.filter(h => h !== 'Terpopuler');
+      }
 
       await onSave(finalData);
       onClose();
@@ -172,9 +187,9 @@ const PlanModal = ({ plan, isOpen, onClose, onSave }) => {
 
   const getTierColor = (tier) => {
     const colors = {
-      basic: 'bg-blue-100 text-blue-800 border-blue-200',
-      professional: 'bg-purple-100 text-purple-800 border-purple-200',
-      enterprise: 'bg-green-100 text-green-800 border-green-200'
+      basic: 'bg-green-100 text-green-800 border-green-200',
+      professional: 'bg-blue-100 text-blue-800 border-blue-200',
+      enterprise: 'bg-purple-100 text-purple-800 border-purple-200'
     };
     return colors[tier] || colors.basic;
   };
@@ -183,24 +198,31 @@ const PlanModal = ({ plan, isOpen, onClose, onSave }) => {
     const icons = {
       basic: <Users className="w-4 h-4" />,
       professional: <Zap className="w-4 h-4" />,
-      enterprise: <CheckCircle className="w-4 h-4" />
+      enterprise: <Crown className="w-4 h-4" />
     };
     return icons[tier] || icons.basic;
   };
 
-  if (!isOpen) return null;
+  const getTierDescription = (tier) => {
+    const descriptions = {
+      basic: 'Untuk UMKM dan startup',
+      professional: 'Untuk bisnis yang berkembang',
+      enterprise: 'Solusi enterprise lengkap'
+    };
+    return descriptions[tier] || descriptions.basic;
+  };
 
   return (
-    <Dialog>
-      <DialogContent className="max-w-4xl max-h-[95vh]">
-        <DialogHeader>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-5xl max-h-[95vh] overflow-y-auto p-0">
+        <DialogHeader className="px-8 py-6 border-b">
           <div className="flex items-center gap-3">
             {getTierIcon(formData.tier)}
             <div>
-              <DialogTitle>
+              <DialogTitle className="text-2xl font-bold">
                 {plan ? 'Edit Paket Berlangganan' : 'Buat Paket Baru'}
               </DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="text-base">
                 {plan 
                   ? 'Perbarui detail dan fitur paket berlangganan'
                   : 'Buat paket berlangganan baru untuk pelanggan Anda'
@@ -208,239 +230,301 @@ const PlanModal = ({ plan, isOpen, onClose, onSave }) => {
               </DialogDescription>
             </div>
           </div>
-          <DialogClose onClick={onClose} />
+          <DialogClose onClick={onClose} className="absolute right-6 top-6" />
         </DialogHeader>
 
-        <DialogBody>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Basic Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <DollarSign className="w-5 h-5" />
-                Informasi Dasar
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Nama Paket *</Label>
-                  <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="e.g., Starter, Business, Enterprise"
-                    className={errors.name ? 'border-destructive' : ''}
-                  />
-                  {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="tier">Tier</Label>
-                  <Select value={formData.tier} onValueChange={(value) => setFormData(prev => ({ ...prev, tier: value }))}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="basic">Basic</SelectItem>
-                      <SelectItem value="professional">Professional</SelectItem>
-                      <SelectItem value="enterprise">Enterprise</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Badge variant="outline" className={getTierColor(formData.tier)}>
-                      {formData.tier.charAt(0).toUpperCase() + formData.tier.slice(1)} Tier
-                    </Badge>
-                  </div>
-                </div>
+        <form onSubmit={handleSubmit} className="px-8 py-6 space-y-8">
+          {/* Basic Information */}
+          <div className="space-y-6">
+            <h3 className="text-xl font-semibold flex items-center gap-3 text-blue-600">
+              <DollarSign className="w-6 h-6" />
+              Informasi Dasar
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <Label htmlFor="name" className="text-sm font-medium">
+                  Nama Paket *
+                </Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="e.g., Starter, Business, Enterprise"
+                  className={errors.name ? 'border-red-500 focus:border-red-500' : ''}
+                />
+                {errors.name && <p className="text-sm text-red-600">{errors.name}</p>}
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="description">Deskripsi</Label>
-                <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Jelaskan apa yang ditawarkan paket ini..."
-                  rows={3}
-                />
+              <div className="space-y-3">
+                <Label htmlFor="tier" className="text-sm font-medium">
+                  Tier Paket
+                </Label>
+                <Select value={formData.tier} onValueChange={(value) => setFormData(prev => ({ ...prev, tier: value }))}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="basic">Basic</SelectItem>
+                    <SelectItem value="professional">Professional</SelectItem>
+                    <SelectItem value="enterprise">Enterprise</SelectItem>
+                  </SelectContent>
+                </Select>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className={`${getTierColor(formData.tier)} text-sm font-medium`}>
+                    {formData.tier.charAt(0).toUpperCase() + formData.tier.slice(1)} Tier
+                  </Badge>
+                  <span className="text-xs text-gray-500">{getTierDescription(formData.tier)}</span>
+                </div>
               </div>
             </div>
 
-            <Separator />
+            <div className="space-y-3">
+              <Label htmlFor="description" className="text-sm font-medium">
+                Deskripsi Paket
+              </Label>
+              <Textarea
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Jelaskan apa yang ditawarkan paket ini, manfaat, dan target pengguna..."
+                rows={3}
+                className="resize-none"
+              />
+            </div>
+          </div>
 
-            {/* Pricing */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <DollarSign className="w-5 h-5" />
-                Harga
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="priceMonthly">Harga Bulanan (Rp) *</Label>
+          <Separator />
+
+          {/* Pricing */}
+          <div className="space-y-6">
+            <h3 className="text-xl font-semibold flex items-center gap-3 text-green-600">
+              <DollarSign className="w-6 h-6" />
+              Harga & Billing
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <Label htmlFor="priceMonthly" className="text-sm font-medium">
+                  Harga Bulanan (Rp) *
+                </Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">Rp</span>
                   <Input
                     id="priceMonthly"
                     type="number"
                     value={formData.priceMonthly}
                     onChange={(e) => setFormData(prev => ({ ...prev, priceMonthly: parseInt(e.target.value) || 0 }))}
                     placeholder="0"
-                    className={errors.priceMonthly ? 'border-destructive' : ''}
+                    className={`pl-12 ${errors.priceMonthly ? 'border-red-500 focus:border-red-500' : ''}`}
                   />
-                  {errors.priceMonthly && <p className="text-sm text-destructive">{errors.priceMonthly}</p>}
                 </div>
+                {errors.priceMonthly && <p className="text-sm text-red-600">{errors.priceMonthly}</p>}
+                <p className="text-xs text-gray-500">
+                  Harga per bulan untuk pelanggan
+                </p>
+              </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="priceYearly">Harga Tahunan (Rp)</Label>
+              <div className="space-y-3">
+                <Label htmlFor="priceYearly" className="text-sm font-medium">
+                  Harga Tahunan (Rp)
+                </Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">Rp</span>
                   <Input
                     id="priceYearly"
                     type="number"
                     value={formData.priceYearly}
                     onChange={(e) => setFormData(prev => ({ ...prev, priceYearly: parseInt(e.target.value) || 0 }))}
                     placeholder="Auto-calculated (20% discount)"
+                    className="pl-12"
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Kosongkan untuk kalkulasi otomatis
-                  </p>
                 </div>
+                <p className="text-xs text-gray-500">
+                  Kosongkan untuk kalkulasi otomatis (10 bulan bayar untuk 12 bulan)
+                </p>
               </div>
             </div>
 
-            <Separator />
+            {/* Popular Plan Toggle */}
+            <div className="flex items-center space-x-3 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 rounded-lg">
+              <Switch
+                id="isPopular"
+                checked={formData.isPopular}
+                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isPopular: checked }))}
+              />
+              <div className="flex items-center gap-2">
+                <Star className="w-5 h-5 text-yellow-500" />
+                <Label htmlFor="isPopular" className="text-sm font-medium text-yellow-800">
+                  Tandai sebagai Paket Terpopuler
+                </Label>
+              </div>
+              <Badge variant="outline" className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0">
+                ⭐ Terpopuler
+              </Badge>
+            </div>
+          </div>
 
-            {/* Limits */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                Batasan Penggunaan
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="maxAgents">Maksimal Agent *</Label>
-                  <Input
-                    id="maxAgents"
-                    type="number"
-                    value={formData.maxAgents}
-                    onChange={(e) => setFormData(prev => ({ ...prev, maxAgents: parseInt(e.target.value) || 1 }))}
-                    placeholder="1"
-                    className={errors.maxAgents ? 'border-destructive' : ''}
-                  />
-                  {errors.maxAgents && <p className="text-sm text-destructive">{errors.maxAgents}</p>}
-                </div>
+          <Separator />
 
-                <div className="space-y-2">
-                  <Label htmlFor="maxMessages">Pesan per Bulan *</Label>
-                  <Input
-                    id="maxMessages"
-                    type="number"
-                    value={formData.maxMessagesPerMonth}
-                    onChange={(e) => setFormData(prev => ({ ...prev, maxMessagesPerMonth: parseInt(e.target.value) || 100 }))}
-                    placeholder="1000"
-                    className={errors.maxMessagesPerMonth ? 'border-destructive' : ''}
-                  />
-                  {errors.maxMessagesPerMonth && <p className="text-sm text-destructive">{errors.maxMessagesPerMonth}</p>}
-                </div>
+          {/* Limits */}
+          <div className="space-y-6">
+            <h3 className="text-xl font-semibold flex items-center gap-3 text-purple-600">
+              <Users className="w-6 h-6" />
+              Batasan Penggunaan
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-3">
+                <Label htmlFor="maxAgents" className="text-sm font-medium">
+                  Maksimal Agent *
+                </Label>
+                <Input
+                  id="maxAgents"
+                  type="number"
+                  value={formData.maxAgents}
+                  onChange={(e) => setFormData(prev => ({ ...prev, maxAgents: parseInt(e.target.value) || 1 }))}
+                  placeholder="1"
+                  className={errors.maxAgents ? 'border-red-500 focus:border-red-500' : ''}
+                />
+                {errors.maxAgents && <p className="text-sm text-red-600">{errors.maxAgents}</p>}
+                <p className="text-xs text-gray-500">
+                  Jumlah agent yang dapat diaktifkan
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <Label htmlFor="maxMessagesPerMonth" className="text-sm font-medium">
+                  Maksimal Pesan per Bulan *
+                </Label>
+                <Input
+                  id="maxMessagesPerMonth"
+                  type="number"
+                  value={formData.maxMessagesPerMonth}
+                  onChange={(e) => setFormData(prev => ({ ...prev, maxMessagesPerMonth: parseInt(e.target.value) || 100 }))}
+                  placeholder="100"
+                  className={errors.maxMessagesPerMonth ? 'border-red-500 focus:border-red-500' : ''}
+                />
+                {errors.maxMessagesPerMonth && <p className="text-sm text-red-600">{errors.maxMessagesPerMonth}</p>}
+                <p className="text-xs text-gray-500">
+                  Batas pesan yang dapat dikirim per bulan
+                </p>
               </div>
             </div>
+          </div>
 
-            <Separator />
+          <Separator />
 
-            {/* Features */}
+          {/* Features */}
+          <div className="space-y-6">
+            <h3 className="text-xl font-semibold flex items-center gap-3 text-indigo-600">
+              <Zap className="w-6 h-6" />
+              Fitur & Kemampuan
+            </h3>
+            
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <Zap className="w-5 h-5" />
-                Fitur
-              </h3>
-              
-              <div className="space-y-2">
-                <Label>Tambah Fitur</Label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Masukkan fitur (e.g., Live Chat, API Access)"
-                    value={featureInput}
-                    onChange={(e) => setFeatureInput(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addFeature())}
-                  />
-                  <Button type="button" onClick={addFeature} disabled={!featureInput.trim()}>
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                </div>
+              <div className="flex gap-3">
+                <Input
+                  placeholder="Tambahkan fitur baru..."
+                  value={featureInput}
+                  onChange={(e) => setFeatureInput(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addFeature())}
+                  className="flex-1"
+                />
+                <Button type="button" onClick={addFeature} variant="outline">
+                  <Plus className="w-4 h-4" />
+                </Button>
               </div>
 
               {formData.features.length > 0 && (
-                <div className="space-y-2">
-                  <Label>Fitur Saat Ini</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {formData.features.map((feature, index) => (
-                      <Badge 
-                        key={index} 
-                        variant="secondary" 
-                        className="cursor-pointer hover:bg-destructive hover:text-destructive-foreground"
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {formData.features.map((feature, index) => (
+                    <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                      <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                      <span className="text-sm flex-1">{feature}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
                         onClick={() => removeFeature(index)}
+                        className="text-red-600 hover:text-red-700 p-1 h-6 w-6 flex-shrink-0"
                       >
-                        {feature} <X className="w-3 h-3 ml-1" />
-                      </Badge>
-                    ))}
-                  </div>
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
+          </div>
 
-            <Separator />
+          <Separator />
 
-            {/* Highlights */}
+          {/* Highlights */}
+          <div className="space-y-6">
+            <h3 className="text-xl font-semibold flex items-center gap-3 text-amber-600">
+              <Star className="w-6 h-6" />
+              Highlight & Promosi
+            </h3>
+            
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <CheckCircle className="w-5 h-5" />
-                Sorotan Paket
-              </h3>
-              
-              <div className="space-y-2">
-                <Label>Tambah Sorotan</Label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Masukkan sorotan (e.g., Terpopuler, Nilai Terbaik)"
-                    value={highlightInput}
-                    onChange={(e) => setHighlightInput(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addHighlight())}
-                  />
-                  <Button type="button" onClick={addHighlight} disabled={!highlightInput.trim()}>
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                </div>
+              <div className="flex gap-3">
+                <Input
+                  placeholder="Tambahkan highlight baru..."
+                  value={highlightInput}
+                  onChange={(e) => setHighlightInput(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addHighlight())}
+                  className="flex-1"
+                />
+                <Button type="button" onClick={addHighlight} variant="outline">
+                  <Plus className="w-4 h-4" />
+                </Button>
               </div>
 
               {formData.highlights.length > 0 && (
-                <div className="space-y-2">
-                  <Label>Sorotan Saat Ini</Label>
-                  <div className="flex flex-wrap gap-2">
-                    {formData.highlights.map((highlight, index) => (
-                      <Badge 
-                        key={index} 
-                        variant="outline" 
-                        className="cursor-pointer hover:bg-destructive hover:text-destructive-foreground"
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {formData.highlights.map((highlight, index) => (
+                    <div key={index} className="flex items-center gap-3 p-3 bg-amber-50 rounded-lg">
+                      <Star className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                      <span className="text-sm flex-1">{highlight}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
                         onClick={() => removeHighlight(index)}
+                        className="text-red-600 hover:text-red-700 p-1 h-6 w-6 flex-shrink-0"
                       >
-                        {highlight} <X className="w-3 h-3 ml-1" />
-                      </Badge>
-                    ))}
-                  </div>
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
+          </div>
 
-            <Separator />
+          <Separator />
 
-            {/* Status */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Status Paket</h3>
-              
-              <div className="flex items-center space-x-2">
+          {/* Status */}
+          <div className="space-y-6">
+            <h3 className="text-xl font-semibold flex items-center gap-3 text-gray-600">
+              <Settings className="w-6 h-6" />
+              Status & Konfigurasi
+            </h3>
+            
+            <div className="space-y-6">
+              <div className="flex items-center space-x-3">
                 <Switch
                   id="isActive"
                   checked={formData.isActive}
                   onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isActive: checked }))}
                 />
-                <Label htmlFor="isActive">Paket Aktif</Label>
+                <Label htmlFor="isActive" className="text-base font-medium">
+                  Paket Aktif
+                </Label>
+                <Badge variant={formData.isActive ? 'default' : 'secondary'}>
+                  {formData.isActive ? 'Aktif' : 'Tidak Aktif'}
+                </Badge>
               </div>
               
               {!formData.isActive && (
@@ -451,19 +535,43 @@ const PlanModal = ({ plan, isOpen, onClose, onSave }) => {
                   </AlertDescription>
                 </Alert>
               )}
-            </div>
-          </form>
-        </DialogBody>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={isSubmitting}>
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting}>
-            <Save className="w-4 h-4 mr-2" />
-            {isSubmitting ? 'Menyimpan...' : (plan ? 'Update Paket' : 'Buat Paket')}
-          </Button>
-        </DialogFooter>
+              <div className="space-y-3">
+                <Label htmlFor="sortOrder" className="text-sm font-medium">
+                  Urutan Tampilan
+                </Label>
+                <Input
+                  id="sortOrder"
+                  type="number"
+                  value={formData.sortOrder}
+                  onChange={(e) => setFormData(prev => ({ ...prev, sortOrder: parseInt(e.target.value) || 0 }))}
+                  placeholder="0"
+                  className="w-32"
+                />
+                <p className="text-xs text-gray-500">
+                  Angka lebih kecil akan ditampilkan lebih dulu
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-4 pt-8 border-t">
+            <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700" disabled={isSubmitting}>
+              <Save className="w-4 h-4 mr-2" />
+              {isSubmitting ? 'Menyimpan...' : (plan ? 'Update Paket' : 'Buat Paket')}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={isSubmitting}
+              className="flex-1"
+            >
+              Batal
+            </Button>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   );
