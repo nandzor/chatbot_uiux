@@ -43,7 +43,9 @@ import {
   TrendingUp,
   Filter,
   Download,
-  RefreshCw
+  RefreshCw,
+  Zap,
+  CheckCircle
 } from 'lucide-react';
 
 const Financials = () => {
@@ -301,18 +303,33 @@ const Financials = () => {
                   <div className="text-muted-foreground">Loading subscription plans...</div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                   {subscriptionPlans.map((plan) => (
-                  <Card key={plan.id}>
-                    <CardHeader>
+                  <Card key={plan.id} className={`relative overflow-hidden transition-all duration-300 hover:shadow-xl hover:scale-105 ${
+                    plan.tier === 'enterprise' ? 'border-2 border-purple-500 shadow-lg' :
+                    plan.tier === 'professional' ? 'border-2 border-blue-500 shadow-md' :
+                    'border-2 border-green-500'
+                  }`}>
+                    <CardHeader className="pb-4">
                       <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle>{plan.name}</CardTitle>
-                          <CardDescription className="capitalize">{plan.tier} tier</CardDescription>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <div className={`w-3 h-3 rounded-full ${
+                              plan.tier === 'enterprise' ? 'bg-purple-500' :
+                              plan.tier === 'professional' ? 'bg-blue-500' :
+                              'bg-green-500'
+                            }`}></div>
+                            <CardTitle className="text-2xl font-bold">{plan.name}</CardTitle>
+                          </div>
+                          <CardDescription className="capitalize text-base">
+                            {plan.tier === 'enterprise' ? 'Solusi Enterprise' :
+                             plan.tier === 'professional' ? 'Untuk Bisnis' :
+                             'Untuk UMKM'}
+                          </CardDescription>
                         </div>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
+                            <Button variant="ghost" size="sm" className="opacity-60 hover:opacity-100">
                               <MoreHorizontal className="w-4 h-4" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -329,64 +346,99 @@ const Financials = () => {
                         </DropdownMenu>
                       </div>
                     </CardHeader>
-                    <CardContent className="space-y-4">
+                    <CardContent className="space-y-6">
+                      {/* Popular Badge */}
+                      {plan.highlights?.includes('Terpopuler') && (
+                        <div className="absolute top-4 right-4 z-10">
+                          <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 animate-pulse">
+                            ⭐ Terpopuler
+                          </Badge>
+                        </div>
+                      )}
+
                       {/* Highlights */}
                       {plan.highlights && plan.highlights.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
+                        <div className="flex flex-wrap gap-2">
                           {plan.highlights.map((highlight, index) => (
-                            <Badge key={index} variant="default" className="text-xs">
+                            <Badge key={index} variant="secondary" className="text-xs font-medium bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
                               {highlight}
                             </Badge>
                           ))}
                         </div>
                       )}
 
-                      {/* Pricing */}
-                      <div className="space-y-2">
-                        <div className="text-3xl font-bold">{formatCurrency(plan.priceMonthly)}<span className="text-sm font-normal text-muted-foreground">/month</span></div>
+                      {/* Pricing Section */}
+                      <div className="text-center space-y-2 p-4 rounded-lg bg-gradient-to-r from-gray-50 to-gray-100">
+                        <div className="text-4xl font-bold text-gray-900">
+                          {formatCurrency(plan.priceMonthly)}
+                          <span className="text-lg font-normal text-gray-500">/bulan</span>
+                        </div>
                         {plan.priceYearly && (
-                          <div className="text-sm text-muted-foreground">
-                            {formatCurrency(plan.priceYearly)}/tahun (hemat 2 bulan)
+                          <div className="text-sm text-green-600 font-medium">
+                            💰 {formatCurrency(plan.priceYearly)}/tahun
+                            <span className="text-xs text-gray-500 ml-1">(hemat 2 bulan)</span>
                           </div>
                         )}
                       </div>
                       
                       {/* Description */}
                       {plan.description && (
-                        <p className="text-sm text-muted-foreground">{plan.description}</p>
+                        <div className="text-sm text-gray-600 leading-relaxed">
+                          {plan.description}
+                        </div>
                       )}
                       
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Max Agents</span>
-                          <span>{plan.maxAgents}</span>
+                      {/* Usage Limits */}
+                      <div className="grid grid-cols-2 gap-4 p-3 bg-blue-50 rounded-lg">
+                        <div className="text-center">
+                          <div className="text-lg font-bold text-blue-600">{plan.maxAgents}</div>
+                          <div className="text-xs text-gray-600">Agent</div>
                         </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Messages/Month</span>
-                          <span>{plan.maxMessagesPerMonth.toLocaleString()}</span>
+                        <div className="text-center">
+                          <div className="text-lg font-bold text-blue-600">{plan.maxMessagesPerMonth.toLocaleString()}</div>
+                          <div className="text-xs text-gray-600">Pesan/Bulan</div>
                         </div>
                       </div>
 
-                      <div className="space-y-2">
-                        <p className="text-sm font-medium">Fitur:</p>
-                        <ul className="text-xs text-muted-foreground space-y-1">
-                          {plan.features.map((feature, index) => (
-                            <li key={index} className="flex items-start gap-2">
-                              <span className="text-green-500 mt-0.5">•</span>
+                      {/* Features */}
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Zap className="w-4 h-4 text-yellow-500" />
+                          <p className="text-sm font-semibold text-gray-800">Fitur Unggulan:</p>
+                        </div>
+                        <ul className="text-sm text-gray-600 space-y-2">
+                          {plan.features.slice(0, 6).map((feature, index) => (
+                            <li key={index} className="flex items-start gap-3">
+                              <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
                               <span>{feature}</span>
                             </li>
                           ))}
+                          {plan.features.length > 6 && (
+                            <li className="text-xs text-blue-600 font-medium">
+                              +{plan.features.length - 6} fitur lainnya...
+                            </li>
+                          )}
                         </ul>
                       </div>
 
-                      <div className="pt-4 border-t space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Active Subscriptions</span>
-                          <span className="font-medium">{plan.activeSubscriptions}</span>
+                      {/* CTA Button */}
+                      <Button className={`w-full py-3 font-semibold ${
+                        plan.tier === 'enterprise' ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700' :
+                        plan.tier === 'professional' ? 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700' :
+                        'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700'
+                      }`}>
+                        🚀 Pilih Paket Ini
+                      </Button>
+
+                      {/* Stats */}
+                      <div className="pt-4 border-t border-gray-200 space-y-2">
+                        <div className="flex justify-between text-xs">
+                          <span className="text-gray-500">Pelanggan Aktif</span>
+                          <span className="font-medium text-gray-700">{plan.activeSubscriptions}</span>
                         </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Monthly Revenue</span>
-                          <span className="font-medium">{formatCurrency(plan.totalRevenue)}</span>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-gray-500">Revenue Bulanan</span>
+                          <span className="font-medium text-gray-700">{formatCurrency(plan.totalRevenue)}</span>
                         </div>
                       </div>
                     </CardContent>
