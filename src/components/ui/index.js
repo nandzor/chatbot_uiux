@@ -23,3 +23,13 @@ export {
   DropdownMenuTrigger 
 } from './DropdownMenu';
 export { Progress } from './Progress';
+export { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription, 
+  DialogClose, 
+  DialogBody, 
+  DialogFooter 
+} from './Dialog';

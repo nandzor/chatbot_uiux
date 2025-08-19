@@ -30,6 +30,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger
 } from '../ui';
+import PlanModal from './PlanModal';
 import { 
   CreditCard,
   DollarSign,
@@ -46,7 +47,7 @@ import {
 const Financials = () => {
   const [activeTab, setActiveTab] = useState('plans');
   const [editingPlan, setEditingPlan] = useState(null);
-  const [showCreatePlan, setShowCreatePlan] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Sample subscription plans data
   const [subscriptionPlans] = useState([
@@ -55,9 +56,13 @@ const Financials = () => {
       name: 'Basic',
       tier: 'basic',
       priceMonthly: 49,
+      priceYearly: 470,
       maxAgents: 5,
       maxMessagesPerMonth: 1000,
       features: ['Live Chat', 'Basic Analytics', 'Email Support'],
+      highlights: ['Most Popular'],
+      description: 'Perfect for small businesses getting started with chatbot automation',
+      isActive: true,
       activeSubscriptions: 45,
       totalRevenue: 2205
     },
@@ -66,9 +71,13 @@ const Financials = () => {
       name: 'Professional',
       tier: 'professional',
       priceMonthly: 149,
+      priceYearly: 1430,
       maxAgents: 15,
       maxMessagesPerMonth: 5000,
       features: ['Live Chat', 'Advanced Analytics', 'API Access', 'Priority Support', 'Custom Integrations'],
+      highlights: ['Best Value'],
+      description: 'Ideal for growing businesses that need advanced features and integrations',
+      isActive: true,
       activeSubscriptions: 89,
       totalRevenue: 13261
     },
@@ -77,9 +86,13 @@ const Financials = () => {
       name: 'Enterprise',
       tier: 'enterprise',
       priceMonthly: 299,
+      priceYearly: 2870,
       maxAgents: 50,
       maxMessagesPerMonth: 20000,
       features: ['All Pro Features', 'White Label', 'Custom Workflows', 'Dedicated Support', 'SLA Guarantee'],
+      highlights: ['Most Powerful'],
+      description: 'Complete solution for large enterprises with custom requirements',
+      isActive: true,
       activeSubscriptions: 23,
       totalRevenue: 6877
     }
@@ -168,134 +181,37 @@ const Financials = () => {
     // Implement transaction action logic here
   };
 
-  const PlanForm = ({ plan, onSave, onCancel }) => {
-    const [formData, setFormData] = useState(plan || {
-      name: '',
-      tier: 'basic',
-      priceMonthly: 0,
-      maxAgents: 1,
-      maxMessagesPerMonth: 100,
-      features: []
-    });
-
-    const [featureInput, setFeatureInput] = useState('');
-
-    const handleSubmit = (e) => {
-      e.preventDefault();
-      onSave(formData);
-    };
-
-    const addFeature = () => {
-      if (featureInput.trim()) {
-        setFormData(prev => ({
-          ...prev,
-          features: [...prev.features, featureInput.trim()]
-        }));
-        setFeatureInput('');
-      }
-    };
-
-    const removeFeature = (index) => {
-      setFormData(prev => ({
-        ...prev,
-        features: prev.features.filter((_, i) => i !== index)
-      }));
-    };
-
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>{plan ? 'Edit Plan' : 'Create New Plan'}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Plan Name</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="tier">Tier</Label>
-                <Select value={formData.tier} onValueChange={(value) => setFormData(prev => ({ ...prev, tier: value }))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="basic">Basic</SelectItem>
-                    <SelectItem value="professional">Professional</SelectItem>
-                    <SelectItem value="enterprise">Enterprise</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="price">Monthly Price ($)</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  value={formData.priceMonthly}
-                  onChange={(e) => setFormData(prev => ({ ...prev, priceMonthly: parseInt(e.target.value) || 0 }))}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="agents">Max Agents</Label>
-                <Input
-                  id="agents"
-                  type="number"
-                  value={formData.maxAgents}
-                  onChange={(e) => setFormData(prev => ({ ...prev, maxAgents: parseInt(e.target.value) || 1 }))}
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="messages">Max Messages/Month</Label>
-                <Input
-                  id="messages"
-                  type="number"
-                  value={formData.maxMessagesPerMonth}
-                  onChange={(e) => setFormData(prev => ({ ...prev, maxMessagesPerMonth: parseInt(e.target.value) || 100 }))}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Features</Label>
-              <div className="flex gap-2">
-                <Input
-                  placeholder="Add feature"
-                  value={featureInput}
-                  onChange={(e) => setFeatureInput(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addFeature())}
-                />
-                <Button type="button" onClick={addFeature}>Add</Button>
-              </div>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {formData.features.map((feature, index) => (
-                  <Badge key={index} variant="secondary" className="cursor-pointer" onClick={() => removeFeature(index)}>
-                    {feature} ×
-                  </Badge>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex gap-2 pt-4">
-              <Button type="submit">Save Plan</Button>
-              <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-    );
+  const handleSavePlan = async (planData) => {
+    console.log('Saving plan:', planData);
+    // Here you would typically make an API call to save the plan
+    // For now, we'll just log the data
+    if (editingPlan) {
+      console.log('Updating existing plan:', editingPlan.id, planData);
+    } else {
+      console.log('Creating new plan:', planData);
+    }
+    
+    // Close modal and reset states
+    setIsModalOpen(false);
+    setEditingPlan(null);
   };
+
+  const handleEditPlan = (plan) => {
+    setEditingPlan(plan);
+    setIsModalOpen(true);
+  };
+
+  const handleCreatePlan = () => {
+    setEditingPlan(null);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingPlan(null);
+  };
+
+
 
   return (
     <div className="space-y-6">
@@ -369,28 +285,13 @@ const Financials = () => {
 
         {/* Subscription Plans Tab */}
         <TabsContent value="plans" className="space-y-6">
-          {showCreatePlan || editingPlan ? (
-            <PlanForm
-              plan={editingPlan}
-              onSave={(planData) => {
-                console.log('Saving plan:', planData);
-                setEditingPlan(null);
-                setShowCreatePlan(false);
-              }}
-              onCancel={() => {
-                setEditingPlan(null);
-                setShowCreatePlan(false);
-              }}
-            />
-          ) : (
-            <>
-              <div className="flex justify-between items-center">
-                <h2 className="text-xl font-semibold">Subscription Plans</h2>
-                <Button onClick={() => setShowCreatePlan(true)}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create New Plan
-                </Button>
-              </div>
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold">Subscription Plans</h2>
+            <Button onClick={handleCreatePlan}>
+              <Plus className="w-4 h-4 mr-2" />
+              Create New Plan
+            </Button>
+          </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {subscriptionPlans.map((plan) => (
@@ -408,7 +309,7 @@ const Financials = () => {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent>
-                            <DropdownMenuItem onClick={() => setEditingPlan(plan)}>
+                            <DropdownMenuItem onClick={() => handleEditPlan(plan)}>
                               <Edit className="w-4 h-4 mr-2" />
                               Edit Plan
                             </DropdownMenuItem>
@@ -421,7 +322,31 @@ const Financials = () => {
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      <div className="text-3xl font-bold">{formatCurrency(plan.priceMonthly)}<span className="text-sm font-normal text-muted-foreground">/month</span></div>
+                      {/* Highlights */}
+                      {plan.highlights && plan.highlights.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {plan.highlights.map((highlight, index) => (
+                            <Badge key={index} variant="default" className="text-xs">
+                              {highlight}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Pricing */}
+                      <div className="space-y-2">
+                        <div className="text-3xl font-bold">{formatCurrency(plan.priceMonthly)}<span className="text-sm font-normal text-muted-foreground">/month</span></div>
+                        {plan.priceYearly && (
+                          <div className="text-sm text-muted-foreground">
+                            {formatCurrency(plan.priceYearly)}/year (save 20%)
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Description */}
+                      {plan.description && (
+                        <p className="text-sm text-muted-foreground">{plan.description}</p>
+                      )}
                       
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
@@ -464,8 +389,6 @@ const Financials = () => {
                   </Card>
                 ))}
               </div>
-            </>
-          )}
         </TabsContent>
 
         {/* Transactions Tab */}
@@ -547,6 +470,14 @@ const Financials = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Plan Modal */}
+      <PlanModal
+        plan={editingPlan}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onSave={handleSavePlan}
+      />
     </div>
   );
 };
