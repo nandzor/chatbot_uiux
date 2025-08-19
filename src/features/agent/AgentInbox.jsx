@@ -844,7 +844,7 @@ const AgentInbox = () => {
               <div className="relative">
                 <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 <Input
-                  placeholder="Cari artikel..."
+                  placeholder="Cari knowledge..."
                   className="pl-10"
                 />
               </div>

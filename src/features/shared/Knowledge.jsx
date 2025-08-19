@@ -18,7 +18,11 @@ import {
   TableHeader,
   TableRow,
   Alert,
-  AlertDescription
+  AlertDescription,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger
 } from '@/components/ui';
 import { 
   Plus, 
@@ -31,7 +35,12 @@ import {
   Save,
   X,
   Crown,
-  Info
+  Info,
+  MessageSquare,
+  FileText,
+  Tag,
+  Globe,
+  Hash
 } from 'lucide-react';
 import { knowledgeArticles } from '@/data/sampleData';
 
@@ -40,9 +49,25 @@ const Knowledge = () => {
   const [articles, setArticles] = useState(knowledgeArticles.filter(article => article.status !== 'deleted'));
   const [isCreating, setIsCreating] = useState(false);
   const [editingArticle, setEditingArticle] = useState(null);
-  const [formData, setFormData] = useState({ title: '', content: '' });
+  const [activeTab, setActiveTab] = useState('qa');
+  
+  // Form data untuk dual mode
+  const [formData, setFormData] = useState({
+    title: '',
+    content: '',
+    summary: '',
+    tags: '',
+    language: 'id',
+    qaItems: [
+      {
+        question: '',
+        variations: '',
+        answer: ''
+      }
+    ]
+  });
+  
   const [charCount, setCharCount] = useState(0);
-
   const MAX_CHARS = 7000;
 
   // Get active article count
@@ -100,324 +125,504 @@ const Knowledge = () => {
     }
   };
 
-  // Fungsi untuk handle perubahan content dengan batasan karakter
-  const handleContentChange = (e) => {
-    const content = e.target.value;
-    if (content.length <= MAX_CHARS) {
-      setFormData(prev => ({ ...prev, content }));
-      setCharCount(content.length);
+  // Fungsi untuk menambah Q&A item baru
+  const addQAItem = () => {
+    setFormData(prev => ({
+      ...prev,
+      qaItems: [
+        ...prev.qaItems,
+        { question: '', variations: '', answer: '' }
+      ]
+    }));
+  };
+
+  // Fungsi untuk menghapus Q&A item
+  const removeQAItem = (index) => {
+    if (formData.qaItems.length > 1) {
+      setFormData(prev => ({
+        ...prev,
+        qaItems: prev.qaItems.filter((_, i) => i !== index)
+      }));
     }
   };
 
-  // Fungsi untuk membuka form create
-  const handleCreate = () => {
-    setFormData({ title: '', content: '' });
-    setCharCount(0);
-    setIsCreating(true);
-    setEditingArticle(null);
+  // Fungsi untuk update Q&A item
+  const updateQAItem = (index, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      qaItems: prev.qaItems.map((item, i) => 
+        i === index ? { ...item, [field]: value } : item
+      )
+    }));
   };
 
-  // Fungsi untuk membuka form edit
-  const handleEdit = (article) => {
-    setFormData({ title: article.title, content: article.content });
-    setCharCount(article.content.length);
-    setEditingArticle(article);
-    setIsCreating(false);
+  // Fungsi untuk handle form input
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Update character count untuk content
+    if (field === 'content') {
+      setCharCount(value.length);
+    }
   };
 
-  // Fungsi untuk save article (create atau update)
-  const handleSave = () => {
-    if (!formData.title.trim() || !formData.content.trim()) {
-      alert('Judul dan konten tidak boleh kosong!');
+  // Fungsi untuk handle form submission
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    if (!formData.title.trim()) {
+      alert('Judul knowledge wajib diisi!');
       return;
     }
 
-    const currentDate = new Date().toISOString().slice(0, 19).replace('T', ' ');
-
-    if (isCreating) {
-      // Create new article
-      const newArticle = {
-        id: Date.now(),
-        title: formData.title.trim(),
-        content: formData.content.trim(),
-        status: 'active',
-        updated_at: currentDate
-      };
-      setArticles(prev => [...prev, newArticle]);
+    if (activeTab === 'qa') {
+      // Validasi Q&A mode
+      const hasValidQA = formData.qaItems.some(item => 
+        item.question.trim() && item.answer.trim()
+      );
+      
+      if (!hasValidQA) {
+        alert('Minimal satu Q&A harus diisi dengan lengkap!');
+        return;
+      }
     } else {
+      // Validasi Article mode
+      if (!formData.content.trim()) {
+        alert('Konten knowledge wajib diisi!');
+        return;
+      }
+    }
+
+    // Prepare data untuk disimpan
+    const articleData = {
+      id: editingArticle ? editingArticle.id : Date.now().toString(),
+      title: formData.title,
+      content: activeTab === 'qa' ? '' : formData.content,
+      summary: formData.summary,
+      tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
+      language: formData.language,
+      metadata: activeTab === 'qa' ? {
+        type: 'qa',
+        qaItems: formData.qaItems.filter(item => 
+          item.question.trim() && item.answer.trim()
+        )
+      } : {
+        type: 'article',
+        wordCount: formData.content.split(' ').length
+      },
+      status: 'inactive',
+      created_at: editingArticle ? editingArticle.created_at : new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    if (editingArticle) {
       // Update existing article
       setArticles(prevArticles =>
         prevArticles.map(article =>
-          article.id === editingArticle.id
-            ? { 
-                ...article, 
-                title: formData.title.trim(), 
-                content: formData.content.trim(),
-                updated_at: currentDate
-              }
-            : article
+          article.id === editingArticle.id ? articleData : article
         )
       );
+    } else {
+      // Create new article
+      setArticles(prevArticles => [...prevArticles, articleData]);
     }
 
-    // Reset form
-    setFormData({ title: '', content: '' });
-    setCharCount(0);
+    // Reset form dan close modal
+    resetForm();
     setIsCreating(false);
     setEditingArticle(null);
   };
 
-  // Fungsi untuk cancel form
-  const handleCancel = () => {
-    setFormData({ title: '', content: '' });
-    setCharCount(0);
-    setIsCreating(false);
-    setEditingArticle(null);
-  };
-
-  // Fungsi untuk truncate content preview
-  const truncateContent = (content, maxLength = 100) => {
-    if (content.length <= maxLength) return content;
-    return content.substr(0, maxLength) + '...';
-  };
-
-  // Fungsi untuk format tanggal
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('id-ID', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+  // Fungsi untuk reset form
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      content: '',
+      summary: '',
+      tags: '',
+      language: 'id',
+      qaItems: [{ question: '', variations: '', answer: '' }]
     });
+    setCharCount(0);
+    setActiveTab('qa');
+  };
+
+  // Fungsi untuk edit article
+  const handleEdit = (article) => {
+    setEditingArticle(article);
+    setFormData({
+      title: article.title,
+      content: article.content || '',
+      summary: article.summary || '',
+      tags: article.tags ? article.tags.join(', ') : '',
+      language: article.language || 'id',
+      qaItems: article.metadata?.type === 'qa' ? 
+        article.metadata.qaItems : 
+        [{ question: '', variations: '', answer: '' }]
+    });
+    setActiveTab(article.metadata?.type === 'qa' ? 'qa' : 'article');
+    setCharCount(article.content ? article.content.length : 0);
+    setIsCreating(true);
+  };
+
+  // Fungsi untuk close modal
+  const closeModal = () => {
+    setIsCreating(false);
+    setEditingArticle(null);
+    resetForm();
   };
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">Knowledge Base Management</h2>
-          <p className="text-muted-foreground">
-            Kelola semua entri pengetahuan untuk chatbot Anda
-            {activeArticle && (
-              <span className="ml-2 text-primary font-medium">
-                • Aktif: "{activeArticle.title}"
-              </span>
-            )}
-          </p>
+          <h1 className="text-3xl font-bold text-gray-900">Knowledge Base</h1>
+          <p className="text-gray-600">Kelola pengetahuan dan FAQ untuk bot</p>
         </div>
-        <Button onClick={handleCreate}>
+        <Button onClick={() => setIsCreating(true)} className="bg-blue-600 hover:bg-blue-700">
           <Plus className="w-4 h-4 mr-2" />
           Tambah Pengetahuan Baru
         </Button>
       </div>
 
-      {/* Info Alert */}
-      <Alert>
-        <Info className="h-4 w-4" />
-        <AlertDescription>
-          <strong>Kebijakan Aktivasi:</strong> Hanya 1 knowledge yang dapat aktif dalam satu waktu. 
-          Mengaktifkan knowledge baru akan otomatis menonaktifkan knowledge lain. 
-          Knowledge aktif akan digunakan oleh chatbot untuk menjawab pertanyaan pelanggan.
-        </AlertDescription>
-      </Alert>
+      {/* Active Knowledge Status */}
+      {activeArticle && (
+        <Alert>
+          <Info className="h-4 w-4" />
+          <AlertDescription>
+            <strong>Knowledge Aktif:</strong> {activeArticle.title}
+            {activeArticle.metadata?.type === 'qa' && (
+              <span className="ml-2 text-blue-600">
+                ({activeArticle.metadata.qaItems.length} Q&A)
+              </span>
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Search Bar */}
-      <Card>
-        <CardContent className="p-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
-            <Input 
-              placeholder="Cari berdasarkan judul atau konten..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+        <Input
+          placeholder="Cari knowledge..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10"
+        />
+      </div>
 
-      {/* Main Table */}
+      {/* Articles Table */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BookOpen className="w-5 h-5" />
-            Daftar Knowledge Articles ({filteredArticles.length})
-          </CardTitle>
+          <CardTitle>Daftar Knowledge</CardTitle>
           <CardDescription>
-            Semua entri pengetahuan yang tersimpan dalam sistem. Gunakan toggle untuk mengaktifkan/nonaktifkan knowledge.
+            {filteredArticles.length} knowledge tersedia
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[25%]">Judul</TableHead>
-                <TableHead className="w-[35%]">Ringkasan Konten</TableHead>
-                <TableHead className="w-[12%]">Status</TableHead>
-                <TableHead className="w-[18%]">Terakhir Diperbarui</TableHead>
-                <TableHead className="w-[10%]">Aksi</TableHead>
+                <TableHead>Judul</TableHead>
+                <TableHead>Tipe</TableHead>
+                <TableHead>Tags</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Dibuat</TableHead>
+                <TableHead className="w-20">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredArticles.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                    {searchTerm ? 'Tidak ada knowledge yang cocok dengan pencarian.' : 'Belum ada knowledge. Tambahkan knowledge pertama Anda!'}
+              {filteredArticles.map((article) => (
+                <TableRow key={article.id}>
+                  <TableCell>
+                    <div>
+                      <div className="font-medium">{article.title}</div>
+                      <div className="text-sm text-gray-500">
+                        {article.metadata?.type === 'qa' ? 
+                          `${article.metadata.qaItems.length} Q&A` : 
+                          `${article.metadata?.wordCount || 0} kata`
+                        }
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={article.metadata?.type === 'qa' ? 'default' : 'secondary'}>
+                      {article.metadata?.type === 'qa' ? 'Q&A' : 'Knowledge'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1">
+                      {article.tags?.map((tag, index) => (
+                        <Badge key={index} variant="outline" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={article.status === 'active'}
+                        onCheckedChange={() => toggleStatus(article.id)}
+                      />
+                      <Badge variant={article.status === 'active' ? 'default' : 'secondary'}>
+                        {article.status === 'active' ? 'Aktif' : 'Tidak Aktif'}
+                      </Badge>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm text-gray-500">
+                      {new Date(article.created_at).toLocaleDateString('id-ID')}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(article)}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(article.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
-              ) : (
-                filteredArticles.map(article => (
-                  <TableRow 
-                    key={article.id}
-                    className={article.status === 'active' ? 'bg-primary/5 border-primary/20' : ''}
-                  >
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        {article.status === 'active' && (
-                          <Crown className="w-4 h-4 text-primary" />
-                        )}
-                        {article.title}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {truncateContent(article.content)}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Switch
-                          checked={article.status === 'active'}
-                          onCheckedChange={() => toggleStatus(article.id)}
-                        />
-                        <Badge 
-                          variant={article.status === 'active' ? 'default' : 'secondary'}
-                          className={article.status === 'active' ? 'bg-primary text-primary-foreground' : ''}
-                        >
-                          {article.status === 'active' ? (
-                            <div className="flex items-center gap-1">
-                              <Crown className="w-3 h-3" />
-                              Aktif
-                            </div>
-                          ) : (
-                            'Nonaktif'
-                          )}
-                        </Badge>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        {formatDate(article.updated_at)}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleEdit(article)}
-                        >
-                          <Edit className="w-3 h-3" />
-                        </Button>
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleDelete(article.id)}
-                          disabled={article.status === 'active'}
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
+              ))}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
 
-      {/* Create/Edit Form Modal */}
-      {(isCreating || editingArticle) && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <Card className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span>
-                  {isCreating ? 'Tambah Pengetahuan Baru' : 'Edit Knowledge'}
-                </span>
-                <Button variant="ghost" size="sm" onClick={handleCancel}>
+      {/* Create/Edit Modal */}
+      {isCreating && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-bold">
+                  {editingArticle ? 'Edit Knowledge' : 'Tambah Knowledge Baru'}
+                </h2>
+                <Button variant="ghost" size="sm" onClick={closeModal}>
                   <X className="w-4 h-4" />
                 </Button>
-              </CardTitle>
-              <CardDescription>
-                {isCreating 
-                  ? 'Buat knowledge baru untuk knowledge base chatbot' 
-                  : 'Perbarui informasi knowledge yang ada'
-                }
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Alert untuk informasi batasan karakter */}
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  Konten knowledge dibatasi maksimal {MAX_CHARS.toLocaleString()} karakter untuk memastikan performa optimal chatbot.
-                </AlertDescription>
-              </Alert>
-
-              {/* Field Judul */}
-              <div className="space-y-2">
-                <Label htmlFor="title">Judul Knowledge</Label>
-                <Input 
-                  id="title"
-                  placeholder="Masukkan judul knowledge..."
-                  value={formData.title}
-                  onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                />
               </div>
 
-              {/* Rich Text Editor dengan Character Counter */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="content">Konten Knowledge</Label>
-                  <span className={`text-sm ${charCount > MAX_CHARS * 0.9 ? 'text-destructive' : 'text-muted-foreground'}`}>
-                    {charCount.toLocaleString()} / {MAX_CHARS.toLocaleString()} karakter
-                  </span>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Judul Knowledge */}
+                <div className="space-y-2">
+                  <Label htmlFor="title" className="text-sm font-medium">
+                    Judul Knowledge *
+                  </Label>
+                  <Input
+                    id="title"
+                    placeholder="Contoh: Pertanyaan Seputar Gadai Emas, Panduan Lengkap Pembayaran Cicilan"
+                    value={formData.title}
+                    onChange={(e) => handleInputChange('title', e.target.value)}
+                    required
+                  />
                 </div>
-                <Textarea 
-                  id="content"
-                  placeholder="Tulis konten knowledge di sini..."
-                  value={formData.content}
-                  onChange={handleContentChange}
-                  rows={15}
-                  className="resize-none"
-                />
-                {/* Progress bar untuk character count */}
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className={`h-2 rounded-full transition-all ${
-                      charCount > MAX_CHARS * 0.9 ? 'bg-destructive' : 'bg-primary'
-                    }`}
-                    style={{ width: `${Math.min((charCount / MAX_CHARS) * 100, 100)}%` }}
-                  ></div>
-                </div>
-              </div>
 
-              {/* Action Buttons */}
-              <div className="flex justify-end gap-2 pt-4 border-t">
-                <Button variant="outline" onClick={handleCancel}>
-                  Batal
-                </Button>
-                <Button onClick={handleSave} disabled={!formData.title.trim() || !formData.content.trim()}>
-                  <Save className="w-4 h-4 mr-2" />
-                  {isCreating ? 'Simpan Knowledge' : 'Update Knowledge'}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+                {/* Tab Interface */}
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="qa" className="flex items-center gap-2">
+                      <MessageSquare className="w-4 h-4" />
+                      Input Q&A
+                    </TabsTrigger>
+                    <TabsTrigger value="article" className="flex items-center gap-2">
+                      <FileText className="w-4 h-4" />
+                      Input Knowledge
+                    </TabsTrigger>
+                  </TabsList>
+
+                  {/* Tab 1: Input Q&A */}
+                  <TabsContent value="qa" className="space-y-6 mt-6">
+                    <div className="space-y-4">
+                      {formData.qaItems.map((item, index) => (
+                        <Card key={index}>
+                          <CardHeader>
+                            <div className="flex justify-between items-center">
+                              <CardTitle className="text-lg">Q&A #{index + 1}</CardTitle>
+                              {formData.qaItems.length > 1 && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removeQAItem(index)}
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </CardHeader>
+                          <CardContent className="space-y-4">
+                            {/* Pertanyaan Pengguna */}
+                            <div className="space-y-2">
+                              <Label htmlFor={`question-${index}`} className="text-sm font-medium">
+                                Pertanyaan Pengguna *
+                              </Label>
+                              <Input
+                                id={`question-${index}`}
+                                placeholder="Contoh: Berapa lama proses persetujuan gadai?"
+                                value={item.question}
+                                onChange={(e) => updateQAItem(index, 'question', e.target.value)}
+                                required
+                              />
+                            </div>
+
+                            {/* Variasi Pertanyaan */}
+                            <div className="space-y-2">
+                              <Label htmlFor={`variations-${index}`} className="text-sm font-medium">
+                                Variasi Pertanyaan
+                              </Label>
+                              <Textarea
+                                id={`variations-${index}`}
+                                placeholder="Contoh: proses gadai berapa hari?, kapan barang saya disetujui?, approval butuh berapa lama?"
+                                value={item.variations}
+                                onChange={(e) => updateQAItem(index, 'variations', e.target.value)}
+                                rows={3}
+                              />
+                              <p className="text-xs text-gray-500">
+                                Pisahkan variasi pertanyaan dengan koma atau baris baru
+                              </p>
+                            </div>
+
+                            {/* Jawaban Bot */}
+                            <div className="space-y-2">
+                              <Label htmlFor={`answer-${index}`} className="text-sm font-medium">
+                                Jawaban Bot *
+                              </Label>
+                              <Textarea
+                                id={`answer-${index}`}
+                                placeholder="Tulis jawaban yang singkat dan langsung untuk pertanyaan tersebut"
+                                value={item.answer}
+                                onChange={(e) => updateQAItem(index, 'answer', e.target.value)}
+                                rows={4}
+                                required
+                              />
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={addQAItem}
+                        className="w-full"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        + Tambah Q&A
+                      </Button>
+                    </div>
+                  </TabsContent>
+
+                  {/* Tab 2: Input Knowledge */}
+                  <TabsContent value="article" className="space-y-6 mt-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                      {/* Editor Teks Kaya */}
+                      <div className="lg:col-span-2 space-y-4">
+                        <Label htmlFor="content" className="text-sm font-medium">
+                          Konten Knowledge *
+                        </Label>
+                        <Textarea
+                          id="content"
+                          placeholder="Tulis konten knowledge Anda di sini..."
+                          value={formData.content}
+                          onChange={(e) => handleInputChange('content', e.target.value)}
+                          rows={20}
+                          className="font-mono"
+                          required
+                        />
+                        <div className="flex justify-between text-sm text-gray-500">
+                          <span>{charCount} karakter</span>
+                          <span>{MAX_CHARS - charCount} tersisa</span>
+                        </div>
+                      </div>
+
+                      {/* Panel Metadata Samping */}
+                      <div className="space-y-4">
+                        {/* Ringkasan */}
+                        <div className="space-y-2">
+                          <Label htmlFor="summary" className="text-sm font-medium">
+                            Ringkasan
+                          </Label>
+                          <Textarea
+                            id="summary"
+                            placeholder="Ringkasan singkat knowledge..."
+                            value={formData.summary}
+                            onChange={(e) => handleInputChange('summary', e.target.value)}
+                            rows={4}
+                          />
+                        </div>
+
+                        {/* Tags */}
+                        <div className="space-y-2">
+                          <Label htmlFor="tags" className="text-sm font-medium">
+                            Tags
+                          </Label>
+                          <div className="relative">
+                            <Hash className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                            <Input
+                              id="tags"
+                              placeholder="gadai, emas, cicilan, pembayaran"
+                              value={formData.tags}
+                              onChange={(e) => handleInputChange('tags', e.target.value)}
+                              className="pl-10"
+                            />
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            Pisahkan tags dengan koma
+                          </p>
+                        </div>
+
+                        {/* Bahasa */}
+                        <div className="space-y-2">
+                          <Label htmlFor="language" className="text-sm font-medium">
+                            Bahasa
+                          </Label>
+                          <select
+                            id="language"
+                            value={formData.language}
+                            onChange={(e) => handleInputChange('language', e.target.value)}
+                            className="w-full p-2 border border-gray-300 rounded-md"
+                          >
+                            <option value="id">Bahasa Indonesia</option>
+                            <option value="en">English</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-6 border-t">
+                  <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">
+                    <Save className="w-4 h-4 mr-2" />
+                    {editingArticle ? 'Update Knowledge' : 'Simpan Knowledge'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={closeModal}
+                    className="flex-1"
+                  >
+                    Batal
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
       )}
     </div>
