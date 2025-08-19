@@ -1,8 +1,8 @@
 import React from 'react';
-import Financials from '@/features/superadmin/Financials';
+import FinancialsComponent from '@/features/superadmin/Financials';
 
-const FinancialsPage = () => {
-  return <Financials />;
+const Financials = () => {
+  return <FinancialsComponent />;
 };
 
-export default FinancialsPage;
+export default Financials;

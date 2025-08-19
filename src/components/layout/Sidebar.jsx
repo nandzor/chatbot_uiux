@@ -17,7 +17,8 @@ import {
   User,
   Bot,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  DollarSign
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
 
@@ -29,11 +30,10 @@ const Sidebar = ({ role, isCollapsed, onToggle, isMobile }) => {
     switch(role) {
       case 'superadmin':
         return [
-          { id: 'dashboard', label: 'Platform Dashboard', icon: Home, href: '/superadmin' },
-          { id: 'clients', label: 'Client Management', icon: Building2, href: '/superadmin/clients' },
-          { id: 'subscriptions', label: 'Subscription Plans', icon: CreditCard, href: '/superadmin/financials' },
-          { id: 'system', label: 'System Health', icon: Activity, href: '/superadmin/system' },
-          { id: 'audit', label: 'Audit Logs', icon: Shield, href: '/superadmin/audit' }
+          { id: 'dashboard', label: 'Dashboard', icon: BarChart3, href: '/superadmin' },
+          { id: 'financials', label: 'Financials', icon: DollarSign, href: '/superadmin/financials' },
+          { id: 'clients', label: 'Client Success & Management', icon: Users, href: '/superadmin/clients' },
+          { id: 'platform', label: 'Platform Engineering & DevOps', icon: Settings, href: '/superadmin/platform/configuration' }
         ];
       case 'organization_admin':
         return [

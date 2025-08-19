@@ -1,7 +1,7 @@
 import React from 'react';
 import ClientManagementTable from '@/features/superadmin/ClientManagementTable';
 
-const ClientManagementPage = () => {
+const ClientManagement = () => {
   return (
     <div className="space-y-6">
       <div>
@@ -14,4 +14,4 @@ const ClientManagementPage = () => {
   );
 };
 
-export default ClientManagementPage;
+export default ClientManagement;
