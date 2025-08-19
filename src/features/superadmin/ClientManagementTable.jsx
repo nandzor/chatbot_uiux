@@ -248,11 +248,9 @@ const ClientManagementTable = () => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem asChild>
-                          <a href={`/superadmin/clients/${org.id}`} className="flex items-center">
-                            <Eye className="h-4 w-4 mr-2" />
-                            Client 360° View
-                          </a>
+                        <DropdownMenuItem onClick={() => window.location.href = `/superadmin/clients/${org.id}`}>
+                          <Eye className="h-4 w-4 mr-2" />
+                          Client 360° View
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => handleLoginAsAdmin(org)}>
                           <LogIn className="h-4 w-4 mr-2" />

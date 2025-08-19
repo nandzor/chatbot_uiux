@@ -18,7 +18,10 @@ import {
   Bot,
   ChevronLeft,
   ChevronRight,
-  DollarSign
+  DollarSign,
+  Heart,
+  UserPlus,
+  Zap
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui';
 
@@ -33,6 +36,9 @@ const Sidebar = ({ role, isCollapsed, onToggle, isMobile }) => {
           { id: 'dashboard', label: 'Dashboard', icon: BarChart3, href: '/superadmin' },
           { id: 'financials', label: 'Financials', icon: DollarSign, href: '/superadmin/financials' },
           { id: 'clients', label: 'Client Success & Management', icon: Users, href: '/superadmin/clients' },
+          { id: 'client-health', label: 'Client Health Dashboard', icon: Heart, href: '/superadmin/client-health' },
+          { id: 'onboarding', label: 'Onboarding Pipeline', icon: UserPlus, href: '/superadmin/onboarding' },
+          { id: 'automation', label: 'Automation & Playbooks', icon: Zap, href: '/superadmin/automation' },
           { id: 'platform', label: 'Platform Engineering & DevOps', icon: Settings, href: '/superadmin/platform/configuration' }
         ];
       case 'organization_admin':
