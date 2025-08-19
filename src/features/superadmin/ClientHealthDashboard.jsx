@@ -47,15 +47,15 @@ const ClientHealthDashboard = () => {
       activeClients: 142,
       atRiskClients: 12,
       criticalClients: 2,
-      totalMRR: 45600,
-      mrrAtRisk: 8900,
+      totalMRR: 456000000,
+      mrrAtRisk: 89000000,
       churnRate: 2.8
     },
     healthDistribution: {
-      healthy: { count: 98, percentage: 62.8, mrr: 29800 },
-      atRisk: { count: 12, percentage: 7.7, mrr: 8900 },
-      critical: { count: 2, percentage: 1.3, mrr: 1200 },
-      trial: { count: 44, percentage: 28.2, mrr: 5700 }
+      healthy: { count: 98, percentage: 62.8, mrr: 298000000 },
+      atRisk: { count: 12, percentage: 7.7, mrr: 89000000 },
+      critical: { count: 2, percentage: 1.3, mrr: 12000000 },
+      trial: { count: 44, percentage: 28.2, mrr: 57000000 }
     },
     cohortAnalysis: {
       q1_2024: { joined: 45, churned: 2, retention: 95.6 },
@@ -99,9 +99,9 @@ const ClientHealthDashboard = () => {
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('id-ID', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'IDR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(amount);

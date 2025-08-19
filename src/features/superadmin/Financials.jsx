@@ -87,7 +87,7 @@ const Financials = () => {
       organization: 'ABC Corporation',
       orgCode: 'ABC-001',
       description: 'Enterprise Plan - March 2024',
-      amount: 299.00,
+      amount: 2500000,
       status: 'success',
       paymentMethod: 'Credit Card',
       transactionId: 'ch_1234567890'
@@ -98,7 +98,7 @@ const Financials = () => {
       organization: 'TechStart Inc',
       orgCode: 'TSI-002',
       description: 'Professional Plan - March 2024',
-      amount: 149.00,
+      amount: 1250000,
       status: 'success',
       paymentMethod: 'Bank Transfer',
       transactionId: 'tr_0987654321'
@@ -109,7 +109,7 @@ const Financials = () => {
       organization: 'Digital Agency Pro',
       orgCode: 'DAP-004',
       description: 'Professional Plan - March 2024',
-      amount: 149.00,
+      amount: 1250000,
       status: 'failed',
       paymentMethod: 'Credit Card',
       transactionId: 'ch_1122334455'
@@ -120,7 +120,7 @@ const Financials = () => {
       organization: 'StartupXYZ',
       orgCode: 'SXZ-005',
       description: 'Basic Plan - March 2024',
-      amount: 49.00,
+      amount: 500000,
       status: 'refunded',
       paymentMethod: 'Credit Card',
       transactionId: 'ch_5566778899'

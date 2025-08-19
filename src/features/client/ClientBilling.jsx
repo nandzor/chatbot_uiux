@@ -30,7 +30,7 @@ const ClientBilling = ({ clientData }) => {
   const [billingData] = React.useState({
     currentSubscription: {
       plan: 'Enterprise',
-      amount: 2500,
+      amount: 2500000,
       billingCycle: 'monthly',
       nextBilling: '2024-04-15',
       status: 'active',
@@ -40,7 +40,7 @@ const ClientBilling = ({ clientData }) => {
       {
         id: 'INV-001',
         date: '2024-03-15',
-        amount: 2500,
+        amount: 2500000,
         status: 'paid',
         dueDate: '2024-03-15',
         description: 'Enterprise Plan - March 2024'
@@ -48,7 +48,7 @@ const ClientBilling = ({ clientData }) => {
       {
         id: 'INV-002',
         date: '2024-02-15',
-        amount: 2500,
+        amount: 2500000,
         status: 'paid',
         dueDate: '2024-02-15',
         description: 'Enterprise Plan - February 2024'
@@ -56,7 +56,7 @@ const ClientBilling = ({ clientData }) => {
       {
         id: 'INV-003',
         date: '2024-01-15',
-        amount: 2500,
+        amount: 2500000,
         status: 'paid',
         dueDate: '2024-01-15',
         description: 'Enterprise Plan - January 2024'
@@ -83,9 +83,9 @@ const ClientBilling = ({ clientData }) => {
   };
 
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('id-ID', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'IDR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(amount);

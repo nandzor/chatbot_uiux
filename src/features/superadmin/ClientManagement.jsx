@@ -131,7 +131,7 @@ const ClientManagement = () => {
           plan: 'Enterprise',
           status: 'Active',
           nextBilling: '2024-04-15',
-          amount: '$299/month'
+          amount: 'Rp 2.500.000/bulan'
         },
         usage: {
           users: { current: 25, limit: 50, percentage: 50 },
@@ -155,9 +155,9 @@ const ClientManagement = () => {
         { id: 4, name: 'Diana Putri', email: 'diana.putri@abccorp.com', role: 'viewer', lastLogin: '2024-03-18 11:20:00', status: 'inactive' }
       ],
       billing: [
-        { id: 1, date: '2024-03-15', amount: '$299.00', status: 'paid', description: 'Enterprise Plan - March', invoice: 'INV-2024-001' },
-        { id: 2, date: '2024-02-15', amount: '$299.00', status: 'paid', description: 'Enterprise Plan - February', invoice: 'INV-2024-002' },
-        { id: 3, date: '2024-01-15', amount: '$299.00', status: 'paid', description: 'Enterprise Plan - January', invoice: 'INV-2024-003' }
+        { id: 1, date: '2024-03-15', amount: 'Rp 2.500.000', status: 'paid', description: 'Enterprise Plan - March', invoice: 'INV-2024-001' },
+        { id: 2, date: '2024-02-15', amount: 'Rp 2.500.000', status: 'paid', description: 'Enterprise Plan - February', invoice: 'INV-2024-002' },
+        { id: 3, date: '2024-01-15', amount: 'Rp 2.500.000', status: 'paid', description: 'Enterprise Plan - January', invoice: 'INV-2024-003' }
       ],
       workflows: [
         { id: 1, name: 'Customer Onboarding', status: 'active', executions: 245, lastRun: '2024-03-20 13:45:00', successRate: 98.5 },

@@ -32,7 +32,7 @@ const ClientLayout = () => {
     plan: 'Enterprise',
     status: 'active',
     healthScore: 92,
-    mrr: 2500,
+    mrr: 2500000,
     renewalDate: '2024-12-15',
     csm: 'Sarah Johnson'
   });
