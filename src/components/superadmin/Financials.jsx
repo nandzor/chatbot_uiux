@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Card, 
   CardContent, 
@@ -31,6 +31,8 @@ import {
   DropdownMenuTrigger
 } from '../ui';
 import PlanModal from './PlanModal';
+import { subscriptionPlansData, subscriptionPlansMetadata } from '../../data/sampleData';
+import subscriptionPlansService from '../../services/subscriptionPlansService';
 import { 
   CreditCard,
   DollarSign,
@@ -49,54 +51,31 @@ const Financials = () => {
   const [editingPlan, setEditingPlan] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Sample subscription plans data
-  const [subscriptionPlans] = useState([
-    {
-      id: 'basic',
-      name: 'Basic',
-      tier: 'basic',
-      priceMonthly: 49,
-      priceYearly: 470,
-      maxAgents: 5,
-      maxMessagesPerMonth: 1000,
-      features: ['Live Chat', 'Basic Analytics', 'Email Support'],
-      highlights: ['Most Popular'],
-      description: 'Perfect for small businesses getting started with chatbot automation',
-      isActive: true,
-      activeSubscriptions: 45,
-      totalRevenue: 2205
-    },
-    {
-      id: 'pro',
-      name: 'Professional',
-      tier: 'professional',
-      priceMonthly: 149,
-      priceYearly: 1430,
-      maxAgents: 15,
-      maxMessagesPerMonth: 5000,
-      features: ['Live Chat', 'Advanced Analytics', 'API Access', 'Priority Support', 'Custom Integrations'],
-      highlights: ['Best Value'],
-      description: 'Ideal for growing businesses that need advanced features and integrations',
-      isActive: true,
-      activeSubscriptions: 89,
-      totalRevenue: 13261
-    },
-    {
-      id: 'enterprise',
-      name: 'Enterprise',
-      tier: 'enterprise',
-      priceMonthly: 299,
-      priceYearly: 2870,
-      maxAgents: 50,
-      maxMessagesPerMonth: 20000,
-      features: ['All Pro Features', 'White Label', 'Custom Workflows', 'Dedicated Support', 'SLA Guarantee'],
-      highlights: ['Most Powerful'],
-      description: 'Complete solution for large enterprises with custom requirements',
-      isActive: true,
-      activeSubscriptions: 23,
-      totalRevenue: 6877
-    }
-  ]);
+  // Subscription plans data from service
+  const [subscriptionPlans, setSubscriptionPlans] = useState([]);
+  const [metadata, setMetadata] = useState(subscriptionPlansMetadata);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load subscription plans data on component mount
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        const [plans, planMetadata] = await Promise.all([
+          subscriptionPlansService.getSubscriptionPlans(),
+          subscriptionPlansService.getMetadata()
+        ]);
+        setSubscriptionPlans(plans);
+        setMetadata(planMetadata);
+      } catch (error) {
+        console.error('Error loading subscription plans:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
 
   // Sample transactions data
   const [transactions] = useState([
@@ -183,17 +162,34 @@ const Financials = () => {
 
   const handleSavePlan = async (planData) => {
     console.log('Saving plan:', planData);
-    // Here you would typically make an API call to save the plan
-    // For now, we'll just log the data
-    if (editingPlan) {
-      console.log('Updating existing plan:', editingPlan.id, planData);
-    } else {
-      console.log('Creating new plan:', planData);
-    }
     
-    // Close modal and reset states
-    setIsModalOpen(false);
-    setEditingPlan(null);
+    try {
+      if (editingPlan) {
+        // Update existing plan
+        console.log('Updating existing plan:', editingPlan.id, planData);
+        const updatedPlan = await subscriptionPlansService.updatePlan(editingPlan.id, planData);
+        setSubscriptionPlans(prevPlans => 
+          prevPlans.map(plan => 
+            plan.id === editingPlan.id ? updatedPlan : plan
+          )
+        );
+      } else {
+        // Create new plan
+        console.log('Creating new plan:', planData);
+        const newPlan = await subscriptionPlansService.createPlan(planData);
+        setSubscriptionPlans(prevPlans => [...prevPlans, newPlan]);
+      }
+      
+      // Reload metadata
+      const updatedMetadata = await subscriptionPlansService.getMetadata();
+      setMetadata(updatedMetadata);
+      
+      // Close modal and reset states
+      setIsModalOpen(false);
+      setEditingPlan(null);
+    } catch (error) {
+      console.error('Error saving plan:', error);
+    }
   };
 
   const handleEditPlan = (plan) => {
@@ -229,7 +225,7 @@ const Financials = () => {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(22343)}</div>
+            <div className="text-2xl font-bold">{formatCurrency(metadata.totalMonthlyRevenue)}</div>
             <p className="text-xs text-muted-foreground">
               <span className="text-green-600">+12.5%</span> dari bulan lalu
             </p>
@@ -242,7 +238,7 @@ const Financials = () => {
             <CreditCard className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">157</div>
+            <div className="text-2xl font-bold">{metadata.totalActiveSubscriptions}</div>
             <p className="text-xs text-muted-foreground">
               <span className="text-green-600">+8</span> subscription baru
             </p>
@@ -287,14 +283,25 @@ const Financials = () => {
         <TabsContent value="plans" className="space-y-6">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-semibold">Subscription Plans</h2>
-            <Button onClick={handleCreatePlan}>
-              <Plus className="w-4 h-4 mr-2" />
-              Create New Plan
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => subscriptionPlansService.exportToJSON()}>
+                <Download className="w-4 h-4 mr-2" />
+                Export Data
+              </Button>
+              <Button onClick={handleCreatePlan}>
+                <Plus className="w-4 h-4 mr-2" />
+                Create New Plan
+              </Button>
+            </div>
           </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {subscriptionPlans.map((plan) => (
+              {isLoading ? (
+                <div className="flex justify-center items-center py-12">
+                  <div className="text-muted-foreground">Loading subscription plans...</div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {subscriptionPlans.map((plan) => (
                   <Card key={plan.id}>
                     <CardHeader>
                       <div className="flex justify-between items-start">
@@ -388,7 +395,8 @@ const Financials = () => {
                     </CardContent>
                   </Card>
                 ))}
-              </div>
+                </div>
+              )}
         </TabsContent>
 
         {/* Transactions Tab */}

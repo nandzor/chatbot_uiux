@@ -1065,3 +1065,104 @@ export const integrationsData = [
     ]
   }
 ];
+
+// Subscription Plans Data
+export const subscriptionPlansData = [
+  {
+    id: 'basic',
+    name: 'Basic',
+    tier: 'basic',
+    priceMonthly: 49,
+    priceYearly: 470,
+    maxAgents: 5,
+    maxMessagesPerMonth: 1000,
+    features: [
+      'Live Chat',
+      'Basic Analytics', 
+      'Email Support',
+      '5 Chat Agents',
+      '1,000 Messages/Month',
+      'Basic Templates',
+      'Standard Integrations'
+    ],
+    highlights: ['Most Popular'],
+    description: 'Perfect for small businesses getting started with chatbot automation. Includes essential features to help you provide excellent customer support.',
+    isActive: true,
+    activeSubscriptions: 45,
+    totalRevenue: 2205,
+    createdAt: '2024-01-15T10:00:00Z',
+    updatedAt: '2024-03-20T14:30:00Z'
+  },
+  {
+    id: 'pro',
+    name: 'Professional', 
+    tier: 'professional',
+    priceMonthly: 149,
+    priceYearly: 1430,
+    maxAgents: 15,
+    maxMessagesPerMonth: 5000,
+    features: [
+      'Live Chat',
+      'Advanced Analytics',
+      'API Access',
+      'Priority Support',
+      'Custom Integrations',
+      '15 Chat Agents',
+      '5,000 Messages/Month',
+      'Advanced Templates',
+      'Custom Branding',
+      'Multi-language Support',
+      'Advanced Reporting',
+      'Webhook Integrations'
+    ],
+    highlights: ['Best Value'],
+    description: 'Ideal for growing businesses that need advanced features and integrations. Scale your customer support with powerful automation tools.',
+    isActive: true,
+    activeSubscriptions: 89,
+    totalRevenue: 13261,
+    createdAt: '2024-01-15T10:00:00Z',
+    updatedAt: '2024-03-20T14:30:00Z'
+  },
+  {
+    id: 'enterprise',
+    name: 'Enterprise',
+    tier: 'enterprise', 
+    priceMonthly: 299,
+    priceYearly: 2870,
+    maxAgents: 50,
+    maxMessagesPerMonth: 20000,
+    features: [
+      'All Pro Features',
+      'White Label',
+      'Custom Workflows',
+      'Dedicated Support',
+      'SLA Guarantee',
+      '50 Chat Agents',
+      '20,000 Messages/Month',
+      'Custom Development',
+      'Advanced Security',
+      'Multi-tenant Support',
+      'Custom AI Training',
+      '24/7 Phone Support',
+      'On-premise Option',
+      'Custom Integrations',
+      'Advanced Analytics Dashboard'
+    ],
+    highlights: ['Most Powerful'],
+    description: 'Complete solution for large enterprises with custom requirements. Get dedicated support and advanced features for maximum scalability.',
+    isActive: true,
+    activeSubscriptions: 23,
+    totalRevenue: 6877,
+    createdAt: '2024-01-15T10:00:00Z',
+    updatedAt: '2024-03-20T14:30:00Z'
+  }
+];
+
+// Subscription Plans Metadata
+export const subscriptionPlansMetadata = {
+  lastUpdated: '2024-03-20T14:30:00Z',
+  version: '1.0.0',
+  totalPlans: 3,
+  totalActiveSubscriptions: 157,
+  totalMonthlyRevenue: 22343
+};
