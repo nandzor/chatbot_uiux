@@ -13,6 +13,12 @@ import { useAuth } from '../contexts/AuthContext';
 const SuperAdminLayout = () => {
   const { logout } = useAuth();
 
+  const handleLogout = () => {
+    if (window.confirm('Apakah Anda yakin ingin keluar dari sistem?')) {
+      logout();
+    }
+  };
+
   const navigation = [
     { name: 'Dashboard', href: '/superadmin', icon: BarChart3 },
     { name: 'Financials', href: '/superadmin/financials', icon: DollarSign },
@@ -53,7 +59,7 @@ const SuperAdminLayout = () => {
 
         <div className="absolute bottom-0 w-64 p-4">
           <button
-            onClick={logout}
+            onClick={handleLogout}
             className="flex items-center w-full px-3 py-2 text-sm font-medium text-gray-700 rounded-md hover:bg-gray-100 hover:text-gray-900 transition-colors"
           >
             <LogOut className="mr-3 h-5 w-5" />

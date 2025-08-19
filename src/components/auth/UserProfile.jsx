@@ -83,8 +83,13 @@ const UserProfile = ({ showFullProfile = false }) => {
   };
 
   const handleLogout = () => {
-    logout();
     setIsOpen(false);
+    // Add a small delay to close dropdown before logout
+    setTimeout(() => {
+      if (window.confirm('Apakah Anda yakin ingin keluar dari sistem?')) {
+        logout();
+      }
+    }, 100);
   };
 
   if (showFullProfile) {

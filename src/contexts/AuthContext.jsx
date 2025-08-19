@@ -1,6 +1,16 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getUserAvatarData } from '../utils/avatarUtils';
 
+// Import toaster hook safely
+const useToaster = () => {
+  try {
+    const { useToaster: useToasterHook } = require('../components/ui/Toaster');
+    return useToasterHook();
+  } catch {
+    return { addToast: () => {} };
+  }
+};
+
 // Test users dengan 3 role berbeda
 export const testUsers = [
   {
@@ -57,6 +67,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { addToast } = useToaster();
 
   // Check for existing session on mount
   useEffect(() => {
@@ -96,22 +107,45 @@ export const AuthProvider = ({ children }) => {
         // Save to localStorage for persistence
         localStorage.setItem('chatbot_user', JSON.stringify(userWithoutPassword));
         
+        // Show success notification
+        addToast(`Selamat datang, ${userWithoutPassword.name}!`, 'success');
+        
         setIsLoading(false);
         return { success: true, user: userWithoutPassword };
       } else {
         setIsLoading(false);
+        addToast('Username atau password salah', 'error');
         return { success: false, error: 'Username atau password salah' };
       }
     } catch (error) {
       setIsLoading(false);
+      addToast('Terjadi kesalahan saat login', 'error');
       return { success: false, error: 'Terjadi kesalahan saat login' };
     }
   };
 
   const logout = () => {
+    // Set loading state
+    setIsLoading(true);
+    
+    // Show logout notification
+    addToast('Logout berhasil', 'success');
+    
+    // Clear user data
     setUser(null);
     setIsAuthenticated(false);
+    
+    // Clear localStorage
     localStorage.removeItem('chatbot_user');
+    
+    // Clear any other stored data
+    localStorage.removeItem('chatbot_session');
+    sessionStorage.clear();
+    
+    // Force redirect to login page after a short delay
+    setTimeout(() => {
+      window.location.href = '/auth/login';
+    }, 500);
   };
 
   const hasPermission = (permission) => {
