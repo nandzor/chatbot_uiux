@@ -368,19 +368,15 @@ const Financials = () => {
                       </div>
 
                       <div className="space-y-2">
-                        <p className="text-sm font-medium">Features:</p>
-                        <div className="flex flex-wrap gap-1">
-                          {plan.features.slice(0, 3).map((feature, index) => (
-                            <Badge key={index} variant="outline" className="text-xs">
-                              {feature}
-                            </Badge>
+                        <p className="text-sm font-medium">Fitur:</p>
+                        <ul className="text-xs text-muted-foreground space-y-1">
+                          {plan.features.map((feature, index) => (
+                            <li key={index} className="flex items-start gap-2">
+                              <span className="text-green-500 mt-0.5">•</span>
+                              <span>{feature}</span>
+                            </li>
                           ))}
-                          {plan.features.length > 3 && (
-                            <Badge variant="outline" className="text-xs">
-                              +{plan.features.length - 3} more
-                            </Badge>
-                          )}
-                        </div>
+                        </ul>
                       </div>
 
                       <div className="pt-4 border-t space-y-2">
