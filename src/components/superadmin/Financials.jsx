@@ -128,8 +128,9 @@ const Financials = () => {
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('id-ID', {
       style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0
+      currency: 'IDR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
     }).format(amount);
   };
 
@@ -345,7 +346,7 @@ const Financials = () => {
                         <div className="text-3xl font-bold">{formatCurrency(plan.priceMonthly)}<span className="text-sm font-normal text-muted-foreground">/month</span></div>
                         {plan.priceYearly && (
                           <div className="text-sm text-muted-foreground">
-                            {formatCurrency(plan.priceYearly)}/year (save 20%)
+                            {formatCurrency(plan.priceYearly)}/tahun (hemat 2 bulan)
                           </div>
                         )}
                       </div>

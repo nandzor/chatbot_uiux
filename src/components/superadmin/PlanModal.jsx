@@ -92,19 +92,19 @@ const PlanModal = ({ plan, isOpen, onClose, onSave }) => {
     const newErrors = {};
 
     if (!formData.name.trim()) {
-      newErrors.name = 'Plan name is required';
+      newErrors.name = 'Nama paket wajib diisi';
     }
 
     if (formData.priceMonthly < 0) {
-      newErrors.priceMonthly = 'Price must be positive';
+      newErrors.priceMonthly = 'Harga harus positif';
     }
 
     if (formData.maxAgents < 1) {
-      newErrors.maxAgents = 'Must have at least 1 agent';
+      newErrors.maxAgents = 'Minimal harus ada 1 agent';
     }
 
     if (formData.maxMessagesPerMonth < 1) {
-      newErrors.maxMessagesPerMonth = 'Must have at least 1 message per month';
+      newErrors.maxMessagesPerMonth = 'Minimal harus ada 1 pesan per bulan';
     }
 
     setErrors(newErrors);
@@ -124,7 +124,7 @@ const PlanModal = ({ plan, isOpen, onClose, onSave }) => {
       // Calculate yearly price if not set
       const finalData = {
         ...formData,
-        priceYearly: formData.priceYearly || Math.round(formData.priceMonthly * 12 * 0.8) // 20% discount
+        priceYearly: formData.priceYearly || Math.round(formData.priceMonthly * 10) // 10 bulan bayar untuk 12 bulan
       };
 
       await onSave(finalData);
@@ -198,12 +198,12 @@ const PlanModal = ({ plan, isOpen, onClose, onSave }) => {
             {getTierIcon(formData.tier)}
             <div>
               <DialogTitle>
-                {plan ? 'Edit Subscription Plan' : 'Create New Plan'}
+                {plan ? 'Edit Paket Berlangganan' : 'Buat Paket Baru'}
               </DialogTitle>
               <DialogDescription>
                 {plan 
-                  ? 'Update the subscription plan details and features'
-                  : 'Create a new subscription plan for your customers'
+                  ? 'Perbarui detail dan fitur paket berlangganan'
+                  : 'Buat paket berlangganan baru untuk pelanggan Anda'
                 }
               </DialogDescription>
             </div>
@@ -217,17 +217,17 @@ const PlanModal = ({ plan, isOpen, onClose, onSave }) => {
             <div className="space-y-4">
               <h3 className="text-lg font-semibold flex items-center gap-2">
                 <DollarSign className="w-5 h-5" />
-                Basic Information
+                Informasi Dasar
               </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Plan Name *</Label>
+                  <Label htmlFor="name">Nama Paket *</Label>
                   <Input
                     id="name"
                     value={formData.name}
                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                    placeholder="e.g., Basic, Professional, Enterprise"
+                    placeholder="e.g., Starter, Business, Enterprise"
                     className={errors.name ? 'border-destructive' : ''}
                   />
                   {errors.name && <p className="text-sm text-destructive">{errors.name}</p>}
@@ -254,12 +254,12 @@ const PlanModal = ({ plan, isOpen, onClose, onSave }) => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description">Deskripsi</Label>
                 <Textarea
                   id="description"
                   value={formData.description}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Describe what this plan offers..."
+                  placeholder="Jelaskan apa yang ditawarkan paket ini..."
                   rows={3}
                 />
               </div>
@@ -271,12 +271,12 @@ const PlanModal = ({ plan, isOpen, onClose, onSave }) => {
             <div className="space-y-4">
               <h3 className="text-lg font-semibold flex items-center gap-2">
                 <DollarSign className="w-5 h-5" />
-                Pricing
+                Harga
               </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="priceMonthly">Monthly Price ($) *</Label>
+                  <Label htmlFor="priceMonthly">Harga Bulanan (Rp) *</Label>
                   <Input
                     id="priceMonthly"
                     type="number"
@@ -289,7 +289,7 @@ const PlanModal = ({ plan, isOpen, onClose, onSave }) => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="priceYearly">Yearly Price ($)</Label>
+                  <Label htmlFor="priceYearly">Harga Tahunan (Rp)</Label>
                   <Input
                     id="priceYearly"
                     type="number"
@@ -298,7 +298,7 @@ const PlanModal = ({ plan, isOpen, onClose, onSave }) => {
                     placeholder="Auto-calculated (20% discount)"
                   />
                   <p className="text-xs text-muted-foreground">
-                    Leave empty for auto-calculation
+                    Kosongkan untuk kalkulasi otomatis
                   </p>
                 </div>
               </div>
@@ -310,12 +310,12 @@ const PlanModal = ({ plan, isOpen, onClose, onSave }) => {
             <div className="space-y-4">
               <h3 className="text-lg font-semibold flex items-center gap-2">
                 <Users className="w-5 h-5" />
-                Usage Limits
+                Batasan Penggunaan
               </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="maxAgents">Maximum Agents *</Label>
+                  <Label htmlFor="maxAgents">Maksimal Agent *</Label>
                   <Input
                     id="maxAgents"
                     type="number"
@@ -328,7 +328,7 @@ const PlanModal = ({ plan, isOpen, onClose, onSave }) => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="maxMessages">Messages per Month *</Label>
+                  <Label htmlFor="maxMessages">Pesan per Bulan *</Label>
                   <Input
                     id="maxMessages"
                     type="number"
@@ -348,14 +348,14 @@ const PlanModal = ({ plan, isOpen, onClose, onSave }) => {
             <div className="space-y-4">
               <h3 className="text-lg font-semibold flex items-center gap-2">
                 <Zap className="w-5 h-5" />
-                Features
+                Fitur
               </h3>
               
               <div className="space-y-2">
-                <Label>Add Features</Label>
+                <Label>Tambah Fitur</Label>
                 <div className="flex gap-2">
                   <Input
-                    placeholder="Enter a feature (e.g., Live Chat, API Access)"
+                    placeholder="Masukkan fitur (e.g., Live Chat, API Access)"
                     value={featureInput}
                     onChange={(e) => setFeatureInput(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addFeature())}
@@ -368,7 +368,7 @@ const PlanModal = ({ plan, isOpen, onClose, onSave }) => {
 
               {formData.features.length > 0 && (
                 <div className="space-y-2">
-                  <Label>Current Features</Label>
+                  <Label>Fitur Saat Ini</Label>
                   <div className="flex flex-wrap gap-2">
                     {formData.features.map((feature, index) => (
                       <Badge 
@@ -391,14 +391,14 @@ const PlanModal = ({ plan, isOpen, onClose, onSave }) => {
             <div className="space-y-4">
               <h3 className="text-lg font-semibold flex items-center gap-2">
                 <CheckCircle className="w-5 h-5" />
-                Plan Highlights
+                Sorotan Paket
               </h3>
               
               <div className="space-y-2">
-                <Label>Add Highlights</Label>
+                <Label>Tambah Sorotan</Label>
                 <div className="flex gap-2">
                   <Input
-                    placeholder="Enter a highlight (e.g., Most Popular, Best Value)"
+                    placeholder="Masukkan sorotan (e.g., Terpopuler, Nilai Terbaik)"
                     value={highlightInput}
                     onChange={(e) => setHighlightInput(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addHighlight())}
@@ -411,7 +411,7 @@ const PlanModal = ({ plan, isOpen, onClose, onSave }) => {
 
               {formData.highlights.length > 0 && (
                 <div className="space-y-2">
-                  <Label>Current Highlights</Label>
+                  <Label>Sorotan Saat Ini</Label>
                   <div className="flex flex-wrap gap-2">
                     {formData.highlights.map((highlight, index) => (
                       <Badge 
@@ -432,7 +432,7 @@ const PlanModal = ({ plan, isOpen, onClose, onSave }) => {
 
             {/* Status */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Plan Status</h3>
+              <h3 className="text-lg font-semibold">Status Paket</h3>
               
               <div className="flex items-center space-x-2">
                 <Switch
@@ -440,14 +440,14 @@ const PlanModal = ({ plan, isOpen, onClose, onSave }) => {
                   checked={formData.isActive}
                   onCheckedChange={(checked) => setFormData(prev => ({ ...prev, isActive: checked }))}
                 />
-                <Label htmlFor="isActive">Active Plan</Label>
+                <Label htmlFor="isActive">Paket Aktif</Label>
               </div>
               
               {!formData.isActive && (
                 <Alert>
                   <AlertTriangle className="h-4 w-4" />
                   <AlertDescription>
-                    This plan will be hidden from customers when inactive.
+                    Paket ini akan disembunyikan dari pelanggan ketika tidak aktif.
                   </AlertDescription>
                 </Alert>
               )}
@@ -461,7 +461,7 @@ const PlanModal = ({ plan, isOpen, onClose, onSave }) => {
           </Button>
           <Button onClick={handleSubmit} disabled={isSubmitting}>
             <Save className="w-4 h-4 mr-2" />
-            {isSubmitting ? 'Saving...' : (plan ? 'Update Plan' : 'Create Plan')}
+            {isSubmitting ? 'Menyimpan...' : (plan ? 'Update Paket' : 'Buat Paket')}
           </Button>
         </DialogFooter>
       </DialogContent>
