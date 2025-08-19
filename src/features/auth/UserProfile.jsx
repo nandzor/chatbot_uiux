@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate, useLocation } from 'react-router-dom';
 import UserAvatar from '@/components/common/UserAvatar';
 import { 
   Avatar, 
@@ -32,6 +33,8 @@ import {
 const UserProfile = ({ showFullProfile = false }) => {
   const { user, logout, isRole } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   if (!user) return null;
 
@@ -90,6 +93,27 @@ const UserProfile = ({ showFullProfile = false }) => {
         logout();
       }
     }, 100);
+  };
+
+  const handleProfileSettings = () => {
+    setIsOpen(false);
+    
+    // Navigate based on user role
+    switch (user.role) {
+      case 'superadmin':
+        // For superadmin, you might want to navigate to a different profile page
+        // or keep them in the current context
+        break;
+      case 'organization_admin':
+        navigate('/dashboard/profile');
+        break;
+      case 'agent':
+        navigate('/agent/profile');
+        break;
+      default:
+        // Default navigation
+        break;
+    }
   };
 
   if (showFullProfile) {
@@ -192,7 +216,7 @@ const UserProfile = ({ showFullProfile = false }) => {
 
         <DropdownMenuSeparator />
         
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={handleProfileSettings}>
           <Settings className="w-4 h-4 mr-2" />
           <span>Profile Settings</span>
         </DropdownMenuItem>

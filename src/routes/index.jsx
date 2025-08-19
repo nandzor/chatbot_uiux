@@ -21,6 +21,7 @@ import Analytics from '@/pages/analytics/Analytics';
 import Knowledge from '@/pages/knowledge/Knowledge';
 import Automations from '@/pages/automations/Automations';
 import Settings from '@/pages/settings/Settings';
+import ProfileSettings from '@/features/shared/ProfileSettings';
 
 // Super Admin Pages
 import SuperAdminDashboard from '@/pages/superadmin/Dashboard';
@@ -128,6 +129,10 @@ export const router = createBrowserRouter([
                 <Settings />
               </RoleBasedRoute>
             ) 
+          },
+          { 
+            path: 'profile', 
+            element: <ProfileSettings />
           },
         ],
       },

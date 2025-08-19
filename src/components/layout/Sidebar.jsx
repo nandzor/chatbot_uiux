@@ -48,7 +48,8 @@ const Sidebar = ({ role, isCollapsed, onToggle, isMobile }) => {
           { id: 'analytics', label: 'Analytics', icon: BarChart3, href: '/dashboard/analytics' },
           { id: 'knowledge', label: 'Knowledge Base', icon: BookOpen, href: '/dashboard/knowledge' },
           { id: 'automations', label: 'Automations', icon: Workflow, href: '/dashboard/automations' },
-          { id: 'settings', label: 'Settings', icon: Settings, href: '/dashboard/settings' }
+          { id: 'settings', label: 'Settings', icon: Settings, href: '/dashboard/settings' },
+          { id: 'profile', label: 'Profile Settings', icon: User, href: '/dashboard/profile' }
         ];
       case 'agent':
         return [
