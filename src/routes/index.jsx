@@ -41,6 +41,7 @@ import ServerError from '../pages/errors/ServerError';
 // Protected Route Components
 import ProtectedRoute from '../components/auth/ProtectedRoute';
 import RoleBasedRoute from '../components/auth/RoleBasedRoute';
+import RoleBasedRedirect from '../components/auth/RoleBasedRedirect';
 
 export const router = createBrowserRouter([
   {
@@ -61,13 +62,13 @@ export const router = createBrowserRouter([
         ],
       },
 
-      // Dashboard Routes (Admin/Manager)
+      // Dashboard Routes (Organization Admin/Manager)
       {
         path: '/dashboard',
         element: (
-          <ProtectedRoute>
+          <RoleBasedRoute requiredRole="organization_admin">
             <DashboardLayout />
-          </ProtectedRoute>
+          </RoleBasedRoute>
         ),
         children: [
           { index: true, element: <Dashboard /> },
@@ -91,7 +92,7 @@ export const router = createBrowserRouter([
           { 
             path: 'automations', 
             element: (
-              <RoleBasedRoute requiredPermission="manage_automations">
+              <RoleBasedRoute requiredPermission="manage_settings">
                 <Automations />
               </RoleBasedRoute>
             ) 
@@ -142,8 +143,8 @@ export const router = createBrowserRouter([
       { path: '/unauthorized', element: <Unauthorized /> },
       { path: '/server-error', element: <ServerError /> },
 
-      // Default redirect - will be handled by AuthLayout
-      { index: true, element: <Navigate to="/auth/login" replace /> },
+      // Default redirect - will be handled by RoleBasedRedirect
+      { index: true, element: <RoleBasedRedirect /> },
     ],
   },
 ]);

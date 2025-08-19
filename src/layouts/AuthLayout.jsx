@@ -5,16 +5,9 @@ import { useAuth } from '../contexts/AuthContext';
 const AuthLayout = () => {
   const { isAuthenticated } = useAuth();
 
-  // Redirect to appropriate dashboard based on role if already authenticated
+  // If already authenticated, redirect to appropriate dashboard
   if (isAuthenticated) {
-    const { user } = useAuth();
-    if (user?.role === 'superadmin') {
-      return <Navigate to="/superadmin" replace />;
-    } else if (user?.role === 'agent') {
-      return <Navigate to="/agent" replace />;
-    } else {
-      return <Navigate to="/dashboard" replace />;
-    }
+    return <Navigate to="/" replace />;
   }
 
   return (

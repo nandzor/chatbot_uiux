@@ -1,7 +1,6 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { useRole } from '../../contexts/RoleContext';
 
 const RoleBasedRoute = ({ 
   children, 
@@ -9,8 +8,7 @@ const RoleBasedRoute = ({
   requiredPermission, 
   fallbackPath = '/unauthorized' 
 }) => {
-  const { isAuthenticated, isLoading } = useAuth();
-  const { role, hasPermission } = useRole();
+  const { isAuthenticated, isLoading, user, hasPermission, isRole } = useAuth();
   const location = useLocation();
 
   // Show loading while checking authentication
@@ -28,7 +26,7 @@ const RoleBasedRoute = ({
   }
 
   // Check role-based access
-  if (requiredRole && role !== requiredRole) {
+  if (requiredRole && !isRole(requiredRole)) {
     return <Navigate to={fallbackPath} replace />;
   }
 

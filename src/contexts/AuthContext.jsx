@@ -34,7 +34,7 @@ export const testUsers = [
     organizationId: 'org-001',
     organizationName: 'PT Teknologi Nusantara',
     avatar: getUserAvatarData('ahmad.rahman@company.com', 'Ahmad Rahman').avatar,
-    permissions: ['handle_chats', 'manage_users', 'manage_agents', 'manage_settings', 'view_analytics', 'manage_billing'],
+    permissions: ['handle_chats', 'manage_users', 'manage_agents', 'manage_settings', 'view_analytics', 'manage_billing', 'manage_automations'],
     description: 'Organization administrator with full org management access'
   },
   {
@@ -111,6 +111,24 @@ export const AuthProvider = ({ children }) => {
         addToast(`Selamat datang, ${userWithoutPassword.name}!`, 'success');
         
         setIsLoading(false);
+        
+        // Redirect based on role after successful login
+        setTimeout(() => {
+          switch (userWithoutPassword.role) {
+            case 'superadmin':
+              window.location.href = '/superadmin';
+              break;
+            case 'organization_admin':
+              window.location.href = '/dashboard';
+              break;
+            case 'agent':
+              window.location.href = '/agent';
+              break;
+            default:
+              window.location.href = '/';
+          }
+        }, 500);
+        
         return { success: true, user: userWithoutPassword };
       } else {
         setIsLoading(false);
