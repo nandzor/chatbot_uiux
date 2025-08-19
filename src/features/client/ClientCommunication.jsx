@@ -36,14 +36,35 @@ import {
   Clock,
   User,
   FileText,
-  Video
+  Video,
+  Edit,
+  Trash2,
+  Reply,
+  Eye,
+  Filter,
+  Search,
+  MoreHorizontal
 } from 'lucide-react';
 
 const ClientCommunication = ({ clientData }) => {
   const [isNewMessageOpen, setIsNewMessageOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('history');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterType, setFilterType] = useState('all');
+  
+  // Form state
+  const [formData, setFormData] = useState({
+    type: '',
+    subject: '',
+    recipient: '',
+    message: '',
+    priority: '',
+    schedule: ''
+  });
 
-  // Sample communication data
-  const [communicationData] = useState({
+  // Sample communication data with state management
+  const [communicationData, setCommunicationData] = useState({
     recentCommunications: [
       {
         id: 1,
@@ -104,6 +125,36 @@ const ClientCommunication = ({ clientData }) => {
         scheduled: '2024-03-30 09:00',
         status: 'scheduled'
       }
+    ],
+    templates: [
+      {
+        id: 1,
+        name: 'Weekly Check-in',
+        type: 'email',
+        description: 'Weekly status update template',
+        content: 'Hi [Name], I hope this email finds you well. I wanted to check in on how things are going with [Product/Service]...'
+      },
+      {
+        id: 2,
+        name: 'Support Follow-up',
+        type: 'call',
+        description: 'Post-support call template',
+        content: 'Thank you for taking the time to speak with us today. I wanted to follow up on the support call we had...'
+      },
+      {
+        id: 3,
+        name: 'QBR Preparation',
+        type: 'meeting',
+        description: 'Quarterly review template',
+        content: 'I\'m looking forward to our Quarterly Business Review next week. Here\'s what we\'ll be covering...'
+      },
+      {
+        id: 4,
+        name: 'Feature Announcement',
+        type: 'email',
+        description: 'New feature notification',
+        content: 'We\'re excited to announce a new feature that we believe will significantly improve your experience...'
+      }
     ]
   });
 
@@ -138,6 +189,98 @@ const ClientCommunication = ({ clientData }) => {
     }
   };
 
+  const handleFormChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    // Create new communication
+    const newComm = {
+      id: Date.now(),
+      ...formData,
+      from: 'Current User (CSM)',
+      to: formData.recipient === 'admin' ? 'John Doe (Admin)' : 
+          formData.recipient === 'it' ? 'Jane Smith (IT Manager)' : 'All Users',
+      date: new Date().toLocaleString(),
+      status: formData.schedule ? 'scheduled' : 'sent',
+      preview: formData.message.substring(0, 100) + '...'
+    };
+    
+    if (formData.schedule) {
+      setCommunicationData(prev => ({
+        ...prev,
+        upcomingCommunications: [newComm, ...prev.upcomingCommunications]
+      }));
+    } else {
+      setCommunicationData(prev => ({
+        ...prev,
+        recentCommunications: [newComm, ...prev.recentCommunications]
+      }));
+    }
+    
+    // Reset form and close dialog
+    resetForm();
+  };
+
+  const handleUseTemplate = (template) => {
+    setFormData(prev => ({
+      ...prev,
+      type: template.type,
+      message: template.content
+    }));
+    setIsNewMessageOpen(true);
+  };
+
+  const resetForm = () => {
+    setFormData({
+      type: '',
+      subject: '',
+      recipient: '',
+      message: '',
+      priority: '',
+      schedule: ''
+    });
+    setIsNewMessageOpen(false);
+  };
+
+  const deleteCommunication = (id, type) => {
+    if (type === 'upcoming') {
+      setCommunicationData(prev => ({
+        ...prev,
+        upcomingCommunications: prev.upcomingCommunications.filter(comm => comm.id !== id)
+      }));
+    } else {
+      setCommunicationData(prev => ({
+        ...prev,
+        recentCommunications: prev.recentCommunications.filter(comm => comm.id !== id)
+      }));
+    }
+  };
+
+  const filteredCommunications = communicationData.recentCommunications.filter(comm => {
+    const matchesSearch = comm.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         comm.from.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         comm.to.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = filterStatus === 'all' || comm.status === filterStatus;
+    const matchesType = filterType === 'all' || comm.type === filterType;
+    return matchesSearch && matchesStatus && matchesType;
+  });
+
+  const filteredUpcoming = communicationData.upcomingCommunications.filter(comm => {
+    const matchesSearch = comm.subject.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = filterType === 'all' || comm.type === filterType;
+    return matchesSearch && matchesType;
+  });
+
+  const getCommunicationsByType = (type) => {
+    return communicationData.recentCommunications.filter(comm => type === 'all' || comm.type === type);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -153,216 +296,437 @@ const ClientCommunication = ({ clientData }) => {
               New Communication
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>New Communication</DialogTitle>
               <DialogDescription>
                 Send a message or schedule a communication with {clientData.name}
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="commType">Communication Type</Label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
+            <form onSubmit={handleSubmit} className="space-y-6 py-4">
+              {/* Communication Type */}
+              <div className="space-y-3">
+                <Label htmlFor="commType" className="text-sm font-medium text-gray-700">
+                  Communication Type *
+                </Label>
+                <Select value={formData.type} onValueChange={(value) => handleFormChange('type', value)}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select communication type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="email">Email</SelectItem>
-                    <SelectItem value="call">Phone Call</SelectItem>
-                    <SelectItem value="meeting">Meeting</SelectItem>
-                    <SelectItem value="message">Internal Message</SelectItem>
+                    <SelectItem value="email">📧 Email</SelectItem>
+                    <SelectItem value="call">📞 Phone Call</SelectItem>
+                    <SelectItem value="meeting">🤝 Meeting</SelectItem>
+                    <SelectItem value="message">💬 Internal Message</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <div>
-                <Label htmlFor="subject">Subject</Label>
-                <Input id="subject" placeholder="Enter subject" />
+
+              {/* Subject */}
+              <div className="space-y-3">
+                <Label htmlFor="subject" className="text-sm font-medium text-gray-700">
+                  Subject *
+                </Label>
+                <Input 
+                  id="subject" 
+                  placeholder="Enter communication subject" 
+                  value={formData.subject}
+                  onChange={(e) => handleFormChange('subject', e.target.value)}
+                  required
+                  className="w-full"
+                />
               </div>
-              <div>
-                <Label htmlFor="recipient">Recipient</Label>
-                <Select>
-                  <SelectTrigger>
+
+              {/* Recipient */}
+              <div className="space-y-3">
+                <Label htmlFor="recipient" className="text-sm font-medium text-gray-700">
+                  Recipient *
+                </Label>
+                <Select value={formData.recipient} onValueChange={(value) => handleFormChange('recipient', value)}>
+                  <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select recipient" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="admin">John Doe (Admin)</SelectItem>
-                    <SelectItem value="it">Jane Smith (IT Manager)</SelectItem>
-                    <SelectItem value="team">All Users</SelectItem>
+                    <SelectItem value="admin">👤 John Doe (Admin)</SelectItem>
+                    <SelectItem value="it">👨‍💻 Jane Smith (IT Manager)</SelectItem>
+                    <SelectItem value="team">👥 All Users</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <div>
-                <Label htmlFor="message">Message</Label>
-                <Textarea id="message" placeholder="Enter your message" rows={6} />
+
+              {/* Message */}
+              <div className="space-y-3">
+                <Label htmlFor="message" className="text-sm font-medium text-gray-700">
+                  Message *
+                </Label>
+                <Textarea 
+                  id="message" 
+                  placeholder="Enter your detailed message here..." 
+                  rows={6} 
+                  value={formData.message}
+                  onChange={(e) => handleFormChange('message', e.target.value)}
+                  required
+                  className="resize-none w-full"
+                />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="priority">Priority</Label>
-                  <Select>
-                    <SelectTrigger>
+
+              {/* Priority & Schedule Row */}
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <Label htmlFor="priority" className="text-sm font-medium text-gray-700">
+                    Priority
+                  </Label>
+                  <Select value={formData.priority} onValueChange={(value) => handleFormChange('priority', value)}>
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select priority" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="high">🔴 High</SelectItem>
+                      <SelectItem value="medium">🟡 Medium</SelectItem>
+                      <SelectItem value="low">🟢 Low</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <Label htmlFor="schedule">Schedule (Optional)</Label>
-                  <Input id="schedule" type="datetime-local" />
+                
+                <div className="space-y-3">
+                  <Label htmlFor="schedule" className="text-sm font-medium text-gray-700">
+                    Schedule (Optional)
+                  </Label>
+                  <Input 
+                    id="schedule" 
+                    type="datetime-local" 
+                    value={formData.schedule}
+                    onChange={(e) => handleFormChange('schedule', e.target.value)}
+                    className="w-full"
+                  />
                 </div>
               </div>
-              <div className="flex gap-2 pt-4">
-                <Button className="flex-1">
+
+              {/* Action Buttons */}
+              <div className="flex gap-4 pt-6 border-t border-gray-200">
+                <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">
                   <Send className="w-4 h-4 mr-2" />
-                  Send Now
+                  {formData.schedule ? 'Schedule Communication' : 'Send Now'}
                 </Button>
-                <Button variant="outline" onClick={() => setIsNewMessageOpen(false)} className="flex-1">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={resetForm} 
+                  className="flex-1 border-gray-300 hover:bg-gray-50"
+                >
                   Cancel
                 </Button>
               </div>
-            </div>
+            </form>
           </DialogContent>
         </Dialog>
       </div>
 
-      {/* Communication Tabs */}
-      <Tabs defaultValue="history" className="w-full">
-        <TabsList>
-          <TabsTrigger value="history">Communication History</TabsTrigger>
-          <TabsTrigger value="upcoming">Upcoming Communications</TabsTrigger>
-          <TabsTrigger value="templates">Message Templates</TabsTrigger>
+      {/* Enhanced Communication Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="history" className="flex items-center space-x-2">
+            <MessageSquare className="w-4 h-4" />
+            <span>Communication History</span>
+            <Badge variant="secondary" className="ml-2">
+              {communicationData.recentCommunications.length}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="upcoming" className="flex items-center space-x-2">
+            <Calendar className="w-4 h-4" />
+            <span>Upcoming</span>
+            <Badge variant="secondary" className="ml-2">
+              {communicationData.upcomingCommunications.length}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="templates" className="flex items-center space-x-2">
+            <FileText className="w-4 h-4" />
+            <span>Templates</span>
+            <Badge variant="secondary" className="ml-2">
+              {communicationData.templates.length}
+            </Badge>
+          </TabsTrigger>
         </TabsList>
 
         {/* Communication History */}
-        <TabsContent value="history" className="space-y-4">
-          {communicationData.recentCommunications.map((comm) => (
-            <Card key={comm.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start space-x-4 flex-1">
-                    <div className={`p-2 rounded-full ${getTypeColor(comm.type)}`}>
-                      {getTypeIcon(comm.type)}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <h3 className="font-semibold text-lg">{comm.subject}</h3>
-                        <Badge className={getStatusColor(comm.status)}>
-                          {comm.status}
-                        </Badge>
-                      </div>
-                      <div className="text-sm text-gray-600 mb-2">
-                        <span className="font-medium">From:</span> {comm.from} → 
-                        <span className="font-medium"> To:</span> {comm.to}
-                      </div>
-                      <div className="flex items-center space-x-4 text-sm text-gray-500 mb-3">
-                        <div className="flex items-center">
-                          <Clock className="w-4 h-4 mr-1" />
-                          {comm.date}
-                        </div>
-                        {comm.duration && (
-                          <div>Duration: {comm.duration}</div>
-                        )}
-                      </div>
-                      {comm.preview && (
-                        <p className="text-sm text-gray-700 mb-3 italic">
-                          "{comm.preview}"
-                        </p>
-                      )}
-                      {comm.notes && (
-                        <div className="p-3 bg-gray-50 rounded-lg">
-                          <div className="text-sm font-medium text-gray-700 mb-1">Notes:</div>
-                          <p className="text-sm text-gray-600">{comm.notes}</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex space-x-2">
-                    <Button size="sm" variant="outline">
-                      <FileText className="w-4 h-4" />
-                    </Button>
-                    <Button size="sm" variant="outline">
-                      Reply
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </TabsContent>
-
-        {/* Upcoming Communications */}
-        <TabsContent value="upcoming" className="space-y-4">
-          {communicationData.upcomingCommunications.map((comm) => (
-            <Card key={comm.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className={`p-2 rounded-full ${getTypeColor(comm.type)}`}>
-                      {getTypeIcon(comm.type)}
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-lg">{comm.subject}</h3>
-                      <div className="flex items-center space-x-4 text-sm text-gray-500">
-                        <div className="flex items-center">
-                          <Calendar className="w-4 h-4 mr-1" />
-                          {comm.scheduled}
-                        </div>
-                        {comm.attendees && (
-                          <div>Attendees: {comm.attendees.join(', ')}</div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex space-x-2">
-                    <Button size="sm" variant="outline">
-                      Edit
-                    </Button>
-                    <Button size="sm" variant="outline">
-                      Cancel
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </TabsContent>
-
-        {/* Message Templates */}
-        <TabsContent value="templates" className="space-y-4">
+        <TabsContent value="history" className="space-y-4 mt-6">
+          {/* Filters */}
           <Card>
-            <CardHeader>
-              <CardTitle>Quick Templates</CardTitle>
-              <CardDescription>Pre-written message templates for common communications</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Button variant="outline" className="h-auto p-4 flex-col">
-                  <Mail className="w-6 h-6 mb-2" />
-                  <span className="font-medium">Weekly Check-in</span>
-                  <span className="text-xs text-gray-500">Weekly status update template</span>
-                </Button>
-                <Button variant="outline" className="h-auto p-4 flex-col">
-                  <Phone className="w-6 h-6 mb-2" />
-                  <span className="font-medium">Support Follow-up</span>
-                  <span className="text-xs text-gray-500">Post-support call template</span>
-                </Button>
-                <Button variant="outline" className="h-auto p-4 flex-col">
-                  <Video className="w-6 h-6 mb-2" />
-                  <span className="font-medium">QBR Preparation</span>
-                  <span className="text-xs text-gray-500">Quarterly review template</span>
-                </Button>
-                <Button variant="outline" className="h-auto p-4 flex-col">
-                  <MessageSquare className="w-6 h-6 mb-2" />
-                  <span className="font-medium">Feature Announcement</span>
-                  <span className="text-xs text-gray-500">New feature notification</span>
-                </Button>
+            <CardContent className="p-4">
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-1">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Input
+                      placeholder="Search communications..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+                <div className="w-full md:w-48">
+                  <Select value={filterStatus} onValueChange={setFilterStatus}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Filter by status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="sent">Sent</SelectItem>
+                      <SelectItem value="delivered">Delivered</SelectItem>
+                      <SelectItem value="completed">Completed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="w-full md:w-48">
+                  <Select value={filterType} onValueChange={setFilterType}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Filter by type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Types</SelectItem>
+                      <SelectItem value="email">Email</SelectItem>
+                      <SelectItem value="call">Phone Call</SelectItem>
+                      <SelectItem value="meeting">Meeting</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </CardContent>
           </Card>
+
+          {/* Communications List */}
+          <div className="space-y-4">
+            {filteredCommunications.length === 0 ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <MessageSquare className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No communications found</h3>
+                  <p className="text-gray-500 mb-4">
+                    {searchTerm || filterStatus !== 'all' || filterType !== 'all'
+                      ? 'Try adjusting your search or filters'
+                      : 'Get started by sending your first communication'
+                    }
+                  </p>
+                  {!searchTerm && filterStatus === 'all' && filterType === 'all' && (
+                    <Button onClick={() => setIsNewMessageOpen(true)}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Send First Communication
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            ) : (
+              filteredCommunications.map((comm) => (
+                <Card key={comm.id} className="hover:shadow-md transition-shadow border-l-4 border-l-blue-500">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start space-x-4 flex-1">
+                        <div className={`p-2 rounded-full ${getTypeColor(comm.type)}`}>
+                          {getTypeIcon(comm.type)}
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <h3 className="font-semibold text-lg">{comm.subject}</h3>
+                            <Badge className={getStatusColor(comm.status)}>
+                              {comm.status}
+                            </Badge>
+                          </div>
+                          <div className="text-sm text-gray-600 mb-2">
+                            <span className="font-medium">From:</span> {comm.from} → 
+                            <span className="font-medium"> To:</span> {comm.to}
+                          </div>
+                          <div className="flex items-center space-x-4 text-sm text-gray-500 mb-3">
+                            <div className="flex items-center">
+                              <Clock className="w-4 h-4 mr-1" />
+                              {comm.date}
+                            </div>
+                            {comm.duration && (
+                              <div className="flex items-center">
+                                <Calendar className="w-4 h-4 mr-1" />
+                                {comm.duration}
+                              </div>
+                            )}
+                          </div>
+                          {comm.preview && (
+                            <p className="text-sm text-gray-700 mb-3 italic bg-gray-50 p-3 rounded-lg">
+                              "{comm.preview}"
+                            </p>
+                          )}
+                          {comm.notes && (
+                            <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                              <div className="text-sm font-medium text-blue-700 mb-1">Notes:</div>
+                              <div className="text-sm text-blue-600">{comm.notes}</div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex space-x-2">
+                        <Button size="sm" variant="outline" title="View Details">
+                          <Eye className="w-4 h-4" />
+                        </Button>
+                        <Button size="sm" variant="outline" title="Reply">
+                          <Reply className="w-4 h-4" />
+                        </Button>
+                        <Button size="sm" variant="outline" title="Edit">
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          title="Delete"
+                          onClick={() => deleteCommunication(comm.id, 'history')}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        </TabsContent>
+
+        {/* Upcoming Communications */}
+        <TabsContent value="upcoming" className="space-y-4 mt-6">
+          {/* Filters */}
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-1">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Input
+                      placeholder="Search upcoming communications..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+                <div className="w-full md:w-48">
+                  <Select value={filterType} onValueChange={setFilterType}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Filter by type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Types</SelectItem>
+                      <SelectItem value="email">Email</SelectItem>
+                      <SelectItem value="call">Phone Call</SelectItem>
+                      <SelectItem value="meeting">Meeting</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Upcoming List */}
+          <div className="space-y-4">
+            {filteredUpcoming.length === 0 ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No upcoming communications</h3>
+                  <p className="text-gray-500 mb-4">
+                    {searchTerm || filterType !== 'all'
+                      ? 'Try adjusting your search or filters'
+                      : 'Schedule your first communication'
+                    }
+                  </p>
+                  {!searchTerm && filterType === 'all' && (
+                    <Button onClick={() => setIsNewMessageOpen(true)}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Schedule Communication
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            ) : (
+              filteredUpcoming.map((comm) => (
+                <Card key={comm.id} className="hover:shadow-md transition-shadow border-l-4 border-l-yellow-500">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-4">
+                        <div className={`p-2 rounded-full ${getTypeColor(comm.type)}`}>
+                          {getTypeIcon(comm.type)}
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-lg">{comm.subject}</h3>
+                          <div className="flex items-center space-x-4 text-sm text-gray-500">
+                            <div className="flex items-center">
+                              <Calendar className="w-4 h-4 mr-1" />
+                              {comm.scheduled}
+                            </div>
+                            {comm.attendees && (
+                              <div className="flex items-center">
+                                <User className="w-4 h-4 mr-1" />
+                                {comm.attendees.join(', ')}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex space-x-2">
+                        <Button size="sm" variant="outline">
+                          <Edit className="w-4 h-4 mr-2" />
+                          Edit
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="text-red-600 hover:text-red-700"
+                          onClick={() => deleteCommunication(comm.id, 'upcoming')}
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
+          </div>
+        </TabsContent>
+
+        {/* Message Templates */}
+        <TabsContent value="templates" className="space-y-4 mt-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Quick Templates</h3>
+            <Badge variant="secondary">{communicationData.templates.length} templates</Badge>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {communicationData.templates.map((template) => (
+              <Card key={template.id} className="hover:shadow-md transition-shadow cursor-pointer">
+                <CardContent className="p-6">
+                  <div className="flex items-start space-x-4">
+                    <div className={`p-3 rounded-full ${getTypeColor(template.type)}`}>
+                      {getTypeIcon(template.type)}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-lg mb-2">{template.name}</h3>
+                      <p className="text-sm text-gray-600 mb-3">{template.description}</p>
+                      <p className="text-sm text-gray-700 bg-gray-50 p-3 rounded-lg mb-4">
+                        {template.content.substring(0, 100)}...
+                      </p>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleUseTemplate(template)}
+                        className="w-full"
+                      >
+                        <FileText className="w-4 h-4 mr-2" />
+                        Use Template
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </TabsContent>
       </Tabs>
     </div>

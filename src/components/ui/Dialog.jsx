@@ -1,24 +1,55 @@
-import React from 'react';
+import React, { useState, useEffect, createContext, useContext } from 'react';
 import { cn } from '@/utils/cn';
 import { X } from 'lucide-react';
 import { Button } from './index';
 
-const Dialog = React.forwardRef(({ 
-  className, 
+// Context for Dialog state
+const DialogContext = createContext();
+
+const Dialog = ({ 
+  open, 
+  onOpenChange, 
   children, 
+  className,
   ...props 
-}, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      "fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4",
-      className
-    )}
-    {...props}
-  >
-    {children}
-  </div>
-));
+}) => {
+  const [isOpen, setIsOpen] = useState(open || false);
+
+  useEffect(() => {
+    if (open !== undefined) {
+      setIsOpen(open);
+    }
+  }, [open]);
+
+  const handleOpenChange = (newOpen) => {
+    if (onOpenChange) {
+      onOpenChange(newOpen);
+    } else {
+      setIsOpen(newOpen);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <DialogContext.Provider value={{ isOpen, onOpenChange: handleOpenChange }}>
+      <div
+        className={cn(
+          "fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4",
+          className
+        )}
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            handleOpenChange(false);
+          }
+        }}
+        {...props}
+      >
+        {children}
+      </div>
+    </DialogContext.Provider>
+  );
+};
 Dialog.displayName = "Dialog";
 
 const DialogContent = React.forwardRef(({ 
@@ -29,9 +60,10 @@ const DialogContent = React.forwardRef(({
   <div
     ref={ref}
     className={cn(
-      "w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-background rounded-lg shadow-xl",
+      "w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-white rounded-lg shadow-xl",
       className
     )}
+    onClick={(e) => e.stopPropagation()}
     {...props}
   >
     {children}
@@ -97,18 +129,31 @@ const DialogClose = React.forwardRef(({
   className, 
   onClick,
   ...props 
-}, ref) => (
-  <Button
-    ref={ref}
-    variant="ghost"
-    size="sm"
-    onClick={onClick}
-    className={cn("h-8 w-8 p-0", className)}
-    {...props}
-  >
-    <X className="w-4 h-4" />
-  </Button>
-));
+}, ref) => {
+  const context = useContext(DialogContext);
+  
+  const handleClick = (e) => {
+    if (onClick) {
+      onClick(e);
+    }
+    if (context?.onOpenChange) {
+      context.onOpenChange(false);
+    }
+  };
+
+  return (
+    <Button
+      ref={ref}
+      variant="ghost"
+      size="sm"
+      onClick={handleClick}
+      className={cn("h-8 w-8 p-0", className)}
+      {...props}
+    >
+      <X className="w-4 h-4" />
+    </Button>
+  );
+});
 DialogClose.displayName = "DialogClose";
 
 const DialogBody = React.forwardRef(({ 
@@ -150,11 +195,24 @@ DialogFooter.displayName = "DialogFooter";
 const DialogTrigger = React.forwardRef(({ 
   asChild = false,
   children, 
+  onClick,
   ...props 
 }, ref) => {
+  const context = useContext(DialogContext);
+  
+  const handleClick = (e) => {
+    if (onClick) {
+      onClick(e);
+    }
+    if (context?.onOpenChange) {
+      context.onOpenChange(true);
+    }
+  };
+
   if (asChild) {
     return React.cloneElement(children, {
       ref,
+      onClick: handleClick,
       ...props
     });
   }
@@ -162,6 +220,7 @@ const DialogTrigger = React.forwardRef(({
   return (
     <div
       ref={ref}
+      onClick={handleClick}
       {...props}
     >
       {children}

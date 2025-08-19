@@ -140,6 +140,21 @@ export const router = createBrowserRouter([
           { path: 'financials', element: <Financials /> },
           { path: 'clients', element: <ClientManagement /> },
           { path: 'system', element: <SystemSettings /> },
+          
+          // Client Success & Management Routes
+          { path: 'client-health', element: <ClientHealthDashboard /> },
+          { path: 'onboarding', element: <OnboardingPipeline /> },
+          { path: 'automation', element: <AutomationPlaybooks /> },
+          { path: 'communication', element: <ClientCommunicationCenter /> },
+          
+          // Nested Client Routes - Inside SuperAdmin Layout
+          { path: 'clients/:clientId', element: <ClientLayout /> },
+          { path: 'clients/:clientId/users', element: <ClientLayout /> },
+          { path: 'clients/:clientId/billing', element: <ClientLayout /> },
+          { path: 'clients/:clientId/workflows', element: <ClientLayout /> },
+          { path: 'clients/:clientId/communication', element: <ClientLayout /> },
+          { path: 'clients/:clientId/notes', element: <ClientLayout /> },
+          { path: 'clients/:clientId/success-plays', element: <ClientLayout /> },
         ],
       },
 
@@ -160,21 +175,6 @@ export const router = createBrowserRouter([
 
       // UI Demo Routes
       { path: '/demo/badge', element: <BadgeDemo /> },
-
-      // Client Success & Management Routes
-      { path: '/superadmin/client-health', element: <ClientHealthDashboard /> },
-      { path: '/superadmin/onboarding', element: <OnboardingPipeline /> },
-      { path: '/superadmin/automation', element: <AutomationPlaybooks /> },
-      { path: '/superadmin/communication', element: <ClientCommunicationCenter /> },
-
-      // Nested Client Routes - Inside SuperAdmin Layout
-      { path: '/superadmin/clients/:clientId', element: <ClientLayout /> },
-      { path: '/superadmin/clients/:clientId/users', element: <ClientLayout /> },
-      { path: '/superadmin/clients/:clientId/billing', element: <ClientLayout /> },
-      { path: '/superadmin/clients/:clientId/workflows', element: <ClientLayout /> },
-      { path: '/superadmin/clients/:clientId/communication', element: <ClientLayout /> },
-      { path: '/superadmin/clients/:clientId/notes', element: <ClientLayout /> },
-      { path: '/superadmin/clients/:clientId/success-plays', element: <ClientLayout /> },
 
       // Error Routes
       { path: '/unauthorized', element: <Unauthorized /> },

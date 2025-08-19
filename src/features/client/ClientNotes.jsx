@@ -33,16 +33,34 @@ import {
   User,
   Edit,
   Trash2,
-  Search
+  Search,
+  Filter,
+  Eye,
+  SortAsc,
+  SortDesc,
+  Clock,
+  Tag
 } from 'lucide-react';
 
 const ClientNotes = ({ clientData }) => {
   const [isAddNoteOpen, setIsAddNoteOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
+  const [activeTab, setActiveTab] = useState('all');
+  const [sortBy, setSortBy] = useState('date');
+  const [sortOrder, setSortOrder] = useState('desc');
+  
+  // Form state
+  const [formData, setFormData] = useState({
+    title: '',
+    type: '',
+    content: '',
+    tags: '',
+    followUp: ''
+  });
 
   // Sample notes data
-  const [notes] = React.useState([
+  const [notes, setNotes] = useState([
     {
       id: 1,
       type: 'call',
@@ -105,13 +123,108 @@ const ClientNotes = ({ clientData }) => {
     }
   };
 
+  const handleFormChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    // Create new note
+    const newNote = {
+      id: Date.now(),
+      ...formData,
+      author: 'Current User', // In real app, get from auth context
+      date: new Date().toLocaleString(),
+      tags: formData.tags ? formData.tags.split(',').map(tag => tag.trim()) : []
+    };
+    
+    setNotes(prev => [newNote, ...prev]);
+    
+    // Reset form and close dialog
+    resetForm();
+  };
+
+  const resetForm = () => {
+    setFormData({
+      title: '',
+      type: '',
+      content: '',
+      tags: '',
+      followUp: ''
+    });
+    setIsAddNoteOpen(false);
+  };
+
+  const deleteNote = (noteId) => {
+    setNotes(prev => prev.filter(note => note.id !== noteId));
+  };
+
+  const toggleSortOrder = () => {
+    setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+  };
+
+  const sortNotes = (notesToSort) => {
+    return [...notesToSort].sort((a, b) => {
+      let aValue, bValue;
+      
+      switch (sortBy) {
+        case 'date':
+          aValue = new Date(a.date);
+          bValue = new Date(b.date);
+          break;
+        case 'title':
+          aValue = a.title.toLowerCase();
+          bValue = b.title.toLowerCase();
+          break;
+        case 'author':
+          aValue = a.author.toLowerCase();
+          bValue = b.author.toLowerCase();
+          break;
+        case 'type':
+          aValue = a.type.toLowerCase();
+          bValue = b.type.toLowerCase();
+          break;
+        default:
+          aValue = new Date(a.date);
+          bValue = new Date(b.date);
+      }
+      
+      if (sortOrder === 'asc') {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+  };
+
   const filteredNotes = notes.filter(note => {
     const matchesSearch = note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          note.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         note.author.toLowerCase().includes(searchTerm.toLowerCase());
+                         note.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         note.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesType = filterType === 'all' || note.type === filterType;
-    return matchesSearch && matchesType;
+    const matchesTab = activeTab === 'all' || note.type === activeTab;
+    return matchesSearch && matchesType && matchesTab;
   });
+
+  const sortedNotes = sortNotes(filteredNotes);
+
+  const getNotesByType = (type) => {
+    return notes.filter(note => type === 'all' || note.type === type);
+  };
+
+  const getAllTags = () => {
+    const allTags = notes.flatMap(note => note.tags);
+    return [...new Set(allTags)];
+  };
+
+  const getNotesByTag = (tag) => {
+    return notes.filter(note => note.tags.includes(tag));
+  };
 
   return (
     <div className="space-y-6">
@@ -128,56 +241,112 @@ const ClientNotes = ({ clientData }) => {
               Add Note
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Add New Note</DialogTitle>
               <DialogDescription>
                 Record a new interaction or note for {clientData.name}
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="noteTitle">Title</Label>
-                <Input id="noteTitle" placeholder="Enter note title" />
-              </div>
-              <div>
-                <Label htmlFor="noteType">Type</Label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="call">Phone Call</SelectItem>
-                    <SelectItem value="email">Email</SelectItem>
-                    <SelectItem value="meeting">Meeting</SelectItem>
-                    <SelectItem value="note">General Note</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="noteContent">Content</Label>
-                <Textarea id="noteContent" placeholder="Enter note content" rows={6} />
-              </div>
-              <div>
-                <Label htmlFor="noteTags">Tags (comma separated)</Label>
-                <Input id="noteTags" placeholder="e.g., support, follow-up, important" />
-              </div>
-              <div>
-                <Label htmlFor="noteFollowUp">Follow-up Action</Label>
-                <Input id="noteFollowUp" placeholder="What needs to be done next?" />
-              </div>
-              <div className="flex gap-2 pt-4">
-                <Button className="flex-1">Save Note</Button>
-                <Button variant="outline" onClick={() => setIsAddNoteOpen(false)} className="flex-1">
-                  Cancel
-                </Button>
-              </div>
+            <div className="space-y-4 py-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="noteTitle">Title</Label>
+                  <Input 
+                    id="noteTitle" 
+                    placeholder="Enter note title" 
+                    value={formData.title}
+                    onChange={(e) => handleFormChange('title', e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="noteType">Type</Label>
+                  <Select value={formData.type} onValueChange={(value) => handleFormChange('type', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select option" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="call">Phone Call</SelectItem>
+                      <SelectItem value="email">Email</SelectItem>
+                      <SelectItem value="meeting">Meeting</SelectItem>
+                      <SelectItem value="note">General Note</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="noteContent">Content</Label>
+                  <Textarea 
+                    id="noteContent" 
+                    placeholder="Enter note content" 
+                    rows={4} 
+                    value={formData.content}
+                    onChange={(e) => handleFormChange('content', e.target.value)}
+                    required
+                    className="resize-none"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="noteTags">Tags (comma separated)</Label>
+                  <Input 
+                    id="noteTags" 
+                    placeholder="e.g., support, follow-up, important" 
+                    value={formData.tags}
+                    onChange={(e) => handleFormChange('tags', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="noteFollowUp">Follow-up Action</Label>
+                  <Input 
+                    id="noteFollowUp" 
+                    placeholder="What needs to be done next?" 
+                    value={formData.followUp}
+                    onChange={(e) => handleFormChange('followUp', e.target.value)}
+                  />
+                </div>
+                <div className="flex gap-3 pt-4 border-t">
+                  <Button type="submit" className="flex-1">
+                    Save Note
+                  </Button>
+                  <Button type="button" variant="outline" onClick={resetForm} className="flex-1">
+                    Cancel
+                  </Button>
+                </div>
+              </form>
             </div>
           </DialogContent>
         </Dialog>
       </div>
 
-      {/* Filters */}
+      {/* Enhanced Tabs for different note types */}
+      <div className="border-b border-gray-200">
+        <nav className="-mb-px flex space-x-8">
+          {[
+            { key: 'all', label: 'All Notes', count: notes.length },
+            { key: 'call', label: 'Phone Calls', count: getNotesByType('call').length },
+            { key: 'email', label: 'Emails', count: getNotesByType('email').length },
+            { key: 'meeting', label: 'Meetings', count: getNotesByType('meeting').length },
+            { key: 'note', label: 'General Notes', count: getNotesByType('note').length }
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === tab.key
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              {tab.label}
+              <span className="ml-2 bg-gray-100 text-gray-900 py-0.5 px-2.5 rounded-full text-xs">
+                {tab.count}
+              </span>
+            </button>
+          ))}
+        </nav>
+      </div>
+
+      {/* Enhanced Filters and Search */}
       <Card>
         <CardContent className="p-4">
           <div className="flex flex-col md:flex-row gap-4">
@@ -185,7 +354,7 @@ const ClientNotes = ({ clientData }) => {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
-                  placeholder="Search notes..."
+                  placeholder="Search notes by title, content, author, or tags..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -206,67 +375,151 @@ const ClientNotes = ({ clientData }) => {
                 </SelectContent>
               </Select>
             </div>
+            <div className="w-full md:w-48">
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="date">Date</SelectItem>
+                  <SelectItem value="title">Title</SelectItem>
+                  <SelectItem value="author">Author</SelectItem>
+                  <SelectItem value="type">Type</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={toggleSortOrder}
+              className="w-full md:w-auto"
+            >
+              {sortOrder === 'asc' ? <SortAsc className="w-4 h-4" /> : <SortDesc className="w-4 h-4" />}
+            </Button>
           </div>
         </CardContent>
       </Card>
 
+      {/* Popular Tags */}
+      {getAllTags().length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Tag className="w-4 h-4 mr-2" />
+              Popular Tags
+            </CardTitle>
+            <CardDescription>Quick filter by common tags</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {getAllTags().slice(0, 10).map((tag) => (
+                <Button
+                  key={tag}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSearchTerm(tag)}
+                  className="text-xs"
+                >
+                  {tag} ({getNotesByTag(tag).length})
+                </Button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Notes List */}
       <div className="space-y-4">
-        {filteredNotes.map((note) => (
-          <Card key={note.id} className="hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-start space-x-4">
-                  <div className={`p-2 rounded-full ${getTypeColor(note.type)}`}>
-                    {getTypeIcon(note.type)}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <h3 className="font-semibold text-lg">{note.title}</h3>
-                      <Badge variant="outline" className="capitalize">{note.type}</Badge>
-                    </div>
-                    <div className="flex items-center space-x-4 text-sm text-gray-500 mb-3">
-                      <div className="flex items-center">
-                        <User className="w-4 h-4 mr-1" />
-                        {note.author}
-                      </div>
-                      <div className="flex items-center">
-                        <Calendar className="w-4 h-4 mr-1" />
-                        {note.date}
-                      </div>
-                    </div>
-                    <div className="text-gray-700 mb-4 leading-relaxed">
-                      {note.content}
-                    </div>
-                    {note.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {note.tags.map((tag, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                    {note.followUp && (
-                      <div className="p-3 bg-blue-50 rounded-lg border-l-4 border-blue-400">
-                        <div className="text-sm font-medium text-blue-800 mb-1">Follow-up Required:</div>
-                        <div className="text-sm text-blue-700">{note.followUp}</div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="flex space-x-2">
-                  <Button size="sm" variant="outline">
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <Button size="sm" variant="outline">
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
+        {sortedNotes.length === 0 ? (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No notes found</h3>
+              <p className="text-gray-500 mb-4">
+                {searchTerm || filterType !== 'all' || activeTab !== 'all'
+                  ? 'Try adjusting your search, filters, or tabs'
+                  : 'Get started by adding your first note'
+                }
+              </p>
+              {!searchTerm && filterType === 'all' && activeTab === 'all' && (
+                <Button onClick={() => setIsAddNoteOpen(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add First Note
+                </Button>
+              )}
             </CardContent>
           </Card>
-        ))}
+        ) : (
+          sortedNotes.map((note) => (
+            <Card key={note.id} className="hover:shadow-md transition-shadow border-l-4 border-l-blue-500">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-start space-x-4">
+                    <div className={`p-2 rounded-full ${getTypeColor(note.type)}`}>
+                      {getTypeIcon(note.type)}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <h3 className="font-semibold text-lg">{note.title}</h3>
+                        <Badge variant="outline" className="capitalize">{note.type}</Badge>
+                      </div>
+                      <div className="flex items-center space-x-4 text-sm text-gray-500 mb-3">
+                        <div className="flex items-center">
+                          <User className="w-4 h-4 mr-1" />
+                          {note.author}
+                        </div>
+                        <div className="flex items-center">
+                          <Clock className="w-4 h-4 mr-1" />
+                          {note.date}
+                        </div>
+                      </div>
+                      <div className="text-gray-700 mb-4 leading-relaxed">
+                        {note.content}
+                      </div>
+                      {note.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {note.tags.map((tag, index) => (
+                            <Badge 
+                              key={index} 
+                              variant="outline" 
+                              className="text-xs cursor-pointer hover:bg-blue-50"
+                              onClick={() => setSearchTerm(tag)}
+                            >
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                      {note.followUp && (
+                        <div className="p-3 bg-blue-50 rounded-lg border-l-4 border-blue-400">
+                          <div className="text-sm font-medium text-blue-800 mb-1">Follow-up Required:</div>
+                          <div className="text-sm text-blue-700">{note.followUp}</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button size="sm" variant="outline" title="View Details">
+                      <Eye className="w-4 h-4" />
+                    </Button>
+                    <Button size="sm" variant="outline" title="Edit">
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      title="Delete"
+                      onClick={() => deleteNote(note.id)}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
 
       {/* Quick Stats */}
