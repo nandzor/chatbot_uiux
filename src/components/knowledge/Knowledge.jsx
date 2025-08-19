@@ -62,14 +62,14 @@ const Knowledge = () => {
       const currentActiveArticle = prevArticles.find(article => article.status === 'active');
       
       if (targetArticle.status === 'active') {
-        // Jika artikel sedang aktif, nonaktifkan
+        // Jika knowledge sedang aktif, nonaktifkan
         return prevArticles.map(article =>
           article.id === id
             ? { ...article, status: 'inactive' }
             : article
         );
       } else {
-        // Jika artikel inactive, konfirmasi jika ada artikel aktif lain
+        // Jika knowledge inactive, konfirmasi jika ada knowledge aktif lain
         if (currentActiveArticle && currentActiveArticle.id !== id) {
           const confirmed = window.confirm(
             `Mengaktifkan "${targetArticle.title}" akan menonaktifkan "${currentActiveArticle.title}". Lanjutkan?`
@@ -77,7 +77,7 @@ const Knowledge = () => {
           if (!confirmed) return prevArticles;
         }
         
-        // Aktifkan artikel target dan nonaktifkan yang lain
+        // Aktifkan knowledge target dan nonaktifkan yang lain
         return prevArticles.map(article =>
           article.id === id
             ? { ...article, status: 'active' }
@@ -89,7 +89,7 @@ const Knowledge = () => {
 
   // Fungsi untuk soft delete
   const handleDelete = (id) => {
-    if (window.confirm('Apakah Anda yakin ingin menghapus artikel ini?')) {
+    if (window.confirm('Apakah Anda yakin ingin menghapus knowledge ini?')) {
       setArticles(prevArticles =>
         prevArticles.map(article =>
           article.id === id
@@ -218,9 +218,9 @@ const Knowledge = () => {
       <Alert>
         <Info className="h-4 w-4" />
         <AlertDescription>
-          <strong>Kebijakan Aktivasi:</strong> Hanya 1 artikel yang dapat aktif dalam satu waktu. 
-          Mengaktifkan artikel baru akan otomatis menonaktifkan artikel lain. 
-          Artikel aktif akan digunakan oleh chatbot untuk menjawab pertanyaan pelanggan.
+          <strong>Kebijakan Aktivasi:</strong> Hanya 1 knowledge yang dapat aktif dalam satu waktu. 
+          Mengaktifkan knowledge baru akan otomatis menonaktifkan knowledge lain. 
+          Knowledge aktif akan digunakan oleh chatbot untuk menjawab pertanyaan pelanggan.
         </AlertDescription>
       </Alert>
 
@@ -247,7 +247,7 @@ const Knowledge = () => {
             Daftar Knowledge Articles ({filteredArticles.length})
           </CardTitle>
           <CardDescription>
-            Semua entri pengetahuan yang tersimpan dalam sistem. Gunakan toggle untuk mengaktifkan/nonaktifkan artikel.
+            Semua entri pengetahuan yang tersimpan dalam sistem. Gunakan toggle untuk mengaktifkan/nonaktifkan knowledge.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -265,7 +265,7 @@ const Knowledge = () => {
               {filteredArticles.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                    {searchTerm ? 'Tidak ada artikel yang cocok dengan pencarian.' : 'Belum ada artikel. Tambahkan artikel pertama Anda!'}
+                    {searchTerm ? 'Tidak ada knowledge yang cocok dengan pencarian.' : 'Belum ada knowledge. Tambahkan knowledge pertama Anda!'}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -346,7 +346,7 @@ const Knowledge = () => {
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
                 <span>
-                  {isCreating ? 'Tambah Pengetahuan Baru' : 'Edit Artikel'}
+                  {isCreating ? 'Tambah Pengetahuan Baru' : 'Edit Knowledge'}
                 </span>
                 <Button variant="ghost" size="sm" onClick={handleCancel}>
                   <X className="w-4 h-4" />
@@ -354,8 +354,8 @@ const Knowledge = () => {
               </CardTitle>
               <CardDescription>
                 {isCreating 
-                  ? 'Buat artikel baru untuk knowledge base chatbot' 
-                  : 'Perbarui informasi artikel yang ada'
+                  ? 'Buat knowledge baru untuk knowledge base chatbot' 
+                  : 'Perbarui informasi knowledge yang ada'
                 }
               </CardDescription>
             </CardHeader>
@@ -364,16 +364,16 @@ const Knowledge = () => {
               <Alert>
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Konten artikel dibatasi maksimal {MAX_CHARS.toLocaleString()} karakter untuk memastikan performa optimal chatbot.
+                  Konten knowledge dibatasi maksimal {MAX_CHARS.toLocaleString()} karakter untuk memastikan performa optimal chatbot.
                 </AlertDescription>
               </Alert>
 
               {/* Field Judul */}
               <div className="space-y-2">
-                <Label htmlFor="title">Judul Artikel</Label>
+                <Label htmlFor="title">Judul Knowledge</Label>
                 <Input 
                   id="title"
-                  placeholder="Masukkan judul artikel..."
+                  placeholder="Masukkan judul knowledge..."
                   value={formData.title}
                   onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
                 />
@@ -382,14 +382,14 @@ const Knowledge = () => {
               {/* Rich Text Editor dengan Character Counter */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="content">Konten Artikel</Label>
+                  <Label htmlFor="content">Konten Knowledge</Label>
                   <span className={`text-sm ${charCount > MAX_CHARS * 0.9 ? 'text-destructive' : 'text-muted-foreground'}`}>
                     {charCount.toLocaleString()} / {MAX_CHARS.toLocaleString()} karakter
                   </span>
                 </div>
                 <Textarea 
                   id="content"
-                  placeholder="Tulis konten artikel di sini..."
+                  placeholder="Tulis konten knowledge di sini..."
                   value={formData.content}
                   onChange={handleContentChange}
                   rows={15}
@@ -413,7 +413,7 @@ const Knowledge = () => {
                 </Button>
                 <Button onClick={handleSave} disabled={!formData.title.trim() || !formData.content.trim()}>
                   <Save className="w-4 h-4 mr-2" />
-                  {isCreating ? 'Simpan Artikel' : 'Update Artikel'}
+                  {isCreating ? 'Simpan Knowledge' : 'Update Knowledge'}
                 </Button>
               </div>
             </CardContent>
