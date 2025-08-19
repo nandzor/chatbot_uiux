@@ -56,7 +56,7 @@ export const ROUTES = {
   // Super Admin Routes
   SUPERADMIN: '/superadmin',
   SUPERADMIN_FINANCIALS: '/superadmin/financials',
-  SUPERADMIN_USERS: '/superadmin/users',
+  SUPERADMIN_CLIENTS: '/superadmin/clients',
   SUPERADMIN_SYSTEM: '/superadmin/system',
   
   // Agent Routes

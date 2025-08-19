@@ -22,7 +22,7 @@ const SuperAdminLayout = () => {
   const navigation = [
     { name: 'Dashboard', href: '/superadmin', icon: BarChart3 },
     { name: 'Financials', href: '/superadmin/financials', icon: DollarSign },
-    { name: 'User Management', href: '/superadmin/users', icon: Users },
+    { name: 'Client Management', href: '/superadmin/clients', icon: Users },
     { name: 'System Settings', href: '/superadmin/system', icon: Settings },
   ];
 

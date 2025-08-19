@@ -58,7 +58,7 @@ src/
 ### Super Admin Routes (`/superadmin`)
 - `/superadmin` - Super admin dashboard
 - `/superadmin/financials` - Financial management
-- `/superadmin/users` - User management
+- `/superadmin/clients` - Client management
 - `/superadmin/system` - System settings
 
 ### Agent Routes (`/agent`)

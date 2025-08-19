@@ -183,9 +183,9 @@ const InboxManagement = () => {
 
   const getStatusBadge = (status) => {
     const variants = {
-      connected: { variant: 'default', color: 'text-green-600', icon: CheckCircle },
-      error: { variant: 'destructive', color: 'text-red-600', icon: XCircle },
-      disconnected: { variant: 'secondary', color: 'text-gray-600', icon: AlertCircle }
+      connected: { variant: 'green', color: 'text-green-600', icon: CheckCircle },
+      error: { variant: 'red', color: 'text-red-600', icon: XCircle },
+      disconnected: { variant: 'default', color: 'text-gray-600', icon: AlertCircle }
     };
     
     const config = variants[status] || variants.disconnected;

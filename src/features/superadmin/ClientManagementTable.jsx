@@ -111,12 +111,12 @@ const ClientManagementTable = () => {
 
   const getStatusBadge = (status) => {
     const statusConfig = {
-      active: { variant: 'default', label: 'Active' },
-      trial: { variant: 'secondary', label: 'Trial' },
-      suspended: { variant: 'destructive', label: 'Suspended' }
+      active: { variant: 'green', label: 'Active' },
+      trial: { variant: 'default', label: 'Trial' },
+      suspended: { variant: 'red', label: 'Suspended' }
     };
 
-    const config = statusConfig[status] || { variant: 'outline', label: status };
+    const config = statusConfig[status] || { variant: 'default', label: status };
     
     return (
       <Badge variant={config.variant}>
@@ -127,12 +127,12 @@ const ClientManagementTable = () => {
 
   const getPlanBadge = (planName) => {
     const planConfig = {
-      'Basic': { variant: 'outline', className: 'text-blue-600' },
-      'Professional': { variant: 'secondary', className: 'text-purple-600' },
-      'Enterprise': { variant: 'default', className: 'text-green-600' }
+      'Basic': { variant: 'blue', className: '' },
+      'Professional': { variant: 'purple', className: '' },
+      'Enterprise': { variant: 'green', className: '' }
     };
 
-    const config = planConfig[planName] || { variant: 'outline', className: '' };
+    const config = planConfig[planName] || { variant: 'default', className: '' };
     
     return (
       <Badge variant={config.variant} className={config.className}>

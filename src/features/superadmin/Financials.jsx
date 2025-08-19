@@ -138,10 +138,10 @@ const Financials = () => {
 
   const getStatusBadge = (status) => {
     const variants = {
-      'success': 'default',
-      'failed': 'destructive',
-      'refunded': 'secondary',
-      'pending': 'outline'
+      'success': 'green',
+      'failed': 'red',
+      'refunded': 'default',
+      'pending': 'yellow'
     };
     
     const labels = {

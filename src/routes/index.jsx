@@ -33,6 +33,9 @@ import AgentDashboard from '@/pages/agent/Dashboard';
 import AgentInbox from '@/pages/agent/Inbox';
 import AgentProfile from '@/pages/agent/Profile';
 
+// UI Components Demo
+import BadgeDemo from '@/components/ui/BadgeDemo';
+
 // Error Pages
 import NotFound from '@/pages/errors/NotFound';
 import Unauthorized from '@/pages/errors/Unauthorized';
@@ -138,6 +141,9 @@ export const router = createBrowserRouter([
           { path: 'profile', element: <AgentProfile /> },
         ],
       },
+
+      // UI Demo Routes
+      { path: '/demo/badge', element: <BadgeDemo /> },
 
       // Error Routes
       { path: '/unauthorized', element: <Unauthorized /> },

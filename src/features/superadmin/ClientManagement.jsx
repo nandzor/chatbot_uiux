@@ -154,9 +154,9 @@ const ClientManagement = () => {
 
   const getStatusBadge = (status) => {
     const variants = {
-      'active': 'default',
-      'trial': 'secondary',
-      'suspended': 'destructive'
+      'active': 'green',
+      'trial': 'default',
+      'suspended': 'red'
     };
     
     const labels = {
