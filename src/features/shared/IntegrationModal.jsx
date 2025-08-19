@@ -17,7 +17,7 @@ import {
   SelectValue,
   Switch,
   Separator
-} from '../ui';
+} from '@/components/ui';
 import { 
   X,
   Save,

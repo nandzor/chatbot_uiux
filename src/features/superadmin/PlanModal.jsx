@@ -22,7 +22,7 @@ import {
   Separator,
   Alert,
   AlertDescription
-} from '../ui';
+} from '@/components/ui';
 import { 
   Save,
   X,

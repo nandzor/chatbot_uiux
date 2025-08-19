@@ -1,5 +1,5 @@
 import React from 'react';
-import Knowledge from '../../components/knowledge/Knowledge';
+import Knowledge from '@/features/shared/Knowledge';
 
 const KnowledgePage = () => {
   return <Knowledge />;

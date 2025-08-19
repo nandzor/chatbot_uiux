@@ -1,12 +1,12 @@
 import React from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
   Card, 
   CardContent, 
   CardDescription, 
   CardHeader, 
   CardTitle 
-} from '../ui';
+} from '@/components/ui';
 import { 
   Shield, 
   AlertTriangle,

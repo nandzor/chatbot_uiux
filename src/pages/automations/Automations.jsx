@@ -1,5 +1,5 @@
 import React from 'react';
-import Automations from '../../components/automations/Automations';
+import Automations from '@/features/shared/Automations';
 
 const AutomationsPage = () => {
   return <Automations />;

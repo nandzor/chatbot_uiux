@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui';
-import { Button, Input, Label } from '../../components/ui';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui';
+import { Button, Input, Label } from '@/components/ui';
 import { Eye, EyeOff, Mail, Lock, User, Building } from 'lucide-react';
 
 const Register = () => {

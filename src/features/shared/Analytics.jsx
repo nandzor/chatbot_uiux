@@ -16,7 +16,7 @@ import {
   TableHeader,
   TableRow,
   Badge
-} from '../ui';
+} from '@/components/ui';
 import { 
   LineChart, 
   Line, 
@@ -37,13 +37,13 @@ import {
   PolarRadiusAxis,
   Radar
 } from 'recharts';
-import { ChartContainer, ChartTooltipContent } from '../ui';
+import { ChartContainer, ChartTooltipContent } from '@/components/ui';
 import { 
   channelPerformanceData, 
   sessionsData, 
   intentsData,
   agentsData 
-} from '../../data/sampleData';
+} from '@/data/sampleData';
 
 const Analytics = () => {
   const pieData = [

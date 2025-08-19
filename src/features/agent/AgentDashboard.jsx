@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
   Card, 
   CardContent, 
@@ -12,7 +12,7 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger
-} from '../ui';
+} from '@/components/ui';
 import { 
   MessageSquare,
   Star,

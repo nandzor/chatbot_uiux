@@ -4,9 +4,9 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger
-} from '../ui';
+} from '@/components/ui';
 // Icons tidak diperlukan di Settings.jsx karena sudah dipindah ke komponen masing-masing
-import { agentsData, integrationsData } from '../../data/sampleData';
+import { agentsData, integrationsData } from '@/data/sampleData';
 import IntegrationCard from './IntegrationCard';
 import IntegrationModal from './IntegrationModal';
 import ChannelsTab from './ChannelsTab';

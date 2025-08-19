@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import UserAvatar from '../common/UserAvatar';
+import { useAuth } from '@/contexts/AuthContext';
+import UserAvatar from '@/components/common/UserAvatar';
 import { 
   Avatar, 
   AvatarFallback, 
@@ -18,7 +18,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger
-} from '../ui';
+} from '@/components/ui';
 import { 
   User,
   LogOut,

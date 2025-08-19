@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
-import UserProfile from '../components/auth/UserProfile';
+import UserProfile from '@/features/auth/UserProfile';
 import { 
   BarChart3, 
   DollarSign, 
@@ -8,7 +8,7 @@ import {
   Settings,
   LogOut 
 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 const SuperAdminLayout = () => {
   const { logout } = useAuth();

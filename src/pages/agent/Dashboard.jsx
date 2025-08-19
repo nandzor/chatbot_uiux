@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui';
 import { MessageSquare, Clock, CheckCircle, Users } from 'lucide-react';
 
 const AgentDashboard = () => {

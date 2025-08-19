@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getUserAvatarData } from '../utils/avatarUtils';
+import { getUserAvatarData } from '@/utils/avatarUtils';
 
 // Import toaster hook safely
 const useToaster = () => {
   try {
-    const { useToaster: useToasterHook } = require('../components/ui/Toaster');
+    const { useToaster: useToasterHook } = require('@/components/ui/Toaster');
     return useToasterHook();
   } catch {
     return { addToast: () => {} };

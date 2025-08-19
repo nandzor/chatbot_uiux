@@ -1,5 +1,5 @@
 import React from 'react';
-import Analytics from '../../components/analytics/Analytics';
+import Analytics from '@/features/shared/Analytics';
 
 const AnalyticsPage = () => {
   return <Analytics />;

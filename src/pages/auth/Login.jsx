@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { 
   Card, 
   CardContent, 
@@ -12,7 +12,7 @@ import {
   Alert,
   AlertDescription,
   Badge
-} from '../../components/ui';
+} from '@/components/ui';
 import { 
   LogIn,
   Eye,

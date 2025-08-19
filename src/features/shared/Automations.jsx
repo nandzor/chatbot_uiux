@@ -26,7 +26,7 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger
-} from '../ui';
+} from '@/components/ui';
 import { 
   Plus, 
   Play, 
@@ -43,7 +43,7 @@ import {
   Settings,
   TestTube
 } from 'lucide-react';
-import { workflowsData } from '../../data/sampleData';
+import { workflowsData } from '@/data/sampleData';
 
 const Automations = () => {
   const [isCreating, setIsCreating] = useState(false);

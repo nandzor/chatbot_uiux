@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import UserAvatar from '../common/UserAvatar';
+import { useAuth } from '@/contexts/AuthContext';
+import UserAvatar from '@/components/common/UserAvatar';
 import { 
   Home, 
   Building2, 
@@ -24,7 +24,7 @@ import {
   SelectItem, 
   SelectTrigger, 
   SelectValue 
-} from '../ui';
+} from '@/components/ui';
 
 const SuperAdminSidebar = ({ activeMenu, setActiveMenu }) => {
   const { user } = useAuth();

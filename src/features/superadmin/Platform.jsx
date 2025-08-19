@@ -32,7 +32,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger
-} from '../ui';
+} from '@/components/ui';
 import { 
   Settings,
   Zap,

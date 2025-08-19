@@ -7,10 +7,10 @@ import {
   SelectTrigger,
   SelectValue,
   Button
-} from '../ui';
+} from '@/components/ui';
 import { Search, Filter, X } from 'lucide-react';
 import IntegrationCard from './IntegrationCard';
-import { integrationsData } from '../../data/sampleData';
+import { integrationsData } from '@/data/sampleData';
 
 const IntegrationsTab = ({ 
   integrationsState, 

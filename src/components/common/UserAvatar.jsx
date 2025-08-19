@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Avatar, AvatarFallback, AvatarImage } from '../ui';
-import { getUserAvatarData, getInitials } from '../../utils/avatarUtils';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui';
+import { getUserAvatarData, getInitials } from '@/utils/avatarUtils';
 
 const UserAvatar = ({ 
   user, 

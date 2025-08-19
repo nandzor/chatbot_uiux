@@ -7,7 +7,7 @@ import {
   CardTitle,
   Button,
   Badge
-} from '../ui';
+} from '@/components/ui';
 import { 
   Settings,
   Play,

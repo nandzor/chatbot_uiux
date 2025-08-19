@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import UserAvatar from '../common/UserAvatar';
+import { useAuth } from '@/contexts/AuthContext';
+import UserAvatar from '@/components/common/UserAvatar';
 import { 
   Card, 
   CardContent, 
@@ -23,7 +23,7 @@ import {
   TabsList,
   TabsTrigger,
   Separator
-} from '../ui';
+} from '@/components/ui';
 import { 
   User,
   Bell,

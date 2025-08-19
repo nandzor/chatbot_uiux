@@ -15,7 +15,7 @@ import {
   TableHead,
   TableHeader,
   TableRow
-} from '../ui';
+} from '@/components/ui';
 import { 
   Shield,
   AlertTriangle

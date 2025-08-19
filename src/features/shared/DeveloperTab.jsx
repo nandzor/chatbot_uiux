@@ -13,7 +13,7 @@ import {
   TableHead,
   TableHeader,
   TableRow
-} from '../ui';
+} from '@/components/ui';
 import { 
   Key,
   Webhook,

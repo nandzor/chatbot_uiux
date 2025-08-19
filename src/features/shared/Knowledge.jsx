@@ -19,7 +19,7 @@ import {
   TableRow,
   Alert,
   AlertDescription
-} from '../ui';
+} from '@/components/ui';
 import { 
   Plus, 
   Search, 
@@ -33,7 +33,7 @@ import {
   Crown,
   Info
 } from 'lucide-react';
-import { knowledgeArticles } from '../../data/sampleData';
+import { knowledgeArticles } from '@/data/sampleData';
 
 const Knowledge = () => {
   const [searchTerm, setSearchTerm] = useState('');

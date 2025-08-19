@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui';
-import { Button, Input, Label } from '../../components/ui';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui';
+import { Button, Input, Label } from '@/components/ui';
 import { Lock, Eye, EyeOff, CheckCircle } from 'lucide-react';
 
 const ResetPassword = () => {

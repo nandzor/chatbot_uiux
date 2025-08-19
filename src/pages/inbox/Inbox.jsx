@@ -1,5 +1,5 @@
 import React from 'react';
-import SessionManager from '../../components/inbox/SessionManager';
+import SessionManager from '@/features/shared/SessionManager';
 
 const InboxPage = () => {
   return <SessionManager />;

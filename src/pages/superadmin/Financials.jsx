@@ -1,5 +1,5 @@
 import React from 'react';
-import Financials from '../../components/superadmin/Financials';
+import Financials from '@/features/superadmin/Financials';
 
 const FinancialsPage = () => {
   return <Financials />;

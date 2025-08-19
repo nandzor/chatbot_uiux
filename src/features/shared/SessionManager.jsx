@@ -50,14 +50,14 @@ import {
   TabsList,
   TabsTrigger,
   Textarea
-} from '../ui';
+} from '@/components/ui';
 import { 
   chatSessionsData, 
   customersData, 
   channelConfigsData, 
   agentsData, 
   sessionsMessagesData 
-} from '../../data/sampleData';
+} from '@/data/sampleData';
 import { formatTimeAgo, formatTime } from '../../utils/dateUtils';
 
 const SessionManager = () => {

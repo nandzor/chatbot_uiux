@@ -16,7 +16,7 @@ import {
   TableHead,
   TableHeader,
   TableRow
-} from '../ui';
+} from '@/components/ui';
 import { MessageSquare, Plus, Key, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
 
 const ChannelsTab = ({ channels, showApiKey, setShowApiKey }) => {

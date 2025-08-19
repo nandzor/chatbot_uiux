@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import UserAvatar from '../common/UserAvatar';
+import { useAuth } from '@/contexts/AuthContext';
+import UserAvatar from '@/components/common/UserAvatar';
 import WhatsAppQRConnector from './WhatsAppQRConnector';
 import { 
   Card, 
@@ -28,7 +28,7 @@ import {
   TabsContent,
   TabsList,
   TabsTrigger
-} from '../ui';
+} from '@/components/ui';
 import { 
   Plus,
   MessageSquare,

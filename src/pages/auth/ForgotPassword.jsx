@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui';
-import { Button, Input, Label } from '../../components/ui';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui';
+import { Button, Input, Label } from '@/components/ui';
 import { Mail, ArrowLeft } from 'lucide-react';
 
 const ForgotPassword = () => {

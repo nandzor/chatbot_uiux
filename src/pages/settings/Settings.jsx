@@ -1,5 +1,5 @@
 import React from 'react';
-import Settings from '../../components/settings/Settings';
+import Settings from '@/features/shared/Settings';
 
 const SettingsPage = () => {
   return <Settings />;

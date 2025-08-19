@@ -29,10 +29,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger
-} from '../ui';
+} from '@/components/ui';
 import PlanModal from './PlanModal';
-import { subscriptionPlansData, subscriptionPlansMetadata } from '../../data/sampleData';
-import subscriptionPlansService from '../../services/subscriptionPlansService';
+import { subscriptionPlansData, subscriptionPlansMetadata } from '@/data/sampleData';
+import subscriptionPlansService from '@/api/subscriptionPlansService';
 import { 
   CreditCard,
   DollarSign,

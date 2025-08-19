@@ -1,13 +1,13 @@
 import React from 'react';
 import { Outlet, NavLink } from 'react-router-dom';
-import UserProfile from '../components/auth/UserProfile';
+import UserProfile from '@/features/auth/UserProfile';
 import { 
   BarChart3, 
   MessageSquare, 
   User,
   LogOut 
 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 const AgentLayout = () => {
   const { logout } = useAuth();

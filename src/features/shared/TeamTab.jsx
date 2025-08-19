@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import UserAvatar from '../common/UserAvatar';
+import UserAvatar from '@/components/common/UserAvatar';
 import { 
   Card, 
   CardContent, 
@@ -22,7 +22,7 @@ import {
   AvatarFallback,
   AvatarImage,
   Label
-} from '../ui';
+} from '@/components/ui';
 import { 
   Users,
   Plus,

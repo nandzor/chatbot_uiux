@@ -27,7 +27,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger
-} from '../ui';
+} from '@/components/ui';
 import { 
   Building2,
   Search,

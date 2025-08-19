@@ -1,8 +1,8 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import Sidebar from '../components/layout/Sidebar';
-import UserProfile from '../components/auth/UserProfile';
-import { useAuth } from '../contexts/AuthContext';
+import Sidebar from '@/components/layout/Sidebar';
+import UserProfile from '@/features/auth/UserProfile';
+import { useAuth } from '@/contexts/AuthContext';
 
 const DashboardLayout = () => {
   const { user } = useAuth();

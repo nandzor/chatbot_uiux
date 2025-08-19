@@ -26,7 +26,7 @@ import {
   TableRow,
   ChartContainer,
   ChartTooltipContent
-} from '../ui';
+} from '@/components/ui';
 import { 
   LineChart, 
   Line, 

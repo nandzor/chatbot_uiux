@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import Sidebar from '../layout/Sidebar';
-import UserProfile from '../auth/UserProfile';
+import { useAuth } from '@/contexts/AuthContext';
+import Sidebar from '@/components/layout/Sidebar';
+import UserProfile from '@/features/auth/UserProfile';
 import AgentDashboard from './AgentDashboard';
 import AgentInbox from './AgentInbox';
 import AgentProfile from './AgentProfile';
-import ProtectedRoute from '../auth/ProtectedRoute';
+import ProtectedRoute from '@/features/auth/ProtectedRoute';
 
 const Agent = () => {
   const { user } = useAuth();

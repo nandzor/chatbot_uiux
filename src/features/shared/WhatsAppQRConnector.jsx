@@ -13,7 +13,7 @@ import {
   AlertDescription,
   Progress,
   Separator
-} from '../ui';
+} from '@/components/ui';
 import { 
   QrCode,
   Smartphone,

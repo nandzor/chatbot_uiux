@@ -9,7 +9,7 @@ import {
   Button,
   Alert,
   AlertDescription
-} from '../ui';
+} from '@/components/ui';
 import { 
   DollarSign,
   Building2,

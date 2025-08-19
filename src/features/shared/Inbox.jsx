@@ -26,7 +26,7 @@ CardTitle,
   SelectItem,
   SelectTrigger,
   SelectValue
-} from '../ui';
+} from '@/components/ui';
 
 const Inbox = () => {
   const [selectedConversation, setSelectedConversation] = useState(null);
