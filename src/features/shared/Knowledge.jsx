@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Card, 
   CardContent, 
@@ -22,7 +22,14 @@ import {
   Tabs,
   TabsContent,
   TabsList,
-  TabsTrigger
+  TabsTrigger,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  Progress,
+  Separator
 } from '@/components/ui';
 import { 
   Plus, 
@@ -41,7 +48,24 @@ import {
   Tag,
   Globe,
   Hash,
-  Send
+  Send,
+  CheckCircle,
+  Clock,
+  Eye,
+  EyeOff,
+  Zap,
+  Target,
+  Brain,
+  Sparkles,
+  Shield,
+  TrendingUp,
+  Users,
+  BarChart3,
+  FileCheck,
+  AlertTriangle,
+  Package,
+  Settings,
+  HelpCircle
 } from 'lucide-react';
 import { knowledgeArticles } from '@/data/sampleData';
 
@@ -71,22 +95,65 @@ const Knowledge = () => {
   const [editingArticle, setEditingArticle] = useState(null);
   const [activeTab, setActiveTab] = useState('qa');
   
-  // Form data untuk dual mode
+  // Enhanced form data with professional fields
   const [formData, setFormData] = useState({
     title: '',
+    description: '',
     content: '',
+    category: 'general',
+    priority: 'medium',
+    tags: [],
+    language: 'id',
+    isPublic: true,
+    requiresApproval: false,
     qaItems: [
       {
         question: '',
         variations: '',
-        answer: ''
+        answer: '',
+        confidence: 'high',
+        keywords: []
       }
     ]
   });
   
   const [charCount, setCharCount] = useState(0);
   const [testMessage, setTestMessage] = useState('');
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [formErrors, setFormErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const MAX_CHARS = 7000;
+  
+  // Predefined categories and priorities
+  const categories = [
+    { value: 'general', label: 'Umum', icon: Info },
+    { value: 'product', label: 'Produk', icon: Package },
+    { value: 'service', label: 'Layanan', icon: Settings },
+    { value: 'technical', label: 'Teknis', icon: Zap },
+    { value: 'policy', label: 'Kebijakan', icon: Shield },
+    { value: 'faq', label: 'FAQ', icon: HelpCircle }
+  ];
+  
+  const priorities = [
+    { value: 'low', label: 'Rendah', color: 'text-gray-500' },
+    { value: 'medium', label: 'Sedang', color: 'text-blue-600' },
+    { value: 'high', label: 'Tinggi', color: 'text-orange-600' },
+    { value: 'critical', label: 'Kritis', color: 'text-red-600' }
+  ];
+  
+  const languages = [
+    { value: 'id', label: 'Bahasa Indonesia' },
+    { value: 'en', label: 'English' },
+    { value: 'ja', label: '日本語' },
+    { value: 'ko', label: '한국어' },
+    { value: 'zh', label: '中文' }
+  ];
+  
+  const confidenceLevels = [
+    { value: 'low', label: 'Rendah', color: 'text-red-500' },
+    { value: 'medium', label: 'Sedang', color: 'text-yellow-500' },
+    { value: 'high', label: 'Tinggi', color: 'text-green-500' }
+  ];
 
   // Get active article count
   const activeArticleCount = articles.filter(article => article.status === 'active').length;
@@ -186,94 +253,210 @@ const Knowledge = () => {
     }
   };
 
-  // Fungsi untuk handle form submission
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  // Enhanced form validation
+  const validateForm = () => {
+    const errors = {};
     
     if (!formData.title.trim()) {
-      alert('Judul knowledge wajib diisi!');
-      return;
+      errors.title = 'Judul knowledge wajib diisi';
+    } else if (formData.title.length < 10) {
+      errors.title = 'Judul minimal 10 karakter';
     }
-
+    
+    if (!formData.description.trim()) {
+      errors.description = 'Deskripsi knowledge wajib diisi';
+    }
+    
     if (activeTab === 'qa') {
-      // Validasi Q&A mode
       const hasValidQA = formData.qaItems.some(item => 
         item.question.trim() && item.answer.trim()
       );
       
       if (!hasValidQA) {
-        alert('Minimal satu Q&A harus diisi dengan lengkap!');
-        return;
+        errors.qa = 'Minimal satu Q&A harus diisi dengan lengkap';
       }
+      
+      // Validate individual QA items
+      formData.qaItems.forEach((item, index) => {
+        if (item.question.trim() && !item.answer.trim()) {
+          errors[`qa-${index}-answer`] = 'Jawaban wajib diisi jika pertanyaan diisi';
+        }
+        if (!item.question.trim() && item.answer.trim()) {
+          errors[`qa-${index}-question`] = 'Pertanyaan wajib diisi jika jawaban diisi';
+        }
+      });
     } else {
-      // Validasi Article mode
       if (!formData.content.trim()) {
-        alert('Konten knowledge wajib diisi!');
-        return;
+        errors.content = 'Konten knowledge wajib diisi';
+      } else if (formData.content.length < 100) {
+        errors.content = 'Konten minimal 100 karakter';
       }
     }
-
-    // Prepare data untuk disimpan
-    const articleData = {
-      id: editingArticle ? editingArticle.id : Date.now().toString(),
-      title: formData.title,
-      content: activeTab === 'qa' ? '' : formData.content,
-      metadata: activeTab === 'qa' ? {
-        type: 'qa',
-        qaItems: formData.qaItems.filter(item => 
-          item.question.trim() && item.answer.trim()
-        )
-      } : {
-        type: 'article',
-        wordCount: formData.content.split(' ').length
-      },
-      status: 'inactive',
-      created_at: editingArticle ? editingArticle.created_at : new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-
-    if (editingArticle) {
-      // Update existing article
-      setArticles(prevArticles =>
-        prevArticles.map(article =>
-          article.id === editingArticle.id ? articleData : article
-        )
-      );
-    } else {
-      // Create new article
-      setArticles(prevArticles => [...prevArticles, articleData]);
+    
+    if (formData.tags.length === 0) {
+      errors.tags = 'Minimal satu tag harus dipilih';
     }
-
-    // Reset form dan close modal
-    resetForm();
-    setIsCreating(false);
-    setEditingArticle(null);
+    
+    return errors;
   };
 
-  // Fungsi untuk reset form
+  // Enhanced form submission with validation
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Prepare enhanced data untuk disimpan
+      const articleData = {
+        id: editingArticle ? editingArticle.id : Date.now().toString(),
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        content: activeTab === 'qa' ? '' : formData.content.trim(),
+        category: formData.category,
+        priority: formData.priority,
+        tags: formData.tags,
+        language: formData.language,
+        isPublic: formData.isPublic,
+        requiresApproval: formData.requiresApproval,
+        metadata: activeTab === 'qa' ? {
+          type: 'qa',
+          qaItems: formData.qaItems.filter(item => 
+            item.question.trim() && item.answer.trim()
+          ).map(item => ({
+            ...item,
+            keywords: item.keywords.length > 0 ? item.keywords : 
+              item.question.toLowerCase().split(' ').filter(word => word.length > 3)
+          }))
+        } : {
+          type: 'article',
+          wordCount: formData.content.trim().split(/\s+/).length,
+          readingTime: Math.ceil(formData.content.trim().split(/\s+/).length / 200) // 200 words per minute
+        },
+        status: 'inactive',
+        created_at: editingArticle ? editingArticle.created_at : new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        created_by: editingArticle ? editingArticle.created_by : 'Current User',
+        version: editingArticle ? (editingArticle.version || 1) + 1 : 1
+      };
+
+      if (editingArticle) {
+        // Update existing article
+        setArticles(prevArticles =>
+          prevArticles.map(article =>
+            article.id === editingArticle.id ? articleData : article
+          )
+        );
+      } else {
+        // Create new article
+        setArticles(prevArticles => [...prevArticles, articleData]);
+      }
+
+      // Reset form dan close modal
+      resetForm();
+      setIsCreating(false);
+      setEditingArticle(null);
+      setFormErrors({});
+      
+      // Show success message (in real app, use toast notification)
+      console.log('Knowledge saved successfully!');
+      
+    } catch (error) {
+      console.error('Error saving knowledge:', error);
+      setFormErrors({ submit: 'Terjadi kesalahan saat menyimpan. Silakan coba lagi.' });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Enhanced reset form function
   const resetForm = () => {
     setFormData({
       title: '',
+      description: '',
       content: '',
-      qaItems: [{ question: '', variations: '', answer: '' }]
+      category: 'general',
+      priority: 'medium',
+      tags: [],
+      language: 'id',
+      isPublic: true,
+      requiresApproval: false,
+      qaItems: [{ question: '', variations: '', answer: '', confidence: 'high', keywords: [] }]
     });
     setCharCount(0);
     setActiveTab('qa');
     setTestMessage('');
+    setShowAdvanced(false);
+    setFormErrors({});
   };
 
-  // Fungsi untuk edit article
+  // Tag management functions
+  const addTag = (tag) => {
+    if (tag.trim() && !formData.tags.includes(tag.trim())) {
+      setFormData(prev => ({
+        ...prev,
+        tags: [...prev.tags, tag.trim()]
+      }));
+    }
+  };
+
+  const removeTag = (tagToRemove) => {
+    setFormData(prev => ({
+      ...prev,
+      tags: prev.tags.filter(tag => tag !== tagToRemove)
+    }));
+  };
+
+  // Predefined tag suggestions
+  const tagSuggestions = [
+    'gadai', 'emas', 'cicilan', 'pembayaran', 'persetujuan', 'dokumen', 'syarat', 'proses',
+    'bunga', 'jasa', 'admin', 'biaya', 'jaminan', 'pelunasan', 'perpanjangan', 'penarikan'
+  ];
+
+  // Reset form to default values
+  const handleResetSettings = () => {
+    if (editingArticle) {
+      // Reset to original values when editing
+      handleEdit(editingArticle);
+    } else {
+      // Reset to empty form when creating
+      resetForm();
+    }
+  };
+
+  // Enhanced edit article function
   const handleEdit = (article) => {
     setEditingArticle(article);
     setFormData({
-      title: article.title,
+      title: article.title || '',
+      description: article.description || '',
       content: article.content || '',
+      category: article.category || 'general',
+      priority: article.priority || 'medium',
+      tags: article.tags || [],
+      language: article.language || 'id',
+      isPublic: article.isPublic !== undefined ? article.isPublic : true,
+      requiresApproval: article.requiresApproval || false,
       qaItems: article.metadata?.type === 'qa' ? 
-        article.metadata.qaItems : 
-        [{ question: '', variations: '', answer: '' }]
+        article.metadata.qaItems.map(qa => ({
+          ...qa,
+          confidence: qa.confidence || 'high',
+          keywords: qa.keywords || []
+        })) : 
+        [{ question: '', variations: '', answer: '', confidence: 'high', keywords: [] }]
     });
     setActiveTab(article.metadata?.type === 'qa' ? 'qa' : 'article');
     setCharCount(article.content ? article.content.length : 0);
+    setFormErrors({});
     setIsCreating(true);
   };
 
@@ -454,30 +637,261 @@ const Knowledge = () => {
             className="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold">
-                  {editingArticle ? 'Edit Knowledge' : 'Tambah Knowledge Baru'}
-                </h2>
-                <Button variant="ghost" size="sm" onClick={closeModal}>
-                  <X className="w-4 h-4" />
+            <div className="p-8">
+              {/* Enhanced Header */}
+              <div className="flex justify-between items-start mb-8">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                    <Brain className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">
+                      {editingArticle ? 'Edit Knowledge' : 'Tambah Knowledge Baru'}
+                    </h2>
+                    <p className="text-gray-600 mt-1">
+                      {editingArticle ? 'Perbarui informasi knowledge yang sudah ada' : 'Buat knowledge baru untuk meningkatkan kemampuan bot'}
+                    </p>
+                  </div>
+                </div>
+                <Button variant="ghost" size="sm" onClick={closeModal} className="hover:bg-gray-100 rounded-full">
+                  <X className="w-5 h-5" />
                 </Button>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Judul Knowledge */}
-                <div className="space-y-2">
-                  <Label htmlFor="title" className="text-sm font-medium">
-                    Judul Knowledge *
-                  </Label>
-                  <Input
-                    id="title"
-                    placeholder="Contoh: Pertanyaan Seputar Gadai Emas, Panduan Lengkap Pembayaran Cicilan"
-                    value={formData.title}
-                    onChange={(e) => handleInputChange('title', e.target.value)}
-                    required
-                  />
+              {/* Progress Indicator */}
+              <div className="mb-8">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-700">Progress Form</span>
+                  <span className="text-sm text-gray-500">
+                    {activeTab === 'qa' ? 'Step 1 of 2' : 'Step 2 of 2'}
+                  </span>
                 </div>
+                <Progress value={activeTab === 'qa' ? 50 : 100} className="h-2" />
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Basic Information Section */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {/* Title */}
+                  <div className="lg:col-span-2 space-y-2">
+                    <Label htmlFor="title" className="text-sm font-medium flex items-center gap-2">
+                      <Target className="w-4 h-4 text-blue-600" />
+                      Judul Knowledge *
+                    </Label>
+                    <Input
+                      id="title"
+                      placeholder="Contoh: Pertanyaan Seputar Gadai Emas, Panduan Lengkap Pembayaran Cicilan"
+                      value={formData.title}
+                      onChange={(e) => handleInputChange('title', e.target.value)}
+                      className={formErrors.title ? 'border-red-500' : ''}
+                      required
+                    />
+                    {formErrors.title && (
+                      <p className="text-sm text-red-600 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {formErrors.title}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Description */}
+                  <div className="lg:col-span-2 space-y-2">
+                    <Label htmlFor="description" className="text-sm font-medium flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-green-600" />
+                      Deskripsi Singkat *
+                    </Label>
+                    <Textarea
+                      id="description"
+                      placeholder="Jelaskan secara singkat tentang knowledge ini (maksimal 200 karakter)"
+                      value={formData.description}
+                      onChange={(e) => handleInputChange('description', e.target.value)}
+                      rows={3}
+                      maxLength={200}
+                      className={formErrors.description ? 'border-red-500' : ''}
+                      required
+                    />
+                    <div className="flex justify-between text-sm text-gray-500">
+                      <span>{formData.description.length}/200 karakter</span>
+                      {formErrors.description && (
+                        <span className="text-red-600 flex items-center gap-1">
+                          <AlertCircle className="w-4 h-4" />
+                          {formErrors.description}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Category and Priority */}
+                  <div className="space-y-2">
+                    <Label htmlFor="category" className="text-sm font-medium flex items-center gap-2">
+                      <Tag className="w-4 h-4 text-purple-600" />
+                      Kategori *
+                    </Label>
+                    <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map((category) => {
+                          const IconComponent = category.icon;
+                          return (
+                            <SelectItem key={category.value} value={category.value}>
+                              <div className="flex items-center gap-2">
+                                <IconComponent className="w-4 h-4" />
+                                {category.label}
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="priority" className="text-sm font-medium flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4 text-orange-600" />
+                      Prioritas
+                    </Label>
+                    <Select value={formData.priority} onValueChange={(value) => handleInputChange('priority', value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {priorities.map((priority) => (
+                          <SelectItem key={priority.value} value={priority.value}>
+                            <span className={priority.color}>{priority.label}</span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Language and Visibility */}
+                  <div className="space-y-2">
+                    <Label htmlFor="language" className="text-sm font-medium flex items-center gap-2">
+                      <Globe className="w-4 h-4 text-blue-600" />
+                      Bahasa
+                    </Label>
+                    <Select value={formData.language} onValueChange={(value) => handleInputChange('language', value)}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {languages.map((lang) => (
+                          <SelectItem key={lang.value} value={lang.value}>
+                            {lang.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="visibility" className="text-sm font-medium flex items-center gap-2">
+                      <Eye className="w-4 h-4 text-gray-600" />
+                      Visibilitas
+                    </Label>
+                    <div className="space-y-3">
+                      <div className="flex items-center space-x-3">
+                        <Switch
+                          id="isPublic"
+                          checked={formData.isPublic}
+                          onCheckedChange={(checked) => handleInputChange('isPublic', checked)}
+                        />
+                        <Label htmlFor="isPublic">Knowledge Publik</Label>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <Switch
+                          id="requiresApproval"
+                          checked={formData.requiresApproval}
+                          onCheckedChange={(checked) => handleInputChange('requiresApproval', checked)}
+                        />
+                        <Label htmlFor="requiresApproval">Perlu Persetujuan</Label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tags Section */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium flex items-center gap-2">
+                    <Hash className="w-4 h-4 text-indigo-600" />
+                    Tags *
+                  </Label>
+                  <div className="space-y-3">
+                    {/* Current Tags */}
+                    {formData.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {formData.tags.map((tag, index) => (
+                          <Badge key={index} variant="secondary" className="px-3 py-1">
+                            {tag}
+                            <button
+                              type="button"
+                              onClick={() => removeTag(tag)}
+                              className="ml-2 hover:text-red-600"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {/* Tag Input */}
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="Ketik tag dan tekan Enter"
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            addTag(e.target.value);
+                            e.target.value = '';
+                          }
+                        }}
+                        className="flex-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => {
+                          const input = document.querySelector('input[placeholder="Ketik tag dan tekan Enter"]');
+                          if (input && input.value.trim()) {
+                            addTag(input.value);
+                            input.value = '';
+                          }
+                        }}
+                      >
+                        Tambah
+                      </Button>
+                    </div>
+                    
+                    {/* Tag Suggestions */}
+                    <div className="space-y-2">
+                      <p className="text-xs text-gray-500">Tag yang sering digunakan:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {tagSuggestions.slice(0, 8).map((tag) => (
+                          <button
+                            key={tag}
+                            type="button"
+                            onClick={() => addTag(tag)}
+                            className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded-md text-gray-700 transition-colors"
+                          >
+                            + {tag}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {formErrors.tags && (
+                      <p className="text-sm text-red-600 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {formErrors.tags}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <Separator />
 
                 {/* Tab Interface */}
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -496,27 +910,36 @@ const Knowledge = () => {
                   <TabsContent value="qa" className="space-y-6 mt-6">
                     <div className="space-y-4">
                       {formData.qaItems.map((item, index) => (
-                        <Card key={index}>
+                        <Card key={index} className="border-l-4 border-l-blue-500">
                           <CardHeader>
                             <div className="flex justify-between items-center">
-                              <CardTitle className="text-lg">Q&A #{index + 1}</CardTitle>
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                  <MessageSquare className="w-4 h-4 text-blue-600" />
+                                </div>
+                                <div>
+                                  <CardTitle className="text-lg">Q&A #{index + 1}</CardTitle>
+                                  <p className="text-sm text-gray-500">Pertanyaan dan jawaban untuk bot</p>
+                                </div>
+                              </div>
                               {formData.qaItems.length > 1 && (
                                 <Button
                                   type="button"
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => removeQAItem(index)}
-                                  className="text-red-600 hover:text-red-700"
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
                                 >
                                   <Trash2 className="w-4 h-4" />
                                 </Button>
                               )}
                             </div>
                           </CardHeader>
-                          <CardContent className="space-y-4">
-                            {/* Pertanyaan Pengguna */}
-                            <div className="space-y-2">
-                              <Label htmlFor={`question-${index}`} className="text-sm font-medium">
+                          <CardContent className="space-y-6">
+                            {/* Question Section */}
+                            <div className="space-y-3">
+                              <Label htmlFor={`question-${index}`} className="text-sm font-medium flex items-center gap-2">
+                                <Target className="w-4 h-4 text-blue-600" />
                                 Pertanyaan Pengguna *
                               </Label>
                               <Input
@@ -524,13 +947,21 @@ const Knowledge = () => {
                                 placeholder="Contoh: Berapa lama proses persetujuan gadai?"
                                 value={item.question}
                                 onChange={(e) => updateQAItem(index, 'question', e.target.value)}
+                                className={formErrors[`qa-${index}-question`] ? 'border-red-500' : ''}
                                 required
                               />
+                              {formErrors[`qa-${index}-question`] && (
+                                <p className="text-sm text-red-600 flex items-center gap-1">
+                                  <AlertCircle className="w-4 h-4" />
+                                  {formErrors[`qa-${index}-question`]}
+                                </p>
+                              )}
                             </div>
 
-                            {/* Variasi Pertanyaan */}
-                            <div className="space-y-2">
-                              <Label htmlFor={`variations-${index}`} className="text-sm font-medium">
+                            {/* Question Variations */}
+                            <div className="space-y-3">
+                              <Label htmlFor={`variations-${index}`} className="text-sm font-medium flex items-center gap-2">
+                                <Hash className="w-4 h-4 text-purple-600" />
                                 Variasi Pertanyaan
                               </Label>
                               <Textarea
@@ -540,24 +971,60 @@ const Knowledge = () => {
                                 onChange={(e) => updateQAItem(index, 'variations', e.target.value)}
                                 rows={3}
                               />
-                              <p className="text-xs text-gray-500">
-                                Pisahkan variasi pertanyaan dengan koma atau baris baru
+                              <p className="text-xs text-gray-500 flex items-center gap-1">
+                                <Info className="w-3 h-3" />
+                                Pisahkan variasi pertanyaan dengan koma atau baris baru untuk meningkatkan akurasi bot
                               </p>
                             </div>
 
-                            {/* Jawaban Bot */}
-                            <div className="space-y-2">
-                              <Label htmlFor={`answer-${index}`} className="text-sm font-medium">
+                            {/* Answer Section */}
+                            <div className="space-y-3">
+                              <Label htmlFor={`answer-${index}`} className="text-sm font-medium flex items-center gap-2">
+                                <Brain className="w-4 h-4 text-green-600" />
                                 Jawaban Bot *
                               </Label>
                               <Textarea
                                 id={`answer-${index}`}
-                                placeholder="Tulis jawaban yang singkat dan langsung untuk pertanyaan tersebut"
+                                placeholder="Tulis jawaban yang singkat, jelas, dan langsung untuk pertanyaan tersebut"
                                 value={item.answer}
                                 onChange={(e) => updateQAItem(index, 'answer', e.target.value)}
                                 rows={4}
+                                className={formErrors[`qa-${index}-answer`] ? 'border-red-500' : ''}
                                 required
                               />
+                              {formErrors[`qa-${index}-answer`] && (
+                                <p className="text-sm text-red-600 flex items-center gap-1">
+                                  <AlertCircle className="w-4 h-4" />
+                                  {formErrors[`qa-${index}-answer`]}
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Confidence Level */}
+                            <div className="space-y-3">
+                              <Label className="text-sm font-medium flex items-center gap-2">
+                                <Shield className="w-4 h-4 text-orange-600" />
+                                Tingkat Kepercayaan Jawaban
+                              </Label>
+                              <div className="grid grid-cols-3 gap-2">
+                                {confidenceLevels.map((level) => (
+                                  <button
+                                    key={level.value}
+                                    type="button"
+                                    onClick={() => updateQAItem(index, 'confidence', level.value)}
+                                    className={`p-2 rounded-lg border text-sm font-medium transition-all ${
+                                      item.confidence === level.value
+                                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                                        : 'border-gray-200 hover:border-gray-300'
+                                    }`}
+                                  >
+                                    <div className={`${level.color} font-semibold`}>{level.label}</div>
+                                  </button>
+                                ))}
+                              </div>
+                              <p className="text-xs text-gray-500">
+                                Pilih tingkat kepercayaan untuk membantu bot memberikan jawaban yang lebih akurat
+                              </p>
                             </div>
                           </CardContent>
                         </Card>
@@ -567,12 +1034,19 @@ const Knowledge = () => {
                         type="button"
                         variant="outline"
                         onClick={addQAItem}
-                        className="w-full"
+                        className="w-full h-12 border-dashed border-2 hover:border-blue-500 hover:bg-blue-50 transition-all"
                       >
                         <Plus className="w-4 h-4 mr-2" />
-                        + Tambah Q&A
+                        + Tambah Q&A Baru
                       </Button>
                     </div>
+
+                    {formErrors.qa && (
+                      <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertDescription>{formErrors.qa}</AlertDescription>
+                      </Alert>
+                    )}
                   </TabsContent>
 
                   {/* Tab 2: Input Knowledge */}
@@ -695,20 +1169,56 @@ const Knowledge = () => {
                 </Tabs>
 
                 {/* Action Buttons */}
-                <div className="flex gap-3 pt-6 border-t">
-                  <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">
-                    <Save className="w-4 h-4 mr-2" />
-                    {editingArticle ? 'Update Knowledge' : 'Simpan Knowledge'}
-                  </Button>
+                <div className="flex gap-4 pt-8 border-t mt-8">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={closeModal}
-                    className="flex-1"
+                    className="flex-1 h-12"
+                    disabled={isSubmitting}
                   >
+                    <X className="w-4 h-4 mr-2" />
                     Batal
                   </Button>
+                  
+                  <div className="flex gap-3 flex-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleResetSettings}
+                      className="h-12"
+                      disabled={isSubmitting}
+                    >
+                      Reset
+                    </Button>
+                    
+                    <Button 
+                      type="submit" 
+                      className="flex-1 h-12 bg-blue-600 hover:bg-blue-700 shadow-lg hover:shadow-xl transition-all"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                          Menyimpan...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-4 h-4 mr-2" />
+                          {editingArticle ? 'Update Knowledge' : 'Simpan Knowledge'}
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 </div>
+
+                {/* Submit Error */}
+                {formErrors.submit && (
+                  <Alert variant="destructive" className="mt-4">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>{formErrors.submit}</AlertDescription>
+                  </Alert>
+                )}
               </form>
             </div>
           </div>
