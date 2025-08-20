@@ -5,6 +5,7 @@ const Button = React.forwardRef(({
   className, 
   variant = "default", 
   size = "default", 
+  asChild = false,
   children, 
   ...props 
 }, ref) => {
@@ -26,14 +27,24 @@ const Button = React.forwardRef(({
     icon: "h-10 w-10",
   };
 
+  const buttonClasses = cn(
+    baseClasses,
+    variants[variant],
+    sizes[size],
+    className
+  );
+
+  if (asChild && React.isValidElement(children)) {
+    return React.cloneElement(children, {
+      ref,
+      className: cn(buttonClasses, children.props.className),
+      ...props
+    });
+  }
+
   return (
     <button
-      className={cn(
-        baseClasses,
-        variants[variant],
-        sizes[size],
-        className
-      )}
+      className={buttonClasses}
       ref={ref}
       {...props}
     >

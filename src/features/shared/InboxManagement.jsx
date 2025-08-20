@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import UserAvatar from '@/components/common/UserAvatar';
 import WhatsAppQRConnector from './WhatsAppQRConnector';
+import PlatformDetails from './PlatformDetails';
+import PlatformConfiguration from './PlatformConfiguration';
+import PlatformAgentManagement from './PlatformAgentManagement';
+import PlatformAISettings from './PlatformAISettings';
 import { 
   Card, 
   CardContent, 
@@ -27,7 +31,15 @@ import {
   Tabs,
   TabsContent,
   TabsList,
-  TabsTrigger
+  TabsTrigger,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  Input,
+  Label
 } from '@/components/ui';
 import { 
   Plus,
@@ -51,13 +63,20 @@ import {
   Shield,
   Activity,
   Clock,
-  TrendingUp
+  TrendingUp,
+  AlertTriangle,
+  Save
 } from 'lucide-react';
 
 const InboxManagement = () => {
   const { user } = useAuth();
   const [showWhatsAppConnector, setShowWhatsAppConnector] = useState(false);
   const [activeTab, setActiveTab] = useState('connected-platforms');
+  const [currentView, setCurrentView] = useState('main'); // 'main', 'details', 'configure', 'agents', 'ai-settings', 'edit'
+  const [selectedPlatformId, setSelectedPlatformId] = useState(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editingPlatform, setEditingPlatform] = useState(null);
 
   // Sample data untuk connected platforms
   const [connectedPlatforms, setConnectedPlatforms] = useState([
@@ -238,9 +257,106 @@ const InboxManagement = () => {
   };
 
   const handleInboxAction = (action, inboxId) => {
-    console.log(`${action} inbox:`, inboxId);
-    // Implement inbox actions (edit, delete, configure, etc.)
+    const platform = connectedPlatforms.find(p => p.id === inboxId);
+    
+    switch (action) {
+      case 'view':
+        setSelectedPlatformId(inboxId);
+        setCurrentView('details');
+        break;
+      case 'configure':
+        setSelectedPlatformId(inboxId);
+        setCurrentView('configure');
+        break;
+      case 'agents':
+        setSelectedPlatformId(inboxId);
+        setCurrentView('agents');
+        break;
+      case 'ai':
+        setSelectedPlatformId(inboxId);
+        setCurrentView('ai-settings');
+        break;
+      case 'edit':
+        setEditingPlatform(platform);
+        setShowEditDialog(true);
+        break;
+      case 'delete':
+        setSelectedPlatformId(inboxId);
+        setShowDeleteDialog(true);
+        break;
+      default:
+        console.log(`${action} inbox:`, inboxId);
+    }
   };
+
+  const handleDeletePlatform = () => {
+    setConnectedPlatforms(prev => prev.filter(p => p.id !== selectedPlatformId));
+    setShowDeleteDialog(false);
+    setSelectedPlatformId(null);
+  };
+
+  const handleEditPlatform = (updatedData) => {
+    setConnectedPlatforms(prev => 
+      prev.map(p => p.id === editingPlatform.id ? { ...p, ...updatedData } : p)
+    );
+    setShowEditDialog(false);
+    setEditingPlatform(null);
+  };
+
+  const handleBackToMain = () => {
+    setCurrentView('main');
+    setSelectedPlatformId(null);
+  };
+
+  // Render different views based on currentView
+  if (currentView === 'details') {
+    return (
+      <PlatformDetails
+        platformId={selectedPlatformId}
+        onBack={handleBackToMain}
+        onEdit={(id) => handleInboxAction('edit', id)}
+        onDelete={(id) => handleInboxAction('delete', id)}
+        onConfigure={(id) => handleInboxAction('configure', id)}
+        onManageAgents={(id) => handleInboxAction('agents', id)}
+        onAISettings={(id) => handleInboxAction('ai', id)}
+      />
+    );
+  }
+
+  if (currentView === 'configure') {
+    return (
+      <PlatformConfiguration
+        platformId={selectedPlatformId}
+        onBack={handleBackToMain}
+        onSave={(config) => {
+          console.log('Saving configuration:', config);
+          handleBackToMain();
+        }}
+      />
+    );
+  }
+
+  if (currentView === 'agents') {
+    return (
+      <PlatformAgentManagement
+        platformId={selectedPlatformId}
+        onBack={handleBackToMain}
+      />
+    );
+  }
+
+  if (currentView === 'ai-settings') {
+    return (
+      <PlatformAISettings
+        platformId={selectedPlatformId}
+        onBack={handleBackToMain}
+        onSave={(settings) => {
+          console.log('Saving AI settings:', settings);
+          handleBackToMain();
+        }}
+      />
+    );
+  }
 
   return (
     <div className="space-y-4 lg:space-y-6 max-w-full overflow-hidden">
@@ -330,10 +446,7 @@ const InboxManagement = () => {
                   <CardTitle>Connected Platforms</CardTitle>
                   <CardDescription>Kelola semua platform yang terhubung dengan akun Anda</CardDescription>
                 </div>
-                <Button onClick={() => setActiveTab('add-platform')}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Platform
-                </Button>
+                
               </div>
             </CardHeader>
             <CardContent>
@@ -522,6 +635,193 @@ const InboxManagement = () => {
           onSuccess={handleWhatsAppSuccess}
         />
       )}
+
+      {/* Delete Platform Dialog */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Platform Connection</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this platform connection? This action cannot be undone.
+              All conversations and data associated with this platform will be permanently removed.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Alert className="border-red-200 bg-red-50">
+            <AlertTriangle className="h-4 w-4 text-red-600" />
+            <AlertDescription className="text-red-700">
+              <strong>Warning:</strong> This will permanently delete:
+              <ul className="mt-2 list-disc list-inside space-y-1">
+                <li>All conversation history</li>
+                <li>Agent assignments</li>
+                <li>Platform configuration</li>
+                <li>AI settings and analytics data</li>
+              </ul>
+            </AlertDescription>
+          </Alert>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDeleteDialog(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeletePlatform}>
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete Platform
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Platform Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-lg p-6">
+          <DialogHeader className="pb-8">
+            <DialogTitle className="text-xl font-semibold">Edit Platform Details</DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground mt-3">
+              Update the basic information for this platform connection.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {editingPlatform && (
+            <div className="space-y-8">
+              {/* Platform Type Indicator */}
+              <div className="flex items-center gap-4 p-5 bg-muted/50 rounded-lg border border-border/50">
+                <div className={`p-3 rounded-lg ${
+                  editingPlatform.platform === 'whatsapp' ? 'bg-green-100' :
+                  editingPlatform.platform === 'webchat' ? 'bg-blue-100' :
+                  editingPlatform.platform === 'facebook' ? 'bg-blue-50' :
+                  'bg-gray-100'
+                }`}>
+                  {editingPlatform.platform === 'whatsapp' && <MessageSquare className="w-5 h-5 text-green-600" />}
+                  {editingPlatform.platform === 'webchat' && <Globe className="w-5 h-5 text-blue-600" />}
+                  {editingPlatform.platform === 'facebook' && <MessageSquare className="w-5 h-5 text-blue-600" />}
+                </div>
+                <div>
+                  <p className="font-semibold text-sm capitalize">{editingPlatform.platform}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Platform Type</p>
+                </div>
+              </div>
+
+              {/* Form Fields */}
+              <div className="space-y-7">
+                <div className="space-y-3">
+                  <Label htmlFor="platform-name" className="text-sm font-medium">
+                    Platform Name <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="platform-name"
+                    value={editingPlatform.name}
+                    onChange={(e) => setEditingPlatform(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="Enter platform name"
+                    className="h-11 px-4"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    This name will be displayed in the platform list
+                  </p>
+                </div>
+                
+                {editingPlatform.platform === 'whatsapp' && (
+                  <div className="space-y-3">
+                    <Label htmlFor="platform-phone" className="text-sm font-medium">
+                      Phone Number
+                    </Label>
+                    <Input
+                      id="platform-phone"
+                      value={editingPlatform.phoneNumber || ''}
+                      onChange={(e) => setEditingPlatform(prev => ({ ...prev, phoneNumber: e.target.value }))}
+                      placeholder="e.g., +62 812-3456-7890"
+                      className="h-11 px-4"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      WhatsApp number connected to this platform
+                    </p>
+                  </div>
+                )}
+                
+                {editingPlatform.platform === 'webchat' && (
+                  <div className="space-y-3">
+                    <Label htmlFor="platform-url" className="text-sm font-medium">
+                      Website URL
+                    </Label>
+                    <Input
+                      id="platform-url"
+                      value={editingPlatform.websiteUrl || ''}
+                      onChange={(e) => setEditingPlatform(prev => ({ ...prev, websiteUrl: e.target.value }))}
+                      placeholder="https://example.com"
+                      className="h-11 px-4"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Website where the chat widget is installed
+                    </p>
+                  </div>
+                )}
+                
+                {editingPlatform.platform === 'facebook' && (
+                  <div className="space-y-3">
+                    <Label htmlFor="platform-page" className="text-sm font-medium">
+                      Facebook Page ID
+                    </Label>
+                    <Input
+                      id="platform-page"
+                      value={editingPlatform.pageId || ''}
+                      onChange={(e) => setEditingPlatform(prev => ({ ...prev, pageId: e.target.value }))}
+                      placeholder="@company.official"
+                      className="h-11 px-4"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Facebook page handle or ID connected to this platform
+                    </p>
+                  </div>
+                )}
+
+                {/* Connection Status */}
+                <div className="pt-6 border-t border-border/50">
+                  <div className="flex items-center justify-between py-3">
+                    <div>
+                      <p className="text-sm font-medium">Connection Status</p>
+                      <p className="text-xs text-muted-foreground mt-1">Current platform status</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {editingPlatform.status === 'connected' && (
+                        <>
+                          <CheckCircle className="w-4 h-4 text-green-500" />
+                          <span className="text-sm font-medium text-green-600">Connected</span>
+                        </>
+                      )}
+                      {editingPlatform.status === 'error' && (
+                        <>
+                          <XCircle className="w-4 h-4 text-red-500" />
+                          <span className="text-sm font-medium text-red-600">Error</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter className="pt-8 border-t border-border/50">
+            <div className="flex gap-3 w-full sm:w-auto">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowEditDialog(false)}
+                className="flex-1 sm:flex-none h-11 px-6"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={() => handleEditPlatform(editingPlatform)}
+                className="flex-1 sm:flex-none h-11 px-6"
+                disabled={!editingPlatform?.name?.trim()}
+              >
+                <Save className="w-4 h-4 mr-2" />
+                Save Changes
+              </Button>
+            </div>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
