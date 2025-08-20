@@ -100,34 +100,36 @@ const Knowledge = () => {
 
   // Fungsi untuk toggle status active/inactive (hanya 1 yang bisa aktif)
   const toggleStatus = (id) => {
-    setArticles(prevArticles => {
-      const targetArticle = prevArticles.find(article => article.id === id);
-      const currentActiveArticle = prevArticles.find(article => article.status === 'active');
-      
-      if (targetArticle.status === 'active') {
-        // Jika knowledge sedang aktif, nonaktifkan
-        return prevArticles.map(article =>
+    const targetArticle = articles.find(article => article.id === id);
+    const currentActiveArticle = articles.find(article => article.status === 'active');
+    
+    if (targetArticle.status === 'active') {
+      // Jika knowledge sedang aktif, nonaktifkan
+      setArticles(prevArticles =>
+        prevArticles.map(article =>
           article.id === id
             ? { ...article, status: 'inactive' }
             : article
+        )
+      );
+    } else {
+      // Jika knowledge inactive, konfirmasi jika ada knowledge aktif lain
+      if (currentActiveArticle && currentActiveArticle.id !== id) {
+        const confirmed = window.confirm(
+          `Mengaktifkan "${targetArticle.title}" akan menonaktifkan "${currentActiveArticle.title}". Lanjutkan?`
         );
-      } else {
-        // Jika knowledge inactive, konfirmasi jika ada knowledge aktif lain
-        if (currentActiveArticle && currentActiveArticle.id !== id) {
-          const confirmed = window.confirm(
-            `Mengaktifkan "${targetArticle.title}" akan menonaktifkan "${currentActiveArticle.title}". Lanjutkan?`
-          );
-          if (!confirmed) return prevArticles;
-        }
-        
-        // Aktifkan knowledge target dan nonaktifkan yang lain
-        return prevArticles.map(article =>
+        if (!confirmed) return;
+      }
+      
+      // Aktifkan knowledge target dan nonaktifkan yang lain
+      setArticles(prevArticles =>
+        prevArticles.map(article =>
           article.id === id
             ? { ...article, status: 'active' }
             : { ...article, status: 'inactive' }
-        );
-      }
-    });
+        )
+      );
+    }
   };
 
   // Fungsi untuk soft delete
