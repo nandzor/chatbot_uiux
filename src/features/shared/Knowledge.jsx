@@ -40,9 +40,29 @@ import {
   FileText,
   Tag,
   Globe,
-  Hash
+  Hash,
+  Send
 } from 'lucide-react';
 import { knowledgeArticles } from '@/data/sampleData';
+
+// Utility function to safely parse and format dates
+const parseDate = (dateString) => {
+  try {
+    let date = new Date(dateString);
+    
+    // If invalid, try parsing "YYYY-MM-DD HH:mm:ss" format
+    if (isNaN(date.getTime()) && typeof dateString === 'string') {
+      // Convert "YYYY-MM-DD HH:mm:ss" to ISO format
+      if (dateString.match(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/)) {
+        date = new Date(dateString.replace(' ', 'T') + 'Z');
+      }
+    }
+    
+    return isNaN(date.getTime()) ? new Date() : date;
+  } catch (error) {
+    return new Date();
+  }
+};
 
 const Knowledge = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -55,9 +75,6 @@ const Knowledge = () => {
   const [formData, setFormData] = useState({
     title: '',
     content: '',
-    summary: '',
-    tags: '',
-    language: 'id',
     qaItems: [
       {
         question: '',
@@ -68,6 +85,7 @@ const Knowledge = () => {
   });
   
   const [charCount, setCharCount] = useState(0);
+  const [testMessage, setTestMessage] = useState('');
   const MAX_CHARS = 7000;
 
   // Get active article count
@@ -198,9 +216,6 @@ const Knowledge = () => {
       id: editingArticle ? editingArticle.id : Date.now().toString(),
       title: formData.title,
       content: activeTab === 'qa' ? '' : formData.content,
-      summary: formData.summary,
-      tags: formData.tags.split(',').map(tag => tag.trim()).filter(tag => tag),
-      language: formData.language,
       metadata: activeTab === 'qa' ? {
         type: 'qa',
         qaItems: formData.qaItems.filter(item => 
@@ -238,13 +253,11 @@ const Knowledge = () => {
     setFormData({
       title: '',
       content: '',
-      summary: '',
-      tags: '',
-      language: 'id',
       qaItems: [{ question: '', variations: '', answer: '' }]
     });
     setCharCount(0);
     setActiveTab('qa');
+    setTestMessage('');
   };
 
   // Fungsi untuk edit article
@@ -253,9 +266,6 @@ const Knowledge = () => {
     setFormData({
       title: article.title,
       content: article.content || '',
-      summary: article.summary || '',
-      tags: article.tags ? article.tags.join(', ') : '',
-      language: article.language || 'id',
       qaItems: article.metadata?.type === 'qa' ? 
         article.metadata.qaItems : 
         [{ question: '', variations: '', answer: '' }]
@@ -263,6 +273,33 @@ const Knowledge = () => {
     setActiveTab(article.metadata?.type === 'qa' ? 'qa' : 'article');
     setCharCount(article.content ? article.content.length : 0);
     setIsCreating(true);
+  };
+
+  // Fungsi untuk handle test message
+  const handleTestMessage = () => {
+    if (testMessage.trim()) {
+      // Simulate AI response based on content
+      const response = generateAIResponse(testMessage, formData.content);
+      // For now, just log the response - in real implementation this would call AI API
+      console.log('Test message:', testMessage);
+      console.log('AI Response:', response);
+      setTestMessage('');
+    }
+  };
+
+  // Fungsi untuk generate AI response (simulation)
+  const generateAIResponse = (message, knowledgeContent) => {
+    if (!knowledgeContent) return "Maaf, saya belum memiliki knowledge yang cukup untuk menjawab pertanyaan Anda.";
+    
+    // Simple simulation - in real app this would call AI API
+    const responses = [
+      "Berdasarkan knowledge yang tersedia, saya dapat membantu Anda dengan pertanyaan tersebut.",
+      "Sesuai dengan informasi yang ada, berikut adalah jawabannya...",
+      "Terima kasih atas pertanyaannya. Berdasarkan knowledge base kami...",
+      "Saya menemukan informasi relevan untuk pertanyaan Anda."
+    ];
+    
+    return responses[Math.floor(Math.random() * responses.length)];
   };
 
   // Fungsi untuk close modal
@@ -373,7 +410,7 @@ const Knowledge = () => {
                   </TableCell>
                   <TableCell>
                     <div className="text-sm text-gray-500">
-                      {new Date(article.created_at).toLocaleDateString('id-ID')}
+                      {parseDate(article.created_at).toLocaleDateString('id-ID')}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -403,8 +440,18 @@ const Knowledge = () => {
 
       {/* Create/Edit Modal */}
       {isCreating && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] overflow-y-auto">
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              closeModal();
+            }
+          }}
+        >
+          <div 
+            className="bg-white rounded-lg w-full max-w-6xl max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-2xl font-bold">
@@ -551,54 +598,94 @@ const Knowledge = () => {
 
                       {/* Panel Metadata Samping */}
                       <div className="space-y-4">
-                        {/* Ringkasan */}
+                        {/* Chat Testing Interface */}
                         <div className="space-y-2">
-                          <Label htmlFor="summary" className="text-sm font-medium">
-                            Ringkasan
+                          <Label className="text-sm font-medium">
+                            Test Chatbot Response
                           </Label>
-                          <Textarea
-                            id="summary"
-                            placeholder="Ringkasan singkat knowledge..."
-                            value={formData.summary}
-                            onChange={(e) => handleInputChange('summary', e.target.value)}
-                            rows={4}
-                          />
-                        </div>
-
-                        {/* Tags */}
-                        <div className="space-y-2">
-                          <Label htmlFor="tags" className="text-sm font-medium">
-                            Tags
-                          </Label>
-                          <div className="relative">
-                            <Hash className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                            <Input
-                              id="tags"
-                              placeholder="gadai, emas, cicilan, pembayaran"
-                              value={formData.tags}
-                              onChange={(e) => handleInputChange('tags', e.target.value)}
-                              className="pl-10"
-                            />
+                          <div className="border rounded-lg p-3 bg-gray-50">
+                            {/* Chat Preview */}
+                            <div className="space-y-2 mb-3">
+                              {/* User Message */}
+                              <div className="flex justify-end">
+                                <div className="bg-blue-500 text-white px-2 py-1 rounded-lg max-w-[80%] text-xs">
+                                  <p>hallo</p>
+                                </div>
+                              </div>
+                              
+                              {/* Bot Response */}
+                              <div className="flex justify-start">
+                                <div className="bg-gray-200 text-gray-800 px-2 py-1 rounded-lg max-w-[80%] text-xs">
+                                  <p>Halo! Selamat datang di platform kami. Saya asisten AI yang akan membantu menjawab pertanyaan Anda. Ada yang bisa saya bantu hari ini? 😊</p>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Test Input */}
+                            <div className="space-y-2">
+                              <div className="flex gap-1">
+                                <Input
+                                  placeholder="Ketik pesan test..."
+                                  className="flex-1 text-xs h-8"
+                                  value={testMessage}
+                                  onChange={(e) => setTestMessage(e.target.value)}
+                                  onKeyPress={(e) => e.key === 'Enter' && handleTestMessage()}
+                                />
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  onClick={handleTestMessage}
+                                  className="h-8 px-2"
+                                >
+                                  <Send className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            </div>
+                            
+                            {/* AI Credits Info */}
+                            <div className="text-xs text-gray-500 mt-2 pt-2 border-t">
+                              AI credits used: 1
+                            </div>
                           </div>
-                          <p className="text-xs text-gray-500">
-                            Pisahkan tags dengan koma
-                          </p>
                         </div>
 
-                        {/* Bahasa */}
+                        {/* Quick Test Messages */}
                         <div className="space-y-2">
-                          <Label htmlFor="language" className="text-sm font-medium">
-                            Bahasa
+                          <Label className="text-sm font-medium">
+                            Quick Test Messages
                           </Label>
-                          <select
-                            id="language"
-                            value={formData.language}
-                            onChange={(e) => handleInputChange('language', e.target.value)}
-                            className="w-full p-2 border border-gray-300 rounded-md"
-                          >
-                            <option value="id">Bahasa Indonesia</option>
-                            <option value="en">English</option>
-                          </select>
+                          <div className="space-y-2">
+                            {['Bagaimana cara menggunakan fitur ini?', 'Apa saja yang tersedia?', 'Bisa tolong jelaskan lebih detail?'].map((msg, index) => (
+                              <Button
+                                key={index}
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="w-full text-xs h-8 justify-start"
+                                onClick={() => setTestMessage(msg)}
+                              >
+                                {msg}
+                              </Button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Response Preview */}
+                        <div className="space-y-2">
+                          <Label className="text-sm font-medium">
+                            Response Preview
+                          </Label>
+                          <div className="border rounded-lg p-3 bg-blue-50">
+                            <div className="text-xs text-gray-600 mb-2">
+                              <strong>AI Response:</strong>
+                            </div>
+                            <div className="bg-white p-2 rounded text-xs border">
+                              {testMessage ? 
+                                generateAIResponse(testMessage, formData.content) : 
+                                "Ketik pesan test untuk melihat preview response AI..."
+                              }
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>

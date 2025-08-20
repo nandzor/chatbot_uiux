@@ -78,21 +78,42 @@ export const knowledgeArticles = [
     title: "Base knowledge utama", 
     content: "Selamat datang di platform kami! Panduan ini akan membantu Anda memahami cara menggunakan fitur-fitur utama. Pertama, pastikan Anda telah login ke akun Anda. Kemudian, navigasi ke dashboard utama untuk melihat ringkasan aktivitas. Menu sidebar kiri berisi semua fitur yang tersedia seperti Inbox untuk mengelola percakapan, Analytics untuk melihat performa, dan Knowledge Base untuk mengelola informasi. Untuk memulai, cobalah mengeksplorasi setiap menu dan familiarkan diri dengan antarmuka pengguna.", 
     status: "active", 
-    updated_at: "2024-03-20 14:30:00" 
+    created_at: "2024-03-20T14:30:00Z",
+    updated_at: "2024-03-20T14:30:00Z",
+    tags: ["panduan", "tutorial", "dasar"],
+    language: "id",
+    metadata: {
+      type: "article",
+      wordCount: 89
+    }
   },
   { 
     id: 2, 
     title: "Base knowledge 2", 
     content: "Kami memahami bahwa terkadang produk atau layanan yang diterima mungkin tidak sesuai harapan. Oleh karena itu, kami menyediakan kebijakan pengembalian dana yang jelas dan mudah dipahami. Pengembalian dana dapat diajukan dalam waktu 30 hari sejak pembelian dengan syarat produk masih dalam kondisi asli. Untuk mengajukan pengembalian, silakan hubungi tim customer service kami melalui chat atau email dengan menyertakan nomor pesanan dan alasan pengembalian. Tim kami akan memproses permintaan Anda dalam waktu 3-5 hari kerja.", 
     status: "inactive", 
-    updated_at: "2024-03-19 10:15:00" 
+    created_at: "2024-03-19T10:15:00Z",
+    updated_at: "2024-03-19T10:15:00Z",
+    tags: ["refund", "kebijakan", "customer service"],
+    language: "id",
+    metadata: {
+      type: "article",
+      wordCount: 76
+    }
   },
   { 
     id: 3, 
     title: "Base knowledge 99 ", 
     content: "Pengaturan profil akun yang lengkap dan akurat sangat penting untuk pengalaman yang optimal. Untuk mengakses pengaturan profil, klik pada avatar Anda di pojok kanan atas, kemudian pilih 'Pengaturan Akun'. Di halaman ini, Anda dapat memperbarui informasi personal seperti nama, email, nomor telepon, dan alamat. Pastikan juga untuk mengatur preferensi notifikasi sesuai kebutuhan Anda. Jangan lupa untuk menyimpan perubahan yang telah dibuat dengan mengklik tombol 'Simpan' di bagian bawah halaman.", 
     status: "inactive", 
-    updated_at: "2024-03-18 16:45:00" 
+    created_at: "2024-03-18T16:45:00Z",
+    updated_at: "2024-03-18T16:45:00Z",
+    tags: ["profil", "pengaturan", "akun"],
+    language: "id",
+    metadata: {
+      type: "article",
+      wordCount: 82
+    }
   }
 ];
 
