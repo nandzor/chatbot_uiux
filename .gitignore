@@ -137,15 +137,15 @@ jspm_packages/
 .pnp.*
 
 # Deployment files
-deploy.sh
-deploy.config.js
-docker-compose.yml
-Dockerfile
-.dockerignore
-nginx.conf
-nginx-proxy.conf
-vercel.json
-Makefile
+# deploy.sh
+# deploy.config.js
+# docker-compose.yml
+# Dockerfile
+# .dockerignore
+# nginx.conf
+# nginx-proxy.conf
+# vercel.json
+# Makefile
 
 # Backup files
 backup-*.tar.gz
