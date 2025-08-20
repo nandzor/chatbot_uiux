@@ -183,7 +183,7 @@ const AgentDashboard = () => {
       {/* Header dengan Real-time Status */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">My Dashboard</h1>
+          <h1 className="text-xl font-bold text-gray-900">My Dashboard</h1>
           <div className="flex items-center space-x-4 mt-2">
             <div className="flex items-center space-x-2">
               <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
@@ -207,95 +207,155 @@ const AgentDashboard = () => {
       </div>
 
       {/* Real-time Metrics */}
-      <div className="grid grid-cols-6 gap-6">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Obrolan Aktif</p>
-                <p className="text-3xl font-bold text-blue-600">{agentMetrics.realtime.activeChats}</p>
-                <p className="text-xs text-gray-500">+{agentMetrics.realtime.pendingChats} pending</p>
-              </div>
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <MessageSquare className="w-6 h-6 text-blue-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">CSAT Saya</p>
+      <div className="grid grid-cols-6 gap-4">
+        {/* Active Chats Card */}
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="p-4">
+            <div className="flex items-start justify-between">
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                  Obrolan Aktif
+                </p>
+                <p className="text-2xl font-bold text-blue-600 mb-1">
+                  {agentMetrics.realtime.activeChats}
+                </p>
                 <div className="flex items-center space-x-1">
-                  <p className="text-3xl font-bold text-yellow-600">{agentMetrics.realtime.currentCSAT}</p>
-                  <Star className="w-5 h-5 text-yellow-500 fill-current" />
+                  <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                  <p className="text-xs text-gray-500">
+                    +{agentMetrics.realtime.pendingChats} pending
+                  </p>
                 </div>
-                <p className="text-xs text-green-600">+0.2 dari kemarin</p>
               </div>
-              <div className="p-3 bg-yellow-100 rounded-lg">
-                <ThumbsUp className="w-6 h-6 text-yellow-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Avg Handle Time</p>
-                <p className="text-3xl font-bold text-green-600">{agentMetrics.goals.monthly.currentAHT}</p>
-                <p className="text-xs text-green-600">Target: {agentMetrics.goals.monthly.targetAHT}</p>
-              </div>
-              <div className="p-3 bg-green-100 rounded-lg">
-                <Timer className="w-6 h-6 text-green-600" />
+              <div className="p-2.5 bg-blue-50 rounded-lg flex-shrink-0">
+                <MessageSquare className="w-5 h-5 text-blue-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Resolved Hari Ini</p>
-                <p className="text-3xl font-bold text-purple-600">{agentMetrics.realtime.todayResolved}</p>
-                <p className="text-xs text-purple-600">Target: 15/hari</p>
+        {/* CSAT Card */}
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="p-4">
+            <div className="flex items-start justify-between">
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                  CSAT Saya
+                </p>
+                <div className="flex items-center space-x-2 mb-1">
+                  <p className="text-2xl font-bold text-yellow-600">
+                    {agentMetrics.realtime.currentCSAT}
+                  </p>
+                  <Star className="w-4 h-4 text-yellow-500 fill-current" />
+                </div>
+                <div className="flex items-center space-x-1">
+                  <ArrowUp className="w-3 h-3 text-green-500" />
+                  <p className="text-xs text-green-600 font-medium">
+                    +0.2 dari kemarin
+                  </p>
+                </div>
               </div>
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <CheckCircle className="w-6 h-6 text-purple-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Response Time</p>
-                <p className="text-3xl font-bold text-indigo-600">{agentMetrics.realtime.avgResponseTime}</p>
-                <p className="text-xs text-indigo-600">Avg minggu ini</p>
-              </div>
-              <div className="p-3 bg-indigo-100 rounded-lg">
-                <Clock className="w-6 h-6 text-indigo-600" />
+              <div className="p-2.5 bg-yellow-50 rounded-lg flex-shrink-0">
+                <ThumbsUp className="w-5 h-5 text-yellow-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Follow-ups</p>
-                <p className="text-3xl font-bold text-orange-600">{agentMetrics.followUps.length}</p>
-                <p className="text-xs text-orange-600">Perlu ditindaklanjuti</p>
+        {/* Handle Time Card */}
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="p-4">
+            <div className="flex items-start justify-between">
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                  Avg Handle Time
+                </p>
+                <p className="text-2xl font-bold text-green-600 mb-1">
+                  {agentMetrics.goals.monthly.currentAHT}
+                </p>
+                <div className="flex items-center space-x-1">
+                  <CheckCircle className="w-3 h-3 text-green-500" />
+                  <p className="text-xs text-green-600 font-medium">
+                    Target: {agentMetrics.goals.monthly.targetAHT}
+                  </p>
+                </div>
               </div>
-              <div className="p-3 bg-orange-100 rounded-lg">
-                <Bell className="w-6 h-6 text-orange-600" />
+              <div className="p-2.5 bg-green-50 rounded-lg flex-shrink-0">
+                <Timer className="w-5 h-5 text-green-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Resolved Today Card */}
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="p-4">
+            <div className="flex items-start justify-between">
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                  Resolved Hari Ini
+                </p>
+                <p className="text-2xl font-bold text-purple-600 mb-1">
+                  {agentMetrics.realtime.todayResolved}
+                </p>
+                <div className="flex items-center space-x-1">
+                  <Target className="w-3 h-3 text-purple-500" />
+                  <p className="text-xs text-purple-600 font-medium">
+                    Target: 15/hari
+                  </p>
+                </div>
+              </div>
+              <div className="p-2.5 bg-purple-50 rounded-lg flex-shrink-0">
+                <CheckCircle className="w-5 h-5 text-purple-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Response Time Card */}
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="p-4">
+            <div className="flex items-start justify-between">
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                  Response Time
+                </p>
+                <p className="text-2xl font-bold text-indigo-600 mb-1">
+                  {agentMetrics.realtime.avgResponseTime}
+                </p>
+                <div className="flex items-center space-x-1">
+                  <Clock className="w-3 h-3 text-indigo-500" />
+                  <p className="text-xs text-indigo-600 font-medium">
+                    Avg minggu ini
+                  </p>
+                </div>
+              </div>
+              <div className="p-2.5 bg-indigo-50 rounded-lg flex-shrink-0">
+                <Clock className="w-5 h-5 text-indigo-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Follow-ups Card */}
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="p-4">
+            <div className="flex items-start justify-between">
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
+                  Follow-ups
+                </p>
+                <p className="text-2xl font-bold text-orange-600 mb-1">
+                  {agentMetrics.followUps.length}
+                </p>
+                <div className="flex items-center space-x-1">
+                  <AlertCircle className="w-3 h-3 text-orange-500" />
+                  <p className="text-xs text-orange-600 font-medium">
+                    Perlu ditindaklanjuti
+                  </p>
+                </div>
+              </div>
+              <div className="p-2.5 bg-orange-50 rounded-lg flex-shrink-0">
+                <Bell className="w-5 h-5 text-orange-600" />
               </div>
             </div>
           </CardContent>
@@ -305,23 +365,68 @@ const AgentDashboard = () => {
       {/* Performance Trends & Goals */}
       <div className="grid grid-cols-2 gap-6">
         {/* Performance Trend Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <BarChart3 className="w-5 h-5" />
-              <span>Trend Performa</span>
-            </CardTitle>
-            <CardDescription>CSAT dan AHT 7 hari terakhir</CardDescription>
+        <Card className="hover:shadow-md transition-shadow">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center space-x-2 text-lg">
+                  <BarChart3 className="w-5 h-5 text-blue-600" />
+                  <span>Trend Performa</span>
+                </CardTitle>
+                <CardDescription className="mt-1">
+                  CSAT dan AHT 7 hari terakhir
+                </CardDescription>
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                  <span className="text-xs text-gray-600">CSAT</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <span className="text-xs text-gray-600">AHT</span>
+                </div>
+              </div>
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="h-64">
+          <CardContent className="pt-0">
+            <div className="h-72">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={performanceTrend}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="date" />
-                  <YAxis yAxisId="left" domain={[4, 5]} />
-                  <YAxis yAxisId="right" orientation="right" domain={[0, 8]} />
-                  <Tooltip />
+                <LineChart data={performanceTrend} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                  <XAxis 
+                    dataKey="date" 
+                    stroke="#6b7280"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <YAxis 
+                    yAxisId="left" 
+                    domain={[4, 5]} 
+                    stroke="#6b7280"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                    tickFormatter={(value) => value.toFixed(1)}
+                  />
+                  <YAxis 
+                    yAxisId="right" 
+                    orientation="right" 
+                    domain={[0, 8]} 
+                    stroke="#6b7280"
+                    fontSize={12}
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <Tooltip 
+                    contentStyle={{
+                      backgroundColor: 'white',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                    }}
+                  />
                   <Line 
                     yAxisId="left"
                     type="monotone" 
@@ -329,6 +434,8 @@ const AgentDashboard = () => {
                     stroke="#fbbf24" 
                     strokeWidth={3}
                     name="CSAT"
+                    dot={{ fill: '#fbbf24', strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6, stroke: '#fbbf24', strokeWidth: 2 }}
                   />
                   <Line 
                     yAxisId="right"
@@ -337,6 +444,8 @@ const AgentDashboard = () => {
                     stroke="#10b981" 
                     strokeWidth={3}
                     name="AHT (min)"
+                    dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
+                    activeDot={{ r: 6, stroke: '#10b981', strokeWidth: 2 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -345,57 +454,90 @@ const AgentDashboard = () => {
         </Card>
 
         {/* Monthly Goals */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Target className="w-5 h-5" />
+        <Card className="hover:shadow-md transition-shadow">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center space-x-2 text-lg">
+              <Target className="w-5 h-5 text-green-600" />
               <span>Target Bulanan</span>
             </CardTitle>
-            <CardDescription>Progress pencapaian target Januari 2024</CardDescription>
+            <CardDescription className="mt-1">
+              Progress pencapaian target Januari 2024
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">CSAT Target</span>
-                <span className="text-sm text-gray-600">
+          <CardContent className="pt-0 space-y-6">
+            {/* CSAT Goal */}
+            <div className="p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-2">
+                  <Star className="w-4 h-4 text-yellow-600" />
+                  <span className="text-sm font-semibold text-yellow-800">CSAT Target</span>
+                </div>
+                <span className="text-sm font-bold text-yellow-700">
                   {agentMetrics.goals.monthly.currentCSAT}/{agentMetrics.goals.monthly.targetCSAT}
                 </span>
               </div>
               <Progress 
                 value={(agentMetrics.goals.monthly.currentCSAT / agentMetrics.goals.monthly.targetCSAT) * 100} 
-                className="h-3"
+                className="h-2.5 mb-2"
               />
-              <p className="text-xs text-green-600 mt-1">
-                +{((agentMetrics.goals.monthly.currentCSAT / agentMetrics.goals.monthly.targetCSAT) * 100 - 100).toFixed(1)}% dari target
-              </p>
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-yellow-700">
+                  +{((agentMetrics.goals.monthly.currentCSAT / agentMetrics.goals.monthly.targetCSAT) * 100 - 100).toFixed(1)}% dari target
+                </p>
+                <div className="flex items-center space-x-1">
+                  <ArrowUp className="w-3 h-3 text-green-500" />
+                  <span className="text-xs text-green-600 font-medium">On Track</span>
+                </div>
+              </div>
             </div>
 
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Resolusi</span>
-                <span className="text-sm text-gray-600">
+            {/* Resolution Goal */}
+            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="w-4 h-4 text-blue-600" />
+                  <span className="text-sm font-semibold text-blue-800">Resolusi</span>
+                </div>
+                <span className="text-sm font-bold text-blue-700">
                   {agentMetrics.goals.monthly.currentResolutions}/{agentMetrics.goals.monthly.targetResolutions}
                 </span>
               </div>
               <Progress 
                 value={(agentMetrics.goals.monthly.currentResolutions / agentMetrics.goals.monthly.targetResolutions) * 100} 
-                className="h-3"
+                className="h-2.5 mb-2"
               />
-              <p className="text-xs text-blue-600 mt-1">
-                78% tercapai • 22 lagi untuk target
-              </p>
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-blue-700">
+                  {((agentMetrics.goals.monthly.currentResolutions / agentMetrics.goals.monthly.targetResolutions) * 100).toFixed(0)}% tercapai
+                </p>
+                <div className="flex items-center space-x-1">
+                  <Target className="w-3 h-3 text-blue-500" />
+                  <span className="text-xs text-blue-600 font-medium">
+                    {agentMetrics.goals.monthly.targetResolutions - agentMetrics.goals.monthly.currentResolutions} lagi
+                  </span>
+                </div>
+              </div>
             </div>
 
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Average Handle Time</span>
-                <span className="text-sm text-green-600">
-                  {agentMetrics.goals.monthly.currentAHT} (Target: {agentMetrics.goals.monthly.targetAHT})
+            {/* Handle Time Goal */}
+            <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-2">
+                  <Timer className="w-4 h-4 text-green-600" />
+                  <span className="text-sm font-semibold text-green-800">Average Handle Time</span>
+                </div>
+                <span className="text-sm font-bold text-green-700">
+                  {agentMetrics.goals.monthly.currentAHT}
                 </span>
               </div>
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="w-4 h-4 text-green-500" />
-                <span className="text-sm text-green-600">Target tercapai!</span>
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-green-700">
+                  Target: {agentMetrics.goals.monthly.targetAHT}
+                </p>
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                  <span className="text-sm text-green-600 font-medium">Target Tercapai!</span>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -405,40 +547,58 @@ const AgentDashboard = () => {
       {/* Follow-ups & Achievements */}
       <div className="grid grid-cols-3 gap-6">
         {/* Follow-up Tasks */}
-        <Card className="col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <AlertCircle className="w-5 h-5" />
-                <span>Daftar Follow-up</span>
+        <Card className="col-span-2 hover:shadow-md transition-shadow">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center space-x-2 text-lg">
+                  <AlertCircle className="w-5 h-5 text-orange-600" />
+                  <span>Daftar Follow-up</span>
+                </CardTitle>
+                <CardDescription className="mt-1">
+                  Pelanggan yang perlu ditindaklanjuti
+                </CardDescription>
               </div>
-              <Badge variant="blue">{agentMetrics.followUps.length} aktif</Badge>
-            </CardTitle>
-            <CardDescription>Pelanggan yang perlu ditindaklanjuti</CardDescription>
+              <Badge variant="blue" className="px-3 py-1">
+                {agentMetrics.followUps.length} aktif
+              </Badge>
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
+          <CardContent className="pt-0">
+            <div className="space-y-4">
               {agentMetrics.followUps.map((followUp) => (
-                <div key={followUp.id} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center justify-between mb-2">
+                <div key={followUp.id} className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all duration-200">
+                  {/* Header dengan Customer dan Priority */}
+                  <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center space-x-3">
-                      <h4 className="font-medium text-gray-900">{followUp.customer}</h4>
+                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                      <h4 className="font-semibold text-gray-900">{followUp.customer}</h4>
                       {getPriorityBadge(followUp.priority)}
                     </div>
-                    <div className="text-sm text-gray-500">
+                    <div className={`text-sm font-medium px-2 py-1 rounded-full ${
+                      formatTimeRemaining(followUp.dueDate) === 'Overdue' 
+                        ? 'bg-red-100 text-red-700' 
+                        : 'bg-blue-100 text-blue-700'
+                    }`}>
                       {formatTimeRemaining(followUp.dueDate)}
                     </div>
                   </div>
-                  <p className="text-sm text-gray-600 mb-2">{followUp.issue}</p>
+                  
+                  {/* Issue Description */}
+                  <p className="text-sm text-gray-600 mb-3 leading-relaxed">
+                    {followUp.issue}
+                  </p>
+                  
+                  {/* Footer dengan Tags dan Action */}
                   <div className="flex items-center justify-between">
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex flex-wrap gap-2">
                       {followUp.tags.map((tag) => (
-                        <Badge key={tag} variant="gray" className="text-xs">
+                        <Badge key={tag} variant="gray" className="text-xs px-2 py-1 bg-gray-100 text-gray-700 border-gray-200">
                           {tag}
                         </Badge>
                       ))}
                     </div>
-                    <Button size="sm" variant="outline">
+                    <Button size="sm" variant="outline" className="hover:bg-orange-50 hover:border-orange-300 hover:text-orange-700">
                       Tindak Lanjut
                     </Button>
                   </div>
@@ -449,48 +609,70 @@ const AgentDashboard = () => {
         </Card>
 
         {/* Achievements */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Award className="w-5 h-5" />
+        <Card className="hover:shadow-md transition-shadow">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center space-x-2 text-lg">
+              <Award className="w-5 h-5 text-yellow-600" />
               <span>Pencapaian</span>
             </CardTitle>
-            <CardDescription>Badge dan milestone Anda</CardDescription>
+            <CardDescription className="mt-1">
+              Badge dan milestone Anda
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="pt-0 space-y-4">
             {achievements.map((achievement) => (
-              <div key={achievement.id} className={`p-3 border rounded-lg ${
-                achievement.unlocked ? 'bg-yellow-50 border-yellow-200' : 'bg-gray-50 border-gray-200'
+              <div key={achievement.id} className={`p-4 rounded-lg border transition-all duration-200 ${
+                achievement.unlocked 
+                  ? 'bg-gradient-to-br from-yellow-50 to-amber-50 border-yellow-200 hover:shadow-sm' 
+                  : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
               }`}>
-                <div className="flex items-center space-x-3 mb-2">
-                  <div className={`p-2 rounded-lg ${
-                    achievement.unlocked ? 'bg-yellow-100' : 'bg-gray-100'
+                {/* Achievement Header */}
+                <div className="flex items-start space-x-3 mb-3">
+                  <div className={`p-2.5 rounded-lg flex-shrink-0 ${
+                    achievement.unlocked ? 'bg-yellow-100' : 'bg-gray-200'
                   }`}>
                     <achievement.icon className={`w-4 h-4 ${
-                      achievement.unlocked ? 'text-yellow-600' : 'text-gray-400'
+                      achievement.unlocked ? 'text-yellow-600' : 'text-gray-500'
                     }`} />
                   </div>
-                  <div className="flex-1">
-                    <h4 className={`font-medium text-sm ${
-                      achievement.unlocked ? 'text-yellow-800' : 'text-gray-600'
+                  <div className="flex-1 min-w-0">
+                    <h4 className={`font-semibold text-sm mb-1 ${
+                      achievement.unlocked ? 'text-yellow-800' : 'text-gray-700'
                     }`}>
                       {achievement.title}
                     </h4>
+                    <p className={`text-xs leading-relaxed ${
+                      achievement.unlocked ? 'text-yellow-700' : 'text-gray-600'
+                    }`}>
+                      {achievement.description}
+                    </p>
                   </div>
                 </div>
-                <p className="text-xs text-gray-600 mb-2">{achievement.description}</p>
                 
+                {/* Achievement Status */}
                 {achievement.unlocked ? (
-                  <div className="flex items-center space-x-1">
-                    <CheckCircle className="w-3 h-3 text-green-500" />
-                    <span className="text-xs text-green-600">
-                      Unlocked {new Date(achievement.unlockedDate).toLocaleDateString('id-ID')}
-                    </span>
+                  <div className="flex items-center space-x-2 p-2 bg-green-50 rounded-lg border border-green-200">
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <div className="flex-1">
+                      <span className="text-xs font-medium text-green-700">
+                        Unlocked {new Date(achievement.unlockedDate).toLocaleDateString('id-ID', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric'
+                        })}
+                      </span>
+                    </div>
                   </div>
                 ) : (
-                  <div>
-                    <Progress value={achievement.progress} className="h-2 mb-1" />
-                    <span className="text-xs text-gray-500">{achievement.progress}% complete</span>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-gray-600">Progress</span>
+                      <span className="font-medium text-gray-700">{achievement.progress}%</span>
+                    </div>
+                    <Progress value={achievement.progress} className="h-2" />
+                    <p className="text-xs text-gray-500 text-center">
+                      {100 - achievement.progress}% lagi untuk unlock
+                    </p>
                   </div>
                 )}
               </div>
@@ -500,32 +682,63 @@ const AgentDashboard = () => {
       </div>
 
       {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-          <CardDescription>Aksi cepat untuk meningkatkan produktivitas</CardDescription>
+      <Card className="hover:shadow-md transition-shadow">
+        <CardHeader className="pb-4">
+          <CardTitle className="text-lg">Quick Actions</CardTitle>
+          <CardDescription className="mt-1">
+            Aksi cepat untuk meningkatkan produktivitas
+          </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-0">
           <div className="grid grid-cols-5 gap-4">
-            <Button variant="outline" className="h-20 flex-col">
-              <MessageCircle className="w-6 h-6 mb-2" />
-              <span className="text-sm">Buka Inbox</span>
+            <Button 
+              variant="outline" 
+              className="h-24 flex-col hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-all duration-200 group"
+            >
+              <div className="p-2 bg-blue-100 rounded-lg mb-2 group-hover:bg-blue-200 transition-colors">
+                <MessageCircle className="w-6 h-6 text-blue-600" />
+              </div>
+              <span className="text-sm font-medium">Buka Inbox</span>
             </Button>
-            <Button variant="outline" className="h-20 flex-col">
-              <Users className="w-6 h-6 mb-2" />
-              <span className="text-sm">Cari Customer</span>
+            
+            <Button 
+              variant="outline" 
+              className="h-24 flex-col hover:bg-green-50 hover:border-green-300 hover:text-green-700 transition-all duration-200 group"
+            >
+              <div className="p-2 bg-green-100 rounded-lg mb-2 group-hover:bg-green-200 transition-colors">
+                <Users className="w-6 h-6 text-green-600" />
+              </div>
+              <span className="text-sm font-medium">Cari Customer</span>
             </Button>
-            <Button variant="outline" className="h-20 flex-col">
-              <Activity className="w-6 h-6 mb-2" />
-              <span className="text-sm">Knowledge Base</span>
+            
+            <Button 
+              variant="outline" 
+              className="h-24 flex-col hover:bg-purple-50 hover:border-purple-300 hover:text-purple-700 transition-all duration-200 group"
+            >
+              <div className="p-2 bg-purple-100 rounded-lg mb-2 group-hover:bg-purple-200 transition-colors">
+                <Activity className="w-6 h-6 text-purple-600" />
+              </div>
+              <span className="text-sm font-medium">Knowledge Base</span>
             </Button>
-            <Button variant="outline" className="h-20 flex-col">
-              <Calendar className="w-6 h-6 mb-2" />
-              <span className="text-sm">Jadwal Follow-up</span>
+            
+            <Button 
+              variant="outline" 
+              className="h-24 flex-col hover:bg-orange-50 hover:border-orange-300 hover:text-orange-700 transition-all duration-200 group"
+            >
+              <div className="p-2 bg-orange-100 rounded-lg mb-2 group-hover:bg-orange-200 transition-colors">
+                <Calendar className="w-6 h-6 text-orange-600" />
+              </div>
+              <span className="text-sm font-medium">Jadwal Follow-up</span>
             </Button>
-            <Button variant="outline" className="h-20 flex-col">
-              <BarChart3 className="w-6 h-6 mb-2" />
-              <span className="text-sm">Lihat Laporan</span>
+            
+            <Button 
+              variant="outline" 
+              className="h-24 flex-col hover:bg-indigo-50 hover:border-indigo-300 hover:text-indigo-700 transition-all duration-200 group"
+            >
+              <div className="p-2 bg-indigo-100 rounded-lg mb-2 group-hover:bg-indigo-200 transition-colors">
+                <BarChart3 className="w-6 h-6 text-indigo-600" />
+              </div>
+              <span className="text-sm font-medium">Lihat Laporan</span>
             </Button>
           </div>
         </CardContent>

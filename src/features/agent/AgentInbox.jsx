@@ -390,30 +390,35 @@ const AgentInbox = () => {
   }, [selectedSession?.messages]);
 
   return (
-    <div className="h-screen flex bg-gray-50">
+    <div className="h-screen flex bg-gray-50 overflow-hidden">
       {/* Left Panel - Chat Queue */}
-      <div className="w-80 bg-white border-r border-gray-200 flex flex-col">
+      <div className="w-64 bg-white border-r border-gray-200 flex flex-col shadow-sm flex-shrink-0">
         {/* Queue Header */}
-        <div className="p-4 border-b border-gray-200">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900">My Queue</h2>
-            <Badge variant="blue">{filteredSessions.length}</Badge>
+        <div className="p-3 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 flex-shrink-0">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center space-x-2">
+              <MessageSquare className="w-4 h-4 text-blue-600" />
+              <h2 className="text-sm font-semibold text-gray-900">My Queue</h2>
+            </div>
+            <Badge variant="blue" className="px-2 py-0.5 text-xs">
+              {filteredSessions.length}
+            </Badge>
           </div>
           
           {/* Search & Filter */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+              <Search className="absolute left-2 top-2 h-3 w-3 text-gray-400" />
               <Input
                 placeholder="Cari customer..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-7 h-7 text-xs bg-white border-gray-300 focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
             
             <Select value={filterStatus} onValueChange={setFilterStatus}>
-              <SelectTrigger>
+              <SelectTrigger className="h-7 text-xs bg-white border-gray-300">
                 <SelectValue placeholder="Filter status" />
               </SelectTrigger>
               <SelectContent>
@@ -432,25 +437,31 @@ const AgentInbox = () => {
             <div
               key={session.id}
               onClick={() => handleSessionSelect(session)}
-              className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
-                selectedSession?.id === session.id ? 'bg-blue-50 border-blue-200' : ''
+              className={`p-2.5 border-b border-gray-100 cursor-pointer transition-all duration-200 ${
+                selectedSession?.id === session.id 
+                  ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-l-blue-500' 
+                  : 'hover:bg-gray-50 hover:border-l-4 hover:border-l-gray-300'
               }`}
             >
               {/* Session Header */}
-              <div className="flex items-start justify-between mb-2">
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-                    <User className="w-4 h-4 text-gray-600" />
+              <div className="flex items-start justify-between mb-1.5">
+                <div className="flex items-center space-x-2">
+                  <div className="w-7 h-7 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-medium text-xs">
+                    {session.customer.name.charAt(0).toUpperCase()}
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-medium text-gray-900 text-sm">{session.customer.name}</h3>
-                    <p className="text-xs text-gray-500">{session.customer.company}</p>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-gray-900 text-xs truncate">
+                      {session.customer.name}
+                    </h3>
+                    <p className="text-xs text-gray-500 truncate">
+                      {session.customer.company}
+                    </p>
                   </div>
                 </div>
                 <div className="flex flex-col items-end space-y-1">
                   {getSLAIndicator(session.slaStatus, session.waitingTime)}
                   {session.unreadCount > 0 && (
-                    <Badge variant="red" className="text-xs">
+                    <Badge variant="red" className="text-xs px-1 py-0.5 animate-pulse">
                       {session.unreadCount}
                     </Badge>
                   )}
@@ -458,76 +469,121 @@ const AgentInbox = () => {
               </div>
 
               {/* Session Info */}
-              <div className="flex items-center justify-between mb-2">
-                {getPriorityBadge(session.priority)}
+              <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center space-x-1">
-                  {session.tags.map(tag => (
-                    <Badge key={tag} variant="gray" className="text-xs">
+                  {getPriorityBadge(session.priority)}
+                  <Badge variant="blue" className="text-xs px-1 py-0.5">
+                    {session.category}
+                  </Badge>
+                </div>
+                <div className="flex items-center space-x-1">
+                  {session.tags.slice(0, 1).map(tag => (
+                    <Badge key={tag} variant="gray" className="text-xs px-1 py-0.5 bg-gray-100 text-gray-700 border-gray-200">
                       {tag}
                     </Badge>
                   ))}
+                  {session.tags.length > 1 && (
+                    <Badge variant="gray" className="text-xs px-1 py-0.5">
+                      +{session.tags.length - 1}
+                    </Badge>
+                  )}
                 </div>
               </div>
 
               {/* Last Message Preview */}
-              <p className="text-xs text-gray-600 truncate">
-                {session.messages[session.messages.length - 1]?.content}
-              </p>
+              <div className="mb-1.5">
+                <p className="text-xs text-gray-600 line-clamp-1 leading-relaxed">
+                  {session.messages[session.messages.length - 1]?.content}
+                </p>
+              </div>
               
-              {/* Timestamp */}
-              <p className="text-xs text-gray-400 mt-1">
-                {new Date(session.lastMessage).toLocaleTimeString('id-ID', { 
-                  hour: '2-digit', 
-                  minute: '2-digit' 
-                })}
-              </p>
+              {/* Timestamp & Status */}
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-gray-400">
+                  {new Date(session.lastMessage).toLocaleTimeString('id-ID', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                  })}
+                </p>
+                <div className="flex items-center space-x-1">
+                  <div className={`w-2 h-2 rounded-full ${
+                    session.status === 'active' ? 'bg-green-500' :
+                    session.status === 'waiting' ? 'bg-yellow-500' : 'bg-gray-400'
+                  }`}></div>
+                  <span className="text-xs text-gray-500 capitalize">{session.status}</span>
+                </div>
+              </div>
             </div>
           ))}
         </div>
       </div>
 
       {/* Center Panel - Chat Window */}
-      <div className="flex-1 flex flex-col bg-white">
+      <div className="flex-1 flex flex-col bg-white min-w-0">
         {selectedSession ? (
           <>
             {/* Chat Header */}
-            <div className="p-4 border-b border-gray-200 bg-white">
+            <div className="p-3 border-b border-gray-200 bg-gradient-to-r from-white to-gray-50 flex-shrink-0">
               <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                    <User className="w-5 h-5 text-gray-600" />
+                <div className="flex items-center space-x-2 min-w-0">
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
+                    {selectedSession.customer.name.charAt(0).toUpperCase()}
                   </div>
-                  <div>
-                    <h3 className="font-medium text-gray-900">{selectedSession.customer.name}</h3>
-                    <div className="flex items-center space-x-2 text-sm text-gray-500">
-                      <span>{selectedSession.customer.company}</span>
-                      <span>•</span>
-                      <Badge variant="blue" className="text-xs">{selectedSession.customer.plan}</Badge>
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-1 truncate">
+                      {selectedSession.customer.name}
+                    </h3>
+                    <div className="flex items-center space-x-1 text-xs">
+                      <div className="flex items-center space-x-1 min-w-0">
+                        <Building className="w-3 h-3 text-gray-400 flex-shrink-0" />
+                        <span className="text-gray-600 truncate">{selectedSession.customer.company}</span>
+                      </div>
+                      <div className="w-1 h-1 bg-gray-300 rounded-full flex-shrink-0"></div>
+                      <Badge variant="blue" className="text-xs px-1 py-0.5 flex-shrink-0">
+                        {selectedSession.customer.plan}
+                      </Badge>
+                      <div className="w-1 h-1 bg-gray-300 rounded-full flex-shrink-0"></div>
+                      <div className="flex items-center space-x-1 flex-shrink-0">
+                        <Star className="w-3 h-3 text-yellow-500 fill-current" />
+                        <span className="text-gray-600">{selectedSession.customer.avgRating}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
                 
-                <div className="flex items-center space-x-2">
-                  <Button variant="ghost" size="sm" onClick={() => setShowInternalNotes(!showInternalNotes)}>
-                    <FileText className="w-4 h-4" />
+                <div className="flex items-center space-x-1 flex-shrink-0">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setShowInternalNotes(!showInternalNotes)}
+                    className={`hover:bg-yellow-50 hover:text-yellow-700 p-2 ${
+                      showInternalNotes ? 'bg-yellow-100 text-yellow-700' : ''
+                    }`}
+                  >
+                    <FileText className="w-3 h-3" />
                   </Button>
                   
                   <Dialog open={isTransferDialogOpen} onOpenChange={setIsTransferDialogOpen}>
                     <DialogTrigger asChild>
-                      <Button variant="ghost" size="sm">
+                      <Button variant="ghost" size="sm" className="hover:bg-orange-50 hover:text-orange-700">
                         <ArrowRightLeft className="w-4 h-4" />
                       </Button>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent className="max-w-md">
                       <DialogHeader>
-                        <DialogTitle>Transfer Session</DialogTitle>
-                        <DialogDescription>Transfer chat ini ke agent atau departemen lain</DialogDescription>
+                        <DialogTitle className="flex items-center space-x-2">
+                          <ArrowRightLeft className="w-5 h-5 text-orange-600" />
+                          <span>Transfer Session</span>
+                        </DialogTitle>
+                        <DialogDescription>
+                          Transfer chat ini ke agent atau departemen lain
+                        </DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4">
                         <div>
-                          <Label htmlFor="transferTo">Transfer ke</Label>
+                          <Label htmlFor="transferTo" className="text-sm font-medium">Transfer ke</Label>
                           <Select>
-                            <SelectTrigger>
+                            <SelectTrigger className="mt-1">
                               <SelectValue placeholder="Pilih agent atau departemen" />
                             </SelectTrigger>
                             <SelectContent>
@@ -539,17 +595,18 @@ const AgentInbox = () => {
                           </Select>
                         </div>
                         <div>
-                          <Label htmlFor="transferReason">Alasan Transfer</Label>
+                          <Label htmlFor="transferReason" className="text-sm font-medium">Alasan Transfer</Label>
                           <Textarea 
                             placeholder="Jelaskan alasan transfer..." 
                             rows={3}
+                            className="mt-1"
                           />
                         </div>
-                        <div className="flex justify-end space-x-2">
+                        <div className="flex justify-end space-x-2 pt-2">
                           <Button variant="outline" onClick={() => setIsTransferDialogOpen(false)}>
                             Batal
                           </Button>
-                          <Button onClick={handleTransferSession}>
+                          <Button onClick={handleTransferSession} className="bg-orange-600 hover:bg-orange-700">
                             Transfer
                           </Button>
                         </div>
@@ -559,20 +616,25 @@ const AgentInbox = () => {
 
                   <Dialog open={isWrapUpDialogOpen} onOpenChange={setIsWrapUpDialogOpen}>
                     <DialogTrigger asChild>
-                      <Button variant="ghost" size="sm">
+                      <Button variant="ghost" size="sm" className="hover:bg-green-50 hover:text-green-700">
                         <CheckCircle className="w-4 h-4" />
                       </Button>
                     </DialogTrigger>
-                    <DialogContent>
+                    <DialogContent className="max-w-md">
                       <DialogHeader>
-                        <DialogTitle>Wrap-Up Session</DialogTitle>
-                        <DialogDescription>Selesaikan chat session ini</DialogDescription>
+                        <DialogTitle className="flex items-center space-x-2">
+                          <CheckCircle className="w-5 h-5 text-green-600" />
+                          <span>Wrap-Up Session</span>
+                        </DialogTitle>
+                        <DialogDescription>
+                          Selesaikan chat session ini
+                        </DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4">
                         <div>
-                          <Label htmlFor="category">Kategori Sesi</Label>
+                          <Label htmlFor="category" className="text-sm font-medium">Kategori Sesi</Label>
                           <Select>
-                            <SelectTrigger>
+                            <SelectTrigger className="mt-1">
                               <SelectValue placeholder="Pilih kategori" />
                             </SelectTrigger>
                             <SelectContent>
@@ -584,34 +646,35 @@ const AgentInbox = () => {
                           </Select>
                         </div>
                         <div>
-                          <Label>Tandai untuk Tim Lain</Label>
+                          <Label className="text-sm font-medium">Tandai untuk Tim Lain</Label>
                           <div className="space-y-2 mt-2">
                             <div className="flex items-center space-x-2">
-                              <input type="checkbox" id="sales" />
-                              <Label htmlFor="sales">Peluang Sales</Label>
+                              <input type="checkbox" id="sales" className="rounded border-gray-300" />
+                              <Label htmlFor="sales" className="text-sm">Peluang Sales</Label>
                             </div>
                             <div className="flex items-center space-x-2">
-                              <input type="checkbox" id="churn" />
-                              <Label htmlFor="churn">Risiko Churn</Label>
+                              <input type="checkbox" id="churn" className="rounded border-gray-300" />
+                              <Label htmlFor="churn" className="text-sm">Risiko Churn</Label>
                             </div>
                             <div className="flex items-center space-x-2">
-                              <input type="checkbox" id="feedback" />
-                              <Label htmlFor="feedback">Feedback Produk</Label>
+                              <input type="checkbox" id="feedback" className="rounded border-gray-300" />
+                              <Label htmlFor="feedback" className="text-sm">Feedback Produk</Label>
                             </div>
                           </div>
                         </div>
                         <div>
-                          <Label htmlFor="summary">Ringkasan Session</Label>
+                          <Label htmlFor="summary" className="text-sm font-medium">Ringkasan Session</Label>
                           <Textarea 
                             placeholder="Ringkas masalah dan solusi yang diberikan..." 
                             rows={3}
+                            className="mt-1"
                           />
                         </div>
-                        <div className="flex justify-end space-x-2">
+                        <div className="flex justify-end space-x-2 pt-2">
                           <Button variant="outline" onClick={() => setIsWrapUpDialogOpen(false)}>
                             Batal
                           </Button>
-                          <Button onClick={handleWrapUpSession}>
+                          <Button onClick={handleWrapUpSession} className="bg-green-600 hover:bg-green-700">
                             Selesaikan Session
                           </Button>
                         </div>
@@ -624,10 +687,18 @@ const AgentInbox = () => {
 
             {/* Internal Notes (Collapsible) */}
             {showInternalNotes && (
-              <div className="p-4 bg-yellow-50 border-b border-yellow-200">
+              <div className="p-4 bg-gradient-to-r from-yellow-50 to-amber-50 border-b border-yellow-200">
                 <div className="flex items-center justify-between mb-2">
-                  <Label className="text-sm font-medium text-yellow-800">Internal Notes</Label>
-                  <Button variant="ghost" size="sm" onClick={() => setShowInternalNotes(false)}>
+                  <div className="flex items-center space-x-2">
+                    <FileText className="w-4 h-4 text-yellow-700" />
+                    <Label className="text-sm font-semibold text-yellow-800">Internal Notes</Label>
+                  </div>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => setShowInternalNotes(false)}
+                    className="hover:bg-yellow-100 hover:text-yellow-800"
+                  >
                     <X className="w-4 h-4" />
                   </Button>
                 </div>
@@ -636,33 +707,37 @@ const AgentInbox = () => {
                   onChange={(e) => setInternalNotes(e.target.value)}
                   placeholder="Catatan internal untuk tim..."
                   rows={2}
-                  className="bg-white"
+                  className="bg-white border-yellow-300 focus:border-yellow-500 focus:ring-yellow-500 resize-none text-sm"
                 />
-                <div className="flex justify-end mt-2">
-                  <Button size="sm">
-                    Simpan Catatan
+                <div className="flex items-center justify-between mt-2">
+                  <p className="text-xs text-yellow-700">
+                    💡 Hanya visible untuk tim internal
+                  </p>
+                  <Button size="sm" className="bg-yellow-600 hover:bg-yellow-700 text-white text-xs px-3 py-1">
+                    <FileText className="w-3 h-3 mr-1" />
+                    Simpan
                   </Button>
                 </div>
               </div>
             )}
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gradient-to-b from-gray-50 to-white">
               {selectedSession.messages.map((message) => (
                 <div
                   key={message.id}
                   className={`flex ${message.type === 'agent' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                  <div className={`max-w-xs lg:max-w-md px-3 py-2 rounded-xl shadow-sm ${
                     message.type === 'agent' 
-                      ? 'bg-blue-600 text-white' 
-                      : 'bg-white text-gray-900 border border-gray-200'
+                      ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white' 
+                      : 'bg-white text-gray-900 border border-gray-200 shadow-md'
                   }`}>
-                    <p className="text-sm">{message.content}</p>
-                    <div className={`text-xs mt-1 flex items-center justify-end space-x-1 ${
+                    <p className="text-sm leading-relaxed">{message.content}</p>
+                    <div className={`text-xs mt-1.5 flex items-center justify-between ${
                       message.type === 'agent' ? 'text-blue-100' : 'text-gray-500'
                     }`}>
-                      <span>
+                      <span className="font-medium">
                         {new Date(message.timestamp).toLocaleTimeString('id-ID', { 
                           hour: '2-digit', 
                           minute: '2-digit' 
@@ -670,8 +745,18 @@ const AgentInbox = () => {
                       </span>
                       {message.type === 'agent' && (
                         <div className="flex items-center space-x-1">
-                          {message.delivered && <CheckCircle className="w-3 h-3" />}
-                          {message.read && <Eye className="w-3 h-3" />}
+                          {message.delivered && (
+                            <div className="flex items-center space-x-1">
+                              <CheckCircle className="w-3 h-3" />
+                              <span className="text-xs">✓</span>
+                            </div>
+                          )}
+                          {message.read && (
+                            <div className="flex items-center space-x-1">
+                              <Eye className="w-3 h-3" />
+                              <span className="text-xs">👁</span>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -682,14 +767,18 @@ const AgentInbox = () => {
             </div>
 
             {/* Quick Replies */}
-            <div className="px-4 py-2 bg-gray-50 border-t border-gray-200">
-              <div className="flex space-x-2 overflow-x-auto">
+            <div className="px-4 py-2 bg-gradient-to-r from-gray-50 to-blue-50 border-t border-gray-200">
+              <div className="flex items-center space-x-2 mb-1">
+                <Zap className="w-3 h-3 text-blue-600" />
+                <span className="text-xs font-medium text-gray-700">Quick Replies</span>
+              </div>
+              <div className="flex space-x-1 overflow-x-auto pb-1">
                 {quickReplies.map((reply, index) => (
                   <Button
                     key={index}
                     variant="outline"
                     size="sm"
-                    className="whitespace-nowrap text-xs"
+                    className="whitespace-nowrap text-xs px-2 py-1 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-all duration-200"
                     onClick={() => setMessageText(reply)}
                   >
                     {reply}
@@ -699,7 +788,7 @@ const AgentInbox = () => {
             </div>
 
             {/* Message Input */}
-            <div className="p-4 border-t border-gray-200 bg-white">
+            <div className="p-4 border-t border-gray-200 bg-white shadow-sm">
               <div className="flex items-end space-x-2">
                 <div className="flex-1">
                   <Textarea
@@ -708,15 +797,33 @@ const AgentInbox = () => {
                     onKeyPress={handleKeyPress}
                     placeholder="Ketik pesan..."
                     rows={2}
-                    className="resize-none"
+                    className="resize-none border-gray-300 focus:border-blue-500 focus:ring-blue-500 text-sm"
                   />
+                  <div className="flex items-center justify-between mt-1">
+                    <p className="text-xs text-gray-500">
+                      💡 Quick replies untuk respon cepat
+                    </p>
+                    <div className="text-xs text-gray-500">
+                      Enter untuk kirim
+                    </div>
+                  </div>
                 </div>
-                <div className="flex flex-col space-y-2">
-                  <Button variant="ghost" size="sm">
-                    <Paperclip className="w-4 h-4" />
+                <div className="flex flex-col space-y-1">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="hover:bg-gray-100 hover:text-gray-700 p-2"
+                    title="Attach file"
+                  >
+                    <Paperclip className="w-3 h-3" />
                   </Button>
-                  <Button onClick={handleSendMessage} disabled={!messageText.trim()}>
-                    <Send className="w-4 h-4" />
+                  <Button 
+                    onClick={handleSendMessage} 
+                    disabled={!messageText.trim()}
+                    className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed p-2"
+                    title="Send message"
+                  >
+                    <Send className="w-3 h-3" />
                   </Button>
                 </div>
               </div>
@@ -734,75 +841,86 @@ const AgentInbox = () => {
       </div>
 
       {/* Right Panel - Context & Help */}
-      <div className="w-80 bg-white border-l border-gray-200">
+      <div className="w-64 bg-white border-l border-gray-200 shadow-sm flex-shrink-0">
         <Tabs value={contextTab} onValueChange={setContextTab} className="h-full flex flex-col">
-          <TabsList className="grid w-full grid-cols-3 p-1 m-4">
-            <TabsTrigger value="customer-info" className="text-xs">Customer</TabsTrigger>
-            <TabsTrigger value="knowledge" className="text-xs">Knowledge</TabsTrigger>
-            <TabsTrigger value="history" className="text-xs">History</TabsTrigger>
-          </TabsList>
+          <div className="p-2.5 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-blue-50 flex-shrink-0">
+            <h3 className="text-xs font-semibold text-gray-700 mb-1.5">Context & Help</h3>
+            <TabsList className="grid w-full grid-cols-3 p-1 bg-white border border-gray-200">
+              <TabsTrigger value="customer-info" className="text-xs data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700">
+                Customer
+              </TabsTrigger>
+              <TabsTrigger value="knowledge" className="text-xs data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700">
+                Knowledge
+              </TabsTrigger>
+              <TabsTrigger value="history" className="text-xs data-[state=active]:bg-blue-100 data-[state=active]:text-blue-700">
+                History
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* Customer Info Tab */}
-          <TabsContent value="customer-info" className="flex-1 overflow-y-auto p-4 pt-0">
+          <TabsContent value="customer-info" className="flex-1 overflow-y-auto p-2.5 pt-0">
             {selectedSession ? (
-              <div className="space-y-4">
+              <div className="space-y-2.5">
                 {/* Customer Details */}
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm">Customer Details</CardTitle>
+                <Card className="border-gray-200 hover:shadow-sm transition-shadow">
+                  <CardHeader className="pb-1.5">
+                    <CardTitle className="text-xs font-semibold text-gray-800">Customer Details</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center">
-                        <User className="w-6 h-6 text-gray-600" />
+                  <CardContent className="space-y-2.5">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-7 h-7 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold text-xs flex-shrink-0">
+                        {selectedSession.customer.name.charAt(0).toUpperCase()}
                       </div>
-                      <div>
-                        <h3 className="font-medium">{selectedSession.customer.name}</h3>
-                        <p className="text-sm text-gray-600">{selectedSession.customer.email}</p>
+                      <div className="min-w-0">
+                        <h3 className="font-semibold text-gray-900 text-xs truncate">{selectedSession.customer.name}</h3>
+                        <p className="text-xs text-gray-600 truncate">{selectedSession.customer.email}</p>
                       </div>
                     </div>
                     
-                    <div className="space-y-2 text-sm">
-                      <div className="flex items-center space-x-2">
-                        <Building className="w-4 h-4 text-gray-400" />
-                        <span>{selectedSession.customer.company}</span>
+                    <div className="space-y-1.5 text-xs">
+                      <div className="flex items-center space-x-2 p-1 bg-gray-50 rounded-lg">
+                        <Building className="w-3 h-3 text-blue-600 flex-shrink-0" />
+                        <span className="text-gray-700 font-medium truncate">{selectedSession.customer.company}</span>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <Phone className="w-4 h-4 text-gray-400" />
-                        <span>{selectedSession.customer.phone}</span>
+                      <div className="flex items-center space-x-2 p-1 bg-gray-50 rounded-lg">
+                        <Phone className="w-3 h-3 text-green-600 flex-shrink-0" />
+                        <span className="text-gray-700 font-medium truncate">{selectedSession.customer.phone}</span>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <Calendar className="w-4 h-4 text-gray-400" />
-                        <span>Member since {new Date(selectedSession.customer.joinDate).toLocaleDateString('id-ID')}</span>
+                      <div className="flex items-center space-x-2 p-1 bg-gray-50 rounded-lg">
+                        <Calendar className="w-3 h-3 text-purple-600 flex-shrink-0" />
+                        <span className="text-gray-700 font-medium truncate">
+                          Member since {new Date(selectedSession.customer.joinDate).toLocaleDateString('id-ID')}
+                        </span>
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
                 {/* Plan & Stats */}
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm">Plan & Statistics</CardTitle>
+                <Card className="border-gray-200 hover:shadow-sm transition-shadow">
+                  <CardHeader className="pb-1.5">
+                    <CardTitle className="text-xs font-semibold text-gray-800">Plan & Statistics</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Current Plan</span>
-                      <Badge variant="blue">{selectedSession.customer.plan}</Badge>
+                  <CardContent className="space-y-1.5">
+                    <div className="flex items-center justify-between p-1 bg-blue-50 rounded-lg">
+                      <span className="text-xs text-blue-700 font-medium truncate">Current Plan</span>
+                      <Badge variant="blue" className="px-1 py-0.5 text-xs flex-shrink-0">{selectedSession.customer.plan}</Badge>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Total Sessions</span>
-                      <span className="text-sm font-medium">{selectedSession.customer.totalSessions}</span>
+                    <div className="flex items-center justify-between p-1 bg-green-50 rounded-lg">
+                      <span className="text-xs text-green-700 font-medium truncate">Total Sessions</span>
+                      <span className="text-xs font-bold text-green-700 flex-shrink-0">{selectedSession.customer.totalSessions}</span>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Avg Rating</span>
-                      <div className="flex items-center space-x-1">
-                        <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                        <span className="text-sm font-medium">{selectedSession.customer.avgRating}</span>
+                    <div className="flex items-center justify-between p-1 bg-yellow-50 rounded-lg">
+                      <span className="text-xs text-yellow-700 font-medium truncate">Avg Rating</span>
+                      <div className="flex items-center space-x-1 flex-shrink-0">
+                        <Star className="w-3 h-3 text-yellow-500 fill-current" />
+                        <span className="text-xs font-bold text-yellow-700">{selectedSession.customer.avgRating}</span>
                       </div>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Last Activity</span>
-                      <span className="text-sm font-medium">
+                    <div className="flex items-center justify-between p-1 bg-purple-50 rounded-lg">
+                      <span className="text-xs text-purple-700 font-medium truncate">Last Activity</span>
+                      <span className="text-xs font-bold text-purple-700 flex-shrink-0">
                         {new Date(selectedSession.customer.lastActivity).toLocaleDateString('id-ID')}
                       </span>
                     </div>
@@ -810,19 +928,19 @@ const AgentInbox = () => {
                 </Card>
 
                 {/* Session Tags */}
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm">Session Tags</CardTitle>
+                <Card className="border-gray-200 hover:shadow-sm transition-shadow">
+                  <CardHeader className="pb-1.5">
+                    <CardTitle className="text-xs font-semibold text-gray-800">Session Tags</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-1">
                       {selectedSession.tags.map(tag => (
-                        <Badge key={tag} variant="gray" className="text-xs">
+                        <Badge key={tag} variant="gray" className="text-xs px-1 py-0.5 bg-gray-100 text-gray-700 border-gray-200">
                           {tag}
                         </Badge>
                       ))}
-                      <Button variant="ghost" size="sm" className="h-6 px-2">
-                        <Plus className="w-3 h-3" />
+                      <Button variant="ghost" size="sm" className="h-4 px-1 hover:bg-gray-100 hover:text-gray-700">
+                        <Plus className="w-2.5 h-2.5" />
                       </Button>
                     </div>
                   </CardContent>
@@ -831,35 +949,45 @@ const AgentInbox = () => {
             ) : (
               <div className="flex items-center justify-center h-full text-gray-500">
                 <div className="text-center">
-                  <Info className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                  <p className="text-sm">Pilih chat untuk melihat info customer</p>
+                  <Info className="w-6 h-6 mx-auto mb-1 text-gray-400" />
+                  <p className="text-xs">Pilih chat untuk melihat info customer</p>
                 </div>
               </div>
             )}
           </TabsContent>
 
           {/* Knowledge Base Tab */}
-          <TabsContent value="knowledge" className="flex-1 overflow-y-auto p-4 pt-0">
-            <div className="space-y-4">
+          <TabsContent value="knowledge" className="flex-1 overflow-y-auto p-2.5 pt-0">
+            <div className="space-y-2.5">
               <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-2 top-2 h-3 w-3 text-gray-400" />
                 <Input
                   placeholder="Cari knowledge..."
-                  className="pl-10"
+                  className="pl-7 h-7 text-xs border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
               
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 {knowledgeArticles.map((article) => (
-                  <Card key={article.id} className="p-3 hover:bg-gray-50 cursor-pointer">
+                  <Card key={article.id} className="p-2.5 hover:shadow-md cursor-pointer transition-all duration-200 border-gray-200 hover:border-blue-300">
                     <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h4 className="text-sm font-medium text-gray-900">{article.title}</h4>
-                        <p className="text-xs text-gray-600 mt-1">{article.category}</p>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-xs font-semibold text-gray-900 mb-1 truncate">{article.title}</h4>
+                        <div className="flex items-center space-x-1">
+                          <Badge variant="blue" className="text-xs px-1 py-0.5">
+                            {article.category}
+                          </Badge>
+                          <span className="text-xs text-gray-500">
+                            {article.relevance}%
+                          </span>
+                        </div>
                       </div>
-                      <Badge variant="green" className="text-xs">
-                        {article.relevance}%
-                      </Badge>
+                      <div className="flex items-center space-x-1 flex-shrink-0">
+                        <BookOpen className="w-3 h-3 text-blue-600" />
+                        <Badge variant="green" className="text-xs px-1 py-0.5">
+                          {article.relevance}%
+                        </Badge>
+                      </div>
                     </div>
                   </Card>
                 ))}
@@ -868,36 +996,41 @@ const AgentInbox = () => {
           </TabsContent>
 
           {/* History Tab */}
-          <TabsContent value="history" className="flex-1 overflow-y-auto p-4 pt-0">
+          <TabsContent value="history" className="flex-1 overflow-y-auto p-2.5 pt-0">
             {selectedSession ? (
-              <div className="space-y-3">
+              <div className="space-y-1.5">
                 {customerHistory.map((item) => (
-                  <Card key={item.id} className="p-3">
-                    <div className="flex items-start justify-between mb-2">
+                  <Card key={item.id} className="p-2.5 hover:shadow-sm transition-shadow border-gray-200">
+                    <div className="flex items-start justify-between mb-1.5">
                       <div className="flex items-center space-x-2">
                         <div className={`w-2 h-2 rounded-full ${
                           item.type === 'chat' ? 'bg-blue-500' :
                           item.type === 'email' ? 'bg-green-500' : 'bg-purple-500'
                         }`}></div>
-                        <span className="text-xs text-gray-500">{item.date}</span>
+                        <span className="text-xs font-medium text-gray-600">{item.date}</span>
                       </div>
                       {item.rating && (
-                        <div className="flex items-center space-x-1">
+                        <div className="flex items-center space-x-1 flex-shrink-0">
                           <Star className="w-3 h-3 text-yellow-500 fill-current" />
-                          <span className="text-xs">{item.rating}</span>
+                          <span className="text-xs font-medium text-yellow-700">{item.rating}</span>
                         </div>
                       )}
                     </div>
-                    <h4 className="text-sm font-medium text-gray-900">{item.summary}</h4>
-                    <p className="text-xs text-gray-600 mt-1">by {item.agent}</p>
+                    <h4 className="text-xs font-semibold text-gray-900 mb-1 truncate">{item.summary}</h4>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-gray-600 truncate">by {item.agent}</p>
+                      <Badge variant="gray" className="text-xs px-1 py-0.5 bg-gray-100 text-gray-700 flex-shrink-0">
+                        {item.type}
+                      </Badge>
+                    </div>
                   </Card>
                 ))}
               </div>
             ) : (
               <div className="flex items-center justify-center h-full text-gray-500">
                 <div className="text-center">
-                  <History className="w-8 h-8 mx-auto mb-2 text-gray-400" />
-                  <p className="text-sm">Pilih chat untuk melihat history</p>
+                  <History className="w-5 h-5 mx-auto mb-1 text-gray-400" />
+                  <p className="text-xs">Pilih chat untuk melihat history</p>
                 </div>
               </div>
             )}
