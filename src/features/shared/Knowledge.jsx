@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Card, 
   CardContent, 
@@ -122,7 +122,84 @@ const Knowledge = () => {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [formErrors, setFormErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [conversationHistory, setConversationHistory] = useState([
+    {
+      id: 1,
+      type: 'user',
+      message: 'Hallo, ada yang bisa dibantu?',
+      timestamp: new Date()
+    },
+    {
+      id: 2,
+      type: 'bot',
+      message: 'Halo! Selamat datang di platform kami. Saya asisten AI yang akan membantu menjawab pertanyaan Anda. Ada yang bisa saya bantu hari ini? 😊',
+      timestamp: new Date()
+    }
+  ]);
   const MAX_CHARS = 7000;
+  
+  // Ref untuk chat container
+  const chatContainerRef = useRef(null);
+  const [isScrolling, setIsScrolling] = useState(false);
+  const [showScrollButton, setShowScrollButton] = useState(false);
+  
+  // Enhanced auto-scroll function with smooth behavior
+  const scrollToBottom = () => {
+    if (chatContainerRef.current) {
+      setIsScrolling(true);
+      chatContainerRef.current.scrollTo({
+        top: chatContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+      
+      // Reset scrolling state after animation
+      setTimeout(() => setIsScrolling(false), 500);
+    }
+  };
+  
+  // Force scroll to bottom (for immediate scroll)
+  const forceScrollToBottom = () => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  };
+  
+  // Check scroll position and show/hide scroll button
+  const handleScroll = () => {
+    if (chatContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
+      const isAtBottom = scrollTop + clientHeight >= scrollHeight - 10; // 10px tolerance
+      setShowScrollButton(!isAtBottom);
+    }
+  };
+  
+  // Auto-scroll when conversation updates
+  useEffect(() => {
+    // Use force scroll for immediate response
+    forceScrollToBottom();
+    
+    // Add a small delay for smooth scroll effect
+    const timer = setTimeout(() => {
+      scrollToBottom();
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [conversationHistory]);
+  
+  // Add scroll event listener
+  useEffect(() => {
+    const chatContainer = chatContainerRef.current;
+    if (chatContainer) {
+      chatContainer.addEventListener('scroll', handleScroll);
+      
+      // Initial check
+      handleScroll();
+      
+      return () => {
+        chatContainer.removeEventListener('scroll', handleScroll);
+      };
+    }
+  }, []);
   
   // Predefined categories and priorities
   const categories = [
@@ -397,6 +474,20 @@ const Knowledge = () => {
     setTestMessage('');
     setShowAdvanced(false);
     setFormErrors({});
+    setConversationHistory([
+      {
+        id: 1,
+        type: 'user',
+        message: 'Hallo, ada yang bisa dibantu?',
+        timestamp: new Date()
+      },
+      {
+        id: 2,
+        type: 'bot',
+        message: 'Halo! Selamat datang di platform kami. Saya asisten AI yang akan membantu menjawab pertanyaan Anda. Ada yang bisa saya bantu hari ini? 😊',
+        timestamp: new Date()
+      }
+    ]);
   };
 
   // Tag management functions
@@ -460,31 +551,113 @@ const Knowledge = () => {
     setIsCreating(true);
   };
 
-  // Fungsi untuk handle test message
+  // Enhanced test message handler with conversation history
   const handleTestMessage = () => {
     if (testMessage.trim()) {
-      // Simulate AI response based on content
+      // Generate AI response
       const response = generateAIResponse(testMessage, formData.content);
-      // For now, just log the response - in real implementation this would call AI API
+      
+      // Add user message to conversation
+      const userMessage = {
+        id: Date.now(),
+        type: 'user',
+        message: testMessage,
+        timestamp: new Date()
+      };
+      
+      // Add bot response to conversation
+      const botMessage = {
+        id: Date.now() + 1,
+        type: 'bot',
+        message: response,
+        timestamp: new Date()
+      };
+      
+      // Update conversation history
+      setConversationHistory(prev => [...prev, userMessage, botMessage]);
+      
+      // Log for debugging
       console.log('Test message:', testMessage);
       console.log('AI Response:', response);
+      
+      // Clear the input after sending
       setTestMessage('');
+      
+      // In a real implementation, you might want to:
+      // 1. Call actual AI API
+      // 2. Track usage metrics
+      // 3. Store in database
+      // 4. Real-time updates
     }
   };
 
-  // Fungsi untuk generate AI response (simulation)
+  // Enhanced AI response generation with random responses
   const generateAIResponse = (message, knowledgeContent) => {
-    if (!knowledgeContent) return "Maaf, saya belum memiliki knowledge yang cukup untuk menjawab pertanyaan Anda.";
+    if (!message.trim()) return "Silakan ketik pesan untuk mendapatkan respons dari AI.";
     
-    // Simple simulation - in real app this would call AI API
-    const responses = [
-      "Berdasarkan knowledge yang tersedia, saya dapat membantu Anda dengan pertanyaan tersebut.",
-      "Sesuai dengan informasi yang ada, berikut adalah jawabannya...",
-      "Terima kasih atas pertanyaannya. Berdasarkan knowledge base kami...",
-      "Saya menemukan informasi relevan untuk pertanyaan Anda."
+    // Enhanced random responses based on message content
+    const messageLower = message.toLowerCase();
+    
+    // Context-aware responses
+    if (messageLower.includes('hallo') || messageLower.includes('hai') || messageLower.includes('hello')) {
+      const greetings = [
+        "Halo! Selamat datang di platform kami. Saya asisten AI yang siap membantu Anda. Ada yang bisa saya bantu hari ini? 😊",
+        "Hai! Senang bertemu dengan Anda. Saya di sini untuk membantu menjawab pertanyaan seputar layanan kami. Apa yang ingin Anda ketahui?",
+        "Hello! Terima kasih telah menghubungi kami. Saya asisten AI yang akan membantu Anda. Ada pertanyaan spesifik yang ingin Anda ajukan?",
+        "Halo! Selamat datang kembali. Saya siap membantu Anda dengan informasi yang Anda butuhkan. Apa yang ingin Anda tanyakan?"
+      ];
+      return greetings[Math.floor(Math.random() * greetings.length)];
+    }
+    
+    if (messageLower.includes('gadai') || messageLower.includes('emas')) {
+      const gadaiResponses = [
+        "Untuk layanan gadai emas, kami menyediakan berbagai pilihan dengan proses yang mudah dan cepat. Berdasarkan knowledge base kami, Anda dapat mengajukan gadai emas dengan dokumen yang diperlukan.",
+        "Layanan gadai emas kami sangat fleksibel dengan berbagai tenor dan bunga yang kompetitif. Saya dapat membantu menjelaskan detail proses dan persyaratannya.",
+        "Gadai emas adalah salah satu layanan unggulan kami. Berdasarkan informasi terbaru, proses approval membutuhkan waktu 1-3 hari kerja dengan jaminan keamanan yang terjamin."
+      ];
+      return gadaiResponses[Math.floor(Math.random() * gadaiResponses.length)];
+    }
+    
+    if (messageLower.includes('cicilan') || messageLower.includes('bayar') || messageLower.includes('pembayaran')) {
+      const paymentResponses = [
+        "Untuk pembayaran cicilan, kami menyediakan berbagai metode pembayaran yang fleksibel. Anda dapat memilih tenor 3, 6, 12, atau 24 bulan sesuai kemampuan finansial.",
+        "Pembayaran cicilan dapat dilakukan melalui transfer bank, e-wallet, atau pembayaran langsung di kantor kami. Setiap metode memiliki keunggulan masing-masing.",
+        "Berdasarkan knowledge base kami, cicilan dapat diatur sesuai dengan penghasilan bulanan Anda. Kami juga menyediakan opsi pembayaran di muka untuk mengurangi beban bunga."
+      ];
+      return paymentResponses[Math.floor(Math.random() * paymentResponses.length)];
+    }
+    
+    if (messageLower.includes('proses') || messageLower.includes('cara') || messageLower.includes('langkah')) {
+      const processResponses = [
+        "Proses pengajuan sangat sederhana. Pertama, siapkan dokumen yang diperlukan. Kedua, ajukan melalui aplikasi atau datang ke kantor kami. Ketiga, tunggu approval yang biasanya 1-3 hari kerja.",
+        "Langkah-langkahnya mudah sekali! Mulai dari pengisian formulir, verifikasi dokumen, hingga pencairan dana. Saya dapat menjelaskan detail setiap tahap jika diperlukan.",
+        "Cara mengajukan layanan kami sangat straightforward. Berdasarkan knowledge base, proses dari awal hingga selesai membutuhkan waktu maksimal 5 hari kerja."
+      ];
+      return processResponses[Math.floor(Math.random() * processResponses.length)];
+    }
+    
+    if (messageLower.includes('biaya') || messageLower.includes('harga') || messageLower.includes('tarif')) {
+      const costResponses = [
+        "Biaya layanan kami sangat transparan dan kompetitif. Untuk detail lengkap, saya dapat memberikan breakdown biaya administrasi, bunga, dan biaya lainnya.",
+        "Tarif yang kami kenakan sudah termasuk semua biaya tersembunyi. Berdasarkan knowledge base, tidak ada biaya tambahan yang akan dikenakan di luar yang sudah disepakati.",
+        "Harga layanan kami sangat terjangkau dengan berbagai pilihan paket. Saya dapat membantu menghitung total biaya berdasarkan jumlah pinjaman dan tenor yang Anda pilih."
+      ];
+      return costResponses[Math.floor(Math.random() * costResponses.length)];
+    }
+    
+    // Default responses for other questions
+    const defaultResponses = [
+      "Terima kasih atas pertanyaannya. Berdasarkan knowledge base kami, saya dapat membantu menjelaskan detail layanan yang Anda butuhkan.",
+      "Pertanyaan yang sangat bagus! Saya menemukan informasi relevan dalam knowledge base kami yang dapat membantu menjawab pertanyaan Anda.",
+      "Berdasarkan data yang tersedia, saya dapat memberikan informasi lengkap seputar layanan yang Anda tanyakan. Ada detail spesifik yang ingin Anda ketahui?",
+      "Saya senang Anda bertanya tentang hal ini. Knowledge base kami memiliki informasi yang komprehensif untuk menjawab pertanyaan Anda.",
+      "Pertanyaan yang tepat! Saya dapat membantu Anda dengan informasi yang akurat berdasarkan knowledge base terbaru kami.",
+      "Terima kasih telah menghubungi kami. Saya menemukan beberapa informasi relevan yang dapat membantu menjawab pertanyaan Anda.",
+      "Berdasarkan knowledge yang tersedia, saya dapat memberikan panduan lengkap untuk pertanyaan Anda. Ada aspek tertentu yang ingin Anda ketahui lebih detail?",
+      "Saya di sini untuk membantu! Knowledge base kami memiliki informasi yang dapat menjawab pertanyaan Anda dengan lengkap dan akurat."
     ];
     
-    return responses[Math.floor(Math.random() * responses.length)];
+    return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
   };
 
   // Fungsi untuk close modal
@@ -1072,37 +1245,99 @@ const Knowledge = () => {
                         </div>
                       </div>
 
-                      {/* Panel Metadata Samping */}
-                      <div className="space-y-4">
+                      {/* Enhanced Chatbot Testing Panel */}
+                      <div className="space-y-6">
                         {/* Chat Testing Interface */}
-                        <div className="space-y-2">
-                          <Label className="text-sm font-medium">
+                        <div className="space-y-3">
+                          <Label className="text-sm font-medium flex items-center gap-2">
+                            <MessageSquare className="w-4 h-4 text-blue-600" />
                             Test Chatbot Response
                           </Label>
-                          <div className="border rounded-lg p-3 bg-gray-50">
-                            {/* Chat Preview */}
-                            <div className="space-y-2 mb-3">
-                              {/* User Message */}
-                              <div className="flex justify-end">
-                                <div className="bg-blue-500 text-white px-2 py-1 rounded-lg max-w-[80%] text-xs">
-                                  <p>hallo</p>
+                          <div className="border-2 border-gray-200 rounded-xl p-4 bg-gradient-to-br from-gray-50 to-white shadow-sm">
+                            {/* Dynamic Chat Preview */}
+                            <div className="relative">
+                              {/* Scroll Position Indicator */}
+                              {showScrollButton && (
+                                <div className="absolute top-0 right-0 bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-bl-lg z-10">
+                                  <div className="flex items-center gap-1">
+                                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                                    Scroll ke atas
+                                  </div>
                                 </div>
+                              )}
+                              
+                              <div 
+                                ref={chatContainerRef}
+                                className={`space-y-3 mb-4 max-h-48 overflow-y-auto scroll-smooth transition-all duration-200 ${
+                                  isScrolling ? 'ring-2 ring-green-500 ring-opacity-50' : ''
+                                }`}
+                                style={{ scrollBehavior: 'smooth' }}
+                              >
+                                {conversationHistory.map((msg) => (
+                                  <div key={msg.id} className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                    <div className={`px-3 py-2 rounded-2xl max-w-[85%] shadow-sm ${
+                                      msg.type === 'user' 
+                                        ? 'bg-blue-500 text-white' 
+                                        : 'bg-white border border-gray-200 text-gray-800'
+                                    }`}>
+                                      <p className="text-sm font-medium">{msg.message}</p>
+                                      <div className={`text-xs mt-1 ${
+                                        msg.type === 'user' ? 'text-blue-100' : 'text-gray-500'
+                                      }`}>
+                                        {msg.timestamp.toLocaleTimeString('id-ID', { 
+                                          hour: '2-digit', 
+                                          minute: '2-digit' 
+                                        })}
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
                               </div>
                               
-                              {/* Bot Response */}
-                              <div className="flex justify-start">
-                                <div className="bg-gray-200 text-gray-800 px-2 py-1 rounded-lg max-w-[80%] text-xs">
-                                  <p>Halo! Selamat datang di platform kami. Saya asisten AI yang akan membantu menjawab pertanyaan Anda. Ada yang bisa saya bantu hari ini? 😊</p>
-                                </div>
+                              {/* Scroll to Bottom Button - Only show when not at bottom */}
+                              <div 
+                                className={`absolute bottom-2 right-2 transition-all duration-300 group ${
+                                  showScrollButton 
+                                    ? 'opacity-100 translate-y-0' 
+                                    : 'opacity-0 translate-y-2 pointer-events-none'
+                                }`}
+                              >
+                                <button
+                                  type="button"
+                                  onClick={scrollToBottom}
+                                  className={`w-8 h-8 rounded-full shadow-lg flex items-center justify-center transition-all duration-200 hover:scale-110 ${
+                                    isScrolling 
+                                      ? 'bg-green-600 hover:bg-green-700' 
+                                      : 'bg-blue-600 hover:bg-blue-700'
+                                  }`}
+                                  title={isScrolling ? 'Scrolling...' : 'Scroll ke pesan terbaru'}
+                                  disabled={isScrolling}
+                                >
+                                  {isScrolling ? (
+                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                  ) : (
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                                    </svg>
+                                  )}
+                                </button>
+                                
+                                {/* Scroll Status Indicator */}
+                                {showScrollButton && !isScrolling && (
+                                  <div className="absolute -top-8 right-0 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                                    Scroll ke bawah
+                                    <div className="absolute top-full right-2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+                                  </div>
+                                )}
                               </div>
                             </div>
                             
                             {/* Test Input */}
-                            <div className="space-y-2">
-                              <div className="flex gap-1">
+                            <div className="space-y-3">
+                              <div className="flex gap-2">
                                 <Input
-                                  placeholder="Ketik pesan test..."
-                                  className="flex-1 text-xs h-8"
+                                  placeholder="Ketik pesan test untuk bot..."
+                                  className="flex-1 h-10 text-sm border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                                   value={testMessage}
                                   onChange={(e) => setTestMessage(e.target.value)}
                                   onKeyPress={(e) => e.key === 'Enter' && handleTestMessage()}
@@ -1111,55 +1346,138 @@ const Knowledge = () => {
                                   type="button"
                                   size="sm"
                                   onClick={handleTestMessage}
-                                  className="h-8 px-2"
+                                  className="h-10 px-4 bg-blue-600 hover:bg-blue-700 shadow-sm"
+                                  disabled={!testMessage.trim()}
                                 >
-                                  <Send className="w-3 h-3" />
+                                  <Send className="w-4 h-4" />
                                 </Button>
+                              </div>
+                              
+                              {/* Character count */}
+                              <div className="text-xs text-gray-500 text-center">
+                                {testMessage.length}/500 karakter
                               </div>
                             </div>
                             
-                            {/* AI Credits Info */}
-                            <div className="text-xs text-gray-500 mt-2 pt-2 border-t">
-                              AI credits used: 1
+                            {/* AI Credits Info & Actions */}
+                            <div className="flex items-center justify-between text-xs text-gray-500 mt-3 pt-3 border-t border-gray-200">
+                              <div className="flex items-center gap-3">
+                                <span className="flex items-center gap-1">
+                                  <Zap className="w-3 h-3 text-yellow-500" />
+                                  AI credits used: {conversationHistory.length - 2}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Clock className="w-3 h-3 text-blue-500" />
+                                  Response time: ~2s
+                                </span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setConversationHistory([
+                                  {
+                                    id: 1,
+                                    type: 'user',
+                                    message: 'Hallo, ada yang bisa dibantu?',
+                                    timestamp: new Date()
+                                  },
+                                  {
+                                    id: 2,
+                                    type: 'bot',
+                                    message: 'Halo! Selamat datang di platform kami. Saya asisten AI yang akan membantu menjawab pertanyaan Anda. Ada yang bisa saya bantu hari ini? 😊',
+                                    timestamp: new Date()
+                                  }
+                                ])}
+                                className="text-blue-600 hover:text-blue-800 hover:underline"
+                              >
+                                Clear Chat
+                              </button>
                             </div>
                           </div>
                         </div>
 
                         {/* Quick Test Messages */}
-                        <div className="space-y-2">
-                          <Label className="text-sm font-medium">
+                        <div className="space-y-3">
+                          <Label className="text-sm font-medium flex items-center gap-2">
+                            <Sparkles className="w-4 h-4 text-purple-600" />
                             Quick Test Messages
                           </Label>
                           <div className="space-y-2">
-                            {['Bagaimana cara menggunakan fitur ini?', 'Apa saja yang tersedia?', 'Bisa tolong jelaskan lebih detail?'].map((msg, index) => (
+                            {[
+                              'Bagaimana cara mengajukan gadai emas?',
+                              'Berapa lama proses approval?',
+                              'Apa saja syarat dokumen yang diperlukan?',
+                              'Berapa bunga yang dikenakan?',
+                              'Bisa bayar cicilan tidak?'
+                            ].map((msg, index) => (
                               <Button
                                 key={index}
                                 type="button"
                                 variant="outline"
                                 size="sm"
-                                className="w-full text-xs h-8 justify-start"
+                                className="w-full h-9 justify-start text-sm hover:bg-blue-50 hover:border-blue-300 transition-colors"
                                 onClick={() => setTestMessage(msg)}
                               >
+                                <MessageSquare className="w-3 h-3 mr-2 text-blue-600" />
                                 {msg}
                               </Button>
                             ))}
                           </div>
                         </div>
 
-                        {/* Response Preview */}
-                        <div className="space-y-2">
-                          <Label className="text-sm font-medium">
-                            Response Preview
+                        {/* Enhanced Response Preview */}
+                        <div className="space-y-3">
+                          <Label className="text-sm font-medium flex items-center gap-2">
+                            <Brain className="w-4 h-4 text-green-600" />
+                            AI Response Preview
                           </Label>
-                          <div className="border rounded-lg p-3 bg-blue-50">
-                            <div className="text-xs text-gray-600 mb-2">
-                              <strong>AI Response:</strong>
+                          <div className="border-2 border-gray-200 rounded-xl p-4 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-sm">
+                            <div className="flex items-center gap-2 mb-3">
+                              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                              <span className="text-sm font-medium text-gray-700">AI Response:</span>
                             </div>
-                            <div className="bg-white p-2 rounded text-xs border">
-                              {testMessage ? 
-                                generateAIResponse(testMessage, formData.content) : 
-                                "Ketik pesan test untuk melihat preview response AI..."
-                              }
+                            <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm min-h-[80px]">
+                              {testMessage ? (
+                                <div className="space-y-2">
+                                  <div className="text-sm text-gray-600">
+                                    <strong>Pertanyaan:</strong> "{testMessage}"
+                                  </div>
+                                  <div className="text-sm text-gray-800 leading-relaxed">
+                                    {generateAIResponse(testMessage, formData.content)}
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="text-sm text-gray-500 text-center py-4">
+                                  <MessageSquare className="w-6 h-6 mx-auto mb-2 text-gray-400" />
+                                  Ketik pesan test untuk melihat preview response AI...
+                                </div>
+                              )}
+                            </div>
+                            
+                            {/* Response Stats */}
+                            {testMessage && (
+                              <div className="flex items-center justify-between text-xs text-gray-500 mt-3 pt-3 border-t border-gray-200">
+                                <span>Response length: {generateAIResponse(testMessage, formData.content).length} chars</span>
+                                <span>Confidence: High</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Testing Tips */}
+                        <div className="space-y-3">
+                          <Label className="text-sm font-medium flex items-center gap-2">
+                            <Info className="w-4 h-4 text-blue-600" />
+                            Testing Tips
+                          </Label>
+                          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                            <div className="text-xs text-yellow-800 space-y-1">
+                              <p className="font-medium">💡 Tips untuk testing yang efektif:</p>
+                              <ul className="space-y-1 ml-2">
+                                <li>• Gunakan pertanyaan yang spesifik dan jelas</li>
+                                <li>• Test berbagai jenis pertanyaan (umum, teknis, spesifik)</li>
+                                <li>• Perhatikan konteks dan relevansi jawaban</li>
+                                <li>• Test dengan bahasa yang berbeda</li>
+                              </ul>
                             </div>
                           </div>
                         </div>
