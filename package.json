@@ -6,9 +6,15 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:staging": "NODE_ENV=staging vite build",
+    "build:prod": "NODE_ENV=production vite build",
     "preview": "vite preview",
+    "preview:staging": "NODE_ENV=staging vite preview --port 4173",
+    "preview:prod": "NODE_ENV=production vite preview --port 4174",
     "lint": "eslint . --ext js,jsx,ts,tsx",
-    "lint:fix": "eslint . --ext js,jsx,ts,tsx --fix"
+    "lint:fix": "eslint . --ext js,jsx,ts,tsx --fix",
+    "deploy:staging": "npm run build:staging && echo '🚀 Staging build complete! Deploy to: /chatbot-saas/'",
+    "deploy:prod": "npm run build:prod && echo '🚀 Production build complete! Deploy to: /chatbot-saas/'"
   },
   "dependencies": {
     "clsx": "^2.0.0",
