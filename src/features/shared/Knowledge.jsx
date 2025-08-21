@@ -1131,25 +1131,6 @@ const Knowledge = () => {
                               )}
                             </div>
 
-                            {/* Question Variations */}
-                            <div className="space-y-3">
-                              <Label htmlFor={`variations-${index}`} className="text-sm font-medium flex items-center gap-2">
-                                <Hash className="w-4 h-4 text-purple-600" />
-                                Variasi Pertanyaan
-                              </Label>
-                              <Textarea
-                                id={`variations-${index}`}
-                                placeholder="Contoh: proses gadai berapa hari?, kapan barang saya disetujui?, approval butuh berapa lama?"
-                                value={item.variations}
-                                onChange={(e) => updateQAItem(index, 'variations', e.target.value)}
-                                rows={3}
-                              />
-                              <p className="text-xs text-gray-500 flex items-center gap-1">
-                                <Info className="w-3 h-3" />
-                                Pisahkan variasi pertanyaan dengan koma atau baris baru untuk meningkatkan akurasi bot
-                              </p>
-                            </div>
-
                             {/* Answer Section */}
                             <div className="space-y-3">
                               <Label htmlFor={`answer-${index}`} className="text-sm font-medium flex items-center gap-2">
@@ -1171,33 +1152,6 @@ const Knowledge = () => {
                                   {formErrors[`qa-${index}-answer`]}
                                 </p>
                               )}
-                            </div>
-
-                            {/* Confidence Level */}
-                            <div className="space-y-3">
-                              <Label className="text-sm font-medium flex items-center gap-2">
-                                <Shield className="w-4 h-4 text-orange-600" />
-                                Tingkat Kepercayaan Jawaban
-                              </Label>
-                              <div className="grid grid-cols-3 gap-2">
-                                {confidenceLevels.map((level) => (
-                                  <button
-                                    key={level.value}
-                                    type="button"
-                                    onClick={() => updateQAItem(index, 'confidence', level.value)}
-                                    className={`p-2 rounded-lg border text-sm font-medium transition-all ${
-                                      item.confidence === level.value
-                                        ? 'border-blue-500 bg-blue-50 text-blue-700'
-                                        : 'border-gray-200 hover:border-gray-300'
-                                    }`}
-                                  >
-                                    <div className={`${level.color} font-semibold`}>{level.label}</div>
-                                  </button>
-                                ))}
-                              </div>
-                              <p className="text-xs text-gray-500">
-                                Pilih tingkat kepercayaan untuk membantu bot memberikan jawaban yang lebih akurat
-                              </p>
                             </div>
                           </CardContent>
                         </Card>
