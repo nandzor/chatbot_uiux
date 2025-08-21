@@ -1197,6 +1197,25 @@ const Knowledge = () => {
                           <span>{charCount} karakter</span>
                           <span>{MAX_CHARS - charCount} tersisa</span>
                         </div>
+                        
+                        {/* Testing Tips - Moved here below Konten Knowledge */}
+                        <div className="space-y-3 pt-4 border-t border-gray-200">
+                          <Label className="text-sm font-medium flex items-center gap-2">
+                            <Info className="w-4 h-4 text-blue-600" />
+                            Testing Tips
+                          </Label>
+                          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                            <div className="text-xs text-yellow-800 space-y-1">
+                              <p className="font-medium">💡 Tips untuk testing yang efektif:</p>
+                              <ul className="space-y-1 ml-2">
+                                <li>• Gunakan pertanyaan yang spesifik dan jelas</li>
+                                <li>• Test berbagai jenis pertanyaan (umum, teknis, spesifik)</li>
+                                <li>• Perhatikan konteks dan relevansi jawaban</li>
+                                <li>• Test dengan bahasa yang berbeda</li>
+                              </ul>
+                            </div>
+                          </div>
+                        </div>
                       </div>
 
                       {/* Enhanced Chatbot Testing Panel */}
@@ -1417,24 +1436,7 @@ const Knowledge = () => {
                           </div>
                         </div>
 
-                        {/* Testing Tips */}
-                        <div className="space-y-3">
-                          <Label className="text-sm font-medium flex items-center gap-2">
-                            <Info className="w-4 h-4 text-blue-600" />
-                            Testing Tips
-                          </Label>
-                          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                            <div className="text-xs text-yellow-800 space-y-1">
-                              <p className="font-medium">💡 Tips untuk testing yang efektif:</p>
-                              <ul className="space-y-1 ml-2">
-                                <li>• Gunakan pertanyaan yang spesifik dan jelas</li>
-                                <li>• Test berbagai jenis pertanyaan (umum, teknis, spesifik)</li>
-                                <li>• Perhatikan konteks dan relevansi jawaban</li>
-                                <li>• Test dengan bahasa yang berbeda</li>
-                              </ul>
-                            </div>
-                          </div>
-                        </div>
+
                       </div>
                     </div>
                   </TabsContent>
