@@ -2061,6 +2061,55 @@ CREATE TRIGGER update_role_permissions_updated_at BEFORE UPDATE ON role_permissi
 CREATE TRIGGER update_user_roles_updated_at BEFORE UPDATE ON user_roles FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_permission_groups_updated_at BEFORE UPDATE ON permission_groups FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+-- Trigger to automatically process subscription payments
+CREATE OR REPLACE FUNCTION trigger_process_subscription_payment()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Only process if status changed to completed, failed, or cancelled
+    IF (TG_OP = 'UPDATE' AND OLD.status != NEW.status AND 
+        NEW.status IN ('completed', 'failed', 'cancelled') AND
+        NEW.subscription_id IS NOT NULL) THEN
+        
+        -- Process the subscription payment
+        PERFORM process_subscription_payment(NEW.id, NEW.status);
+        
+        -- Update invoice status if linked
+        IF NEW.invoice_id IS NOT NULL THEN
+            UPDATE billing_invoices 
+            SET status = NEW.status, 
+                paid_date = CASE WHEN NEW.status = 'completed' THEN CURRENT_TIMESTAMP ELSE NULL END,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = NEW.invoice_id;
+        END IF;
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_payment_subscription_update
+    AFTER UPDATE ON payment_transactions
+    FOR EACH ROW EXECUTE FUNCTION trigger_process_subscription_payment();
+
+-- Trigger to validate payment amounts
+CREATE OR REPLACE FUNCTION trigger_validate_payment_amount()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Validate payment amount for subscription payments
+    IF NEW.subscription_id IS NOT NULL OR NEW.invoice_id IS NOT NULL THEN
+        IF NOT validate_payment_amount(NEW.id) THEN
+            RAISE EXCEPTION 'Payment amount does not match subscription or invoice amount';
+        END IF;
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_payment_amount_validation
+    AFTER INSERT ON payment_transactions
+    FOR EACH ROW EXECUTE FUNCTION trigger_validate_payment_amount();
+
 -- Function to update search vector for knowledge articles
 CREATE OR REPLACE FUNCTION update_knowledge_article_search_vector()
 RETURNS TRIGGER AS $$
@@ -2264,6 +2313,258 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql STABLE;
 
+-- Function to process subscription payment
+CREATE OR REPLACE FUNCTION process_subscription_payment(
+    p_transaction_id UUID,
+    p_payment_status transaction_status
+)
+RETURNS VOID AS $$
+DECLARE
+    v_subscription_id UUID;
+    v_organization_id UUID;
+    v_billing_cycle billing_cycle;
+    v_current_period_end TIMESTAMPTZ;
+    v_new_period_end TIMESTAMPTZ;
+BEGIN
+    -- Get subscription details from transaction
+    SELECT pt.subscription_id, pt.organization_id, s.billing_cycle, s.current_period_end
+    INTO v_subscription_id, v_organization_id, v_billing_cycle, v_current_period_end
+    FROM payment_transactions pt
+    JOIN subscriptions s ON pt.subscription_id = s.id
+    WHERE pt.id = p_transaction_id;
+    
+    -- Process based on payment status
+    CASE p_payment_status
+        WHEN 'completed' THEN
+            -- Calculate new period end based on billing cycle
+            CASE v_billing_cycle
+                WHEN 'monthly' THEN
+                    v_new_period_end := v_current_period_end + INTERVAL '1 month';
+                WHEN 'quarterly' THEN
+                    v_new_period_end := v_current_period_end + INTERVAL '3 months';
+                WHEN 'yearly' THEN
+                    v_new_period_end := v_current_period_end + INTERVAL '1 year';
+                ELSE
+                    v_new_period_end := v_current_period_end + INTERVAL '1 month';
+            END CASE;
+            
+            -- Update subscription
+            UPDATE subscriptions SET
+                status = 'success',
+                current_period_start = v_current_period_end,
+                current_period_end = v_new_period_end,
+                last_payment_date = CURRENT_TIMESTAMP,
+                next_payment_date = v_new_period_end,
+                cancel_at_period_end = FALSE,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = v_subscription_id;
+            
+            -- Update organization subscription status
+            UPDATE organizations SET
+                subscription_status = 'active',
+                subscription_starts_at = COALESCE(subscription_starts_at, CURRENT_TIMESTAMP),
+                subscription_ends_at = v_new_period_end,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = v_organization_id;
+            
+        WHEN 'failed' THEN
+            -- Handle failed payment
+            UPDATE subscriptions SET
+                status = 'failed',
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = v_subscription_id;
+            
+            -- Check if grace period expired
+            IF v_current_period_end < CURRENT_TIMESTAMP - INTERVAL '7 days' THEN
+                UPDATE organizations SET
+                    subscription_status = 'suspended',
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = v_organization_id;
+            END IF;
+            
+        WHEN 'cancelled' THEN
+            -- Handle cancelled payment
+            UPDATE subscriptions SET
+                status = 'cancelled',
+                canceled_at = CURRENT_TIMESTAMP,
+                cancel_at_period_end = TRUE,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = v_subscription_id;
+            
+        ELSE
+            -- For pending, processing, etc., no action needed
+            NULL;
+    END CASE;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to create subscription invoice
+CREATE OR REPLACE FUNCTION create_subscription_invoice(
+    p_subscription_id UUID,
+    p_billing_period_start TIMESTAMPTZ,
+    p_billing_period_end TIMESTAMPTZ
+)
+RETURNS UUID AS $$
+DECLARE
+    v_invoice_id UUID;
+    v_organization_id UUID;
+    v_plan_id UUID;
+    v_unit_amount DECIMAL(10,2);
+    v_currency VARCHAR(3);
+    v_invoice_number VARCHAR(50);
+    v_line_items JSONB;
+BEGIN
+    -- Get subscription details
+    SELECT s.organization_id, s.plan_id, s.unit_amount, s.currency
+    INTO v_organization_id, v_plan_id, v_unit_amount, v_currency
+    FROM subscriptions s
+    WHERE s.id = p_subscription_id;
+    
+    -- Generate invoice number
+    v_invoice_number := 'INV-' || TO_CHAR(CURRENT_TIMESTAMP, 'YYYYMMDD') || '-' || 
+                       LPAD(EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)::TEXT, 10, '0');
+    
+    -- Create line items
+    v_line_items := jsonb_build_array(
+        jsonb_build_object(
+            'description', 'Subscription Fee',
+            'period_start', p_billing_period_start,
+            'period_end', p_billing_period_end,
+            'quantity', 1,
+            'unit_price', v_unit_amount,
+            'total', v_unit_amount
+        )
+    );
+    
+    -- Create invoice
+    INSERT INTO billing_invoices (
+        organization_id,
+        subscription_id,
+        invoice_number,
+        status,
+        subtotal,
+        total_amount,
+        currency,
+        due_date,
+        line_items
+    ) VALUES (
+        v_organization_id,
+        p_subscription_id,
+        v_invoice_number,
+        'pending',
+        v_unit_amount,
+        v_unit_amount,
+        v_currency,
+        CURRENT_TIMESTAMP + INTERVAL '7 days',
+        v_line_items
+    ) RETURNING id INTO v_invoice_id;
+    
+    RETURN v_invoice_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to handle subscription renewal
+CREATE OR REPLACE FUNCTION process_subscription_renewal(
+    p_subscription_id UUID
+)
+RETURNS UUID AS $$
+DECLARE
+    v_invoice_id UUID;
+    v_transaction_id UUID;
+    v_organization_id UUID;
+    v_current_period_end TIMESTAMPTZ;
+    v_unit_amount DECIMAL(10,2);
+    v_currency VARCHAR(3);
+    v_payment_method_id VARCHAR(255);
+BEGIN
+    -- Get subscription details
+    SELECT s.organization_id, s.current_period_end, s.unit_amount, s.currency, s.payment_method_id
+    INTO v_organization_id, v_current_period_end, v_unit_amount, v_currency, v_payment_method_id
+    FROM subscriptions s
+    WHERE s.id = p_subscription_id
+    AND s.status = 'success'
+    AND s.cancel_at_period_end = FALSE;
+    
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Subscription not found or not eligible for renewal';
+    END IF;
+    
+    -- Create invoice for next period
+    v_invoice_id := create_subscription_invoice(
+        p_subscription_id,
+        v_current_period_end,
+        v_current_period_end + INTERVAL '1 month'
+    );
+    
+    -- Create payment transaction
+    INSERT INTO payment_transactions (
+        organization_id,
+        subscription_id,
+        invoice_id,
+        transaction_id,
+        amount,
+        currency,
+        payment_method,
+        payment_gateway,
+        status,
+        payment_type,
+        initiated_at
+    ) VALUES (
+        v_organization_id,
+        p_subscription_id,
+        v_invoice_id,
+        'TXN-' || EXTRACT(EPOCH FROM CURRENT_TIMESTAMP)::TEXT || '-' || 
+        SUBSTRING(p_subscription_id::TEXT FROM 1 FOR 8),
+        v_unit_amount,
+        v_currency,
+        'recurring',
+        'auto_billing',
+        'pending',
+        'recurring',
+        CURRENT_TIMESTAMP
+    ) RETURNING id INTO v_transaction_id;
+    
+    RETURN v_transaction_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to validate payment amount against subscription
+CREATE OR REPLACE FUNCTION validate_payment_amount(
+    p_transaction_id UUID
+)
+RETURNS BOOLEAN AS $$
+DECLARE
+    v_transaction_amount DECIMAL(12,2);
+    v_subscription_amount DECIMAL(10,2);
+    v_invoice_amount DECIMAL(10,2);
+    v_tolerance DECIMAL(12,2) := 0.01; -- Allow 1 cent tolerance
+BEGIN
+    -- Get amounts from transaction, subscription, and invoice
+    SELECT 
+        pt.amount,
+        s.unit_amount,
+        bi.total_amount
+    INTO v_transaction_amount, v_subscription_amount, v_invoice_amount
+    FROM payment_transactions pt
+    LEFT JOIN subscriptions s ON pt.subscription_id = s.id
+    LEFT JOIN billing_invoices bi ON pt.invoice_id = bi.id
+    WHERE pt.id = p_transaction_id;
+    
+    -- Validate against subscription amount
+    IF v_subscription_amount IS NOT NULL THEN
+        RETURN ABS(v_transaction_amount - v_subscription_amount) <= v_tolerance;
+    END IF;
+    
+    -- Validate against invoice amount
+    IF v_invoice_amount IS NOT NULL THEN
+        RETURN ABS(v_transaction_amount - v_invoice_amount) <= v_tolerance;
+    END IF;
+    
+    -- If no reference amount found, return false
+    RETURN FALSE;
+END;
+$$ LANGUAGE plpgsql STABLE;
+
 -- Create materialized views for analytics
 CREATE MATERIALIZED VIEW mv_organization_analytics AS
 SELECT 
@@ -2291,6 +2592,58 @@ WHERE o.status = 'active'
 GROUP BY o.id, o.name, o.subscription_status, sp.name, o.created_at;
 
 CREATE UNIQUE INDEX ON mv_organization_analytics (organization_id);
+
+-- Create payment analytics view
+CREATE MATERIALIZED VIEW mv_payment_analytics AS
+SELECT 
+    pt.organization_id,
+    o.name as organization_name,
+    DATE_TRUNC('month', pt.created_at) as payment_month,
+    COUNT(*) as total_transactions,
+    COUNT(*) FILTER (WHERE pt.status = 'completed') as successful_payments,
+    COUNT(*) FILTER (WHERE pt.status = 'failed') as failed_payments,
+    SUM(pt.amount) FILTER (WHERE pt.status = 'completed') as total_revenue,
+    AVG(pt.amount) FILTER (WHERE pt.status = 'completed') as avg_transaction_amount,
+    COUNT(DISTINCT pt.subscription_id) as unique_subscriptions,
+    SUM(pt.gateway_fee) FILTER (WHERE pt.status = 'completed') as total_gateway_fees,
+    AVG(EXTRACT(EPOCH FROM (pt.captured_at - pt.initiated_at))) FILTER (WHERE pt.status = 'completed') as avg_processing_time_seconds
+FROM payment_transactions pt
+JOIN organizations o ON pt.organization_id = o.id
+WHERE pt.created_at >= CURRENT_DATE - INTERVAL '12 months'
+GROUP BY pt.organization_id, o.name, DATE_TRUNC('month', pt.created_at);
+
+CREATE INDEX ON mv_payment_analytics (organization_id, payment_month);
+
+-- Create subscription health view
+CREATE MATERIALIZED VIEW mv_subscription_health AS
+SELECT 
+    s.organization_id,
+    o.name as organization_name,
+    sp.name as plan_name,
+    s.status as subscription_status,
+    s.billing_cycle,
+    s.current_period_end,
+    s.next_payment_date,
+    CASE 
+        WHEN s.current_period_end < CURRENT_TIMESTAMP THEN 'expired'
+        WHEN s.current_period_end < CURRENT_TIMESTAMP + INTERVAL '7 days' THEN 'expiring_soon'
+        WHEN s.cancel_at_period_end = TRUE THEN 'cancelling'
+        ELSE 'healthy'
+    END as health_status,
+    COUNT(pt.id) as total_payments,
+    COUNT(pt.id) FILTER (WHERE pt.status = 'completed') as successful_payments,
+    COUNT(pt.id) FILTER (WHERE pt.status = 'failed') as failed_payments,
+    MAX(pt.created_at) FILTER (WHERE pt.status = 'completed') as last_successful_payment,
+    SUM(pt.amount) FILTER (WHERE pt.status = 'completed') as total_paid
+FROM subscriptions s
+JOIN organizations o ON s.organization_id = o.id
+JOIN subscription_plans sp ON s.plan_id = sp.id
+LEFT JOIN payment_transactions pt ON s.id = pt.subscription_id
+WHERE s.status != 'cancelled'
+GROUP BY s.id, s.organization_id, o.name, sp.name, s.status, s.billing_cycle, 
+         s.current_period_end, s.next_payment_date, s.cancel_at_period_end;
+
+CREATE INDEX ON mv_subscription_health (organization_id, health_status);
 
 -- Insert sample data for development and testing
 INSERT INTO subscription_plans (name, display_name, description, tier, price_monthly, price_yearly, max_agents, max_channels, max_knowledge_articles, max_monthly_messages, max_monthly_ai_requests, features) VALUES
@@ -2357,10 +2710,80 @@ INSERT INTO permissions (organization_id, name, code, display_name, description,
 ((SELECT id FROM organizations WHERE org_code = 'DEMO001'), 'Manage Webhooks', 'webhooks.manage', 'Manage Webhooks', 'Configure webhook endpoints', 'webhooks', 'manage', 'system_administration', TRUE),
 ((SELECT id FROM organizations WHERE org_code = 'DEMO001'), 'View System Logs', 'logs.view', 'View System Logs', 'Access system logs and audit trails', 'system_logs', 'read', 'system_administration', TRUE);
 
+-- Create sample subscription for DEMO001
+INSERT INTO subscriptions (organization_id, plan_id, status, billing_cycle, unit_amount, currency, current_period_start, current_period_end, next_payment_date, payment_method_id) VALUES
+((SELECT id FROM organizations WHERE org_code = 'DEMO001'), 
+ (SELECT id FROM subscription_plans WHERE name = 'Professional'), 
+ 'success', 
+ 'monthly', 
+ 299000, 
+ 'IDR', 
+ CURRENT_TIMESTAMP - INTERVAL '15 days',
+ CURRENT_TIMESTAMP + INTERVAL '15 days',
+ CURRENT_TIMESTAMP + INTERVAL '15 days',
+ 'pm_demo_card_123');
+
+-- Create sample payment transactions
+INSERT INTO payment_transactions (
+    organization_id, 
+    subscription_id, 
+    transaction_id, 
+    external_transaction_id,
+    amount, 
+    currency, 
+    payment_method, 
+    payment_gateway, 
+    payment_channel,
+    status, 
+    payment_type,
+    initiated_at,
+    captured_at,
+    gateway_response,
+    gateway_fee,
+    net_amount
+) VALUES
+-- Successful monthly payment
+((SELECT id FROM organizations WHERE org_code = 'DEMO001'),
+ (SELECT id FROM subscriptions WHERE organization_id = (SELECT id FROM organizations WHERE org_code = 'DEMO001') LIMIT 1),
+ 'TXN-' || EXTRACT(EPOCH FROM CURRENT_TIMESTAMP - INTERVAL '15 days')::TEXT,
+ 'midtrans_' || EXTRACT(EPOCH FROM CURRENT_TIMESTAMP - INTERVAL '15 days')::TEXT,
+ 299000,
+ 'IDR',
+ 'credit_card',
+ 'midtrans',
+ 'credit_card',
+ 'completed',
+ 'recurring',
+ CURRENT_TIMESTAMP - INTERVAL '15 days',
+ CURRENT_TIMESTAMP - INTERVAL '15 days' + INTERVAL '2 minutes',
+ '{"status_code": "200", "transaction_status": "capture", "gross_amount": "299000.00"}',
+ 8970, -- 3% gateway fee
+ 290030
+),
+-- Upcoming renewal payment (pending)
+((SELECT id FROM organizations WHERE org_code = 'DEMO001'),
+ (SELECT id FROM subscriptions WHERE organization_id = (SELECT id FROM organizations WHERE org_code = 'DEMO001') LIMIT 1),
+ 'TXN-' || EXTRACT(EPOCH FROM CURRENT_TIMESTAMP + INTERVAL '14 days')::TEXT,
+ NULL,
+ 299000,
+ 'IDR',
+ 'credit_card',
+ 'midtrans',
+ 'credit_card',
+ 'pending',
+ 'recurring',
+ CURRENT_TIMESTAMP + INTERVAL '14 days',
+ NULL,
+ '{}',
+ 0,
+ 299000
+);
+
 -- Create scheduled jobs (requires pg_cron extension)
 -- SELECT cron.schedule('clean-expired-sessions', '0 2 * * *', 'SELECT chatbot.clean_expired_sessions();');
--- SELECT cron.schedule('refresh-analytics-mv', '*/5 * * * *', 'REFRESH MATERIALIZED VIEW CONCURRENTLY chatbot.mv_organization_analytics;');
--- SELECT cron.schedule('create-monthly-partitions', '0 0 1 * *', 'SELECT chatbot.create_monthly_partitions(''chat_sessions''); SELECT chatbot.create_monthly_partitions(''messages''); SELECT chatbot.create_monthly_partitions(''ai_conversations_log''); SELECT chatbot.create_monthly_partitions(''audit_logs'');');
+-- SELECT cron.schedule('refresh-analytics-mv', '*/5 * * * *', 'REFRESH MATERIALIZED VIEW CONCURRENTLY chatbot.mv_organization_analytics; REFRESH MATERIALIZED VIEW CONCURRENTLY chatbot.mv_payment_analytics; REFRESH MATERIALIZED VIEW CONCURRENTLY chatbot.mv_subscription_health;');
+-- SELECT cron.schedule('create-monthly-partitions', '0 0 1 * *', 'SELECT chatbot.create_monthly_partitions(''chat_sessions''); SELECT chatbot.create_monthly_partitions(''messages''); SELECT chatbot.create_monthly_partitions(''ai_conversations_log''); SELECT chatbot.create_monthly_partitions(''audit_logs''); SELECT chatbot.create_monthly_partitions(''n8n_executions''); SELECT chatbot.create_monthly_partitions(''realtime_metrics''); SELECT chatbot.create_monthly_partitions(''system_logs'');');
+-- SELECT cron.schedule('process-subscription-renewals', '0 1 * * *', 'SELECT chatbot.process_subscription_renewal(id) FROM chatbot.subscriptions WHERE next_payment_date <= CURRENT_DATE + INTERVAL ''1 day'' AND status = ''success'' AND cancel_at_period_end = FALSE;');
 
 -- Comments for documentation
 COMMENT ON SCHEMA chatbot IS 'Enhanced ChatBot AI + Human Multi-tenant SAAS Database Schema for PostgreSQL 15';
@@ -2415,9 +2838,10 @@ BEGIN
     RAISE NOTICE '🤖 AI Features: Model management, training data, conversation logs';
     RAISE NOTICE '💰 SAAS Features: Subscriptions, billing, usage tracking, API management';
     RAISE NOTICE '🔄 Automation: N8N workflow management and execution tracking';
-    RAISE NOTICE '💳 Payments: Detailed transaction tracking with gateway integration';
+    RAISE NOTICE '💳 Payments: Automated subscription billing with gateway integration';
     RAISE NOTICE '📊 Monitoring: Real-time metrics and comprehensive system logging';
     RAISE NOTICE '🔐 RBAC System: Role-based access control with granular permissions';
+    RAISE NOTICE '🔄 Auto-Billing: Subscription renewal and payment processing automation';
     RAISE NOTICE '🔒 Security: Enhanced with audit logs, rate limiting, session management';
     RAISE NOTICE '✅ PostgreSQL 15 Ready!';
 END $$;
