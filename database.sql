@@ -5,7 +5,11 @@
 
 -- Drop existing objects if they exist (for clean installation)
 DROP SCHEMA IF EXISTS chatbot CASCADE;
+
+-- Create schema explicitly
 CREATE SCHEMA chatbot;
+
+-- Set search path to use the chatbot schema
 SET search_path TO chatbot, public;
 
 -- Enable required extensions for PostgreSQL 15
@@ -16,6 +20,14 @@ CREATE EXTENSION IF NOT EXISTS "btree_gin";
 CREATE EXTENSION IF NOT EXISTS "btree_gist";
 -- Note: Uncomment if pg_stat_statements is available
 -- CREATE EXTENSION IF NOT EXISTS "pg_stat_statements";
+
+-- Create IMMUTABLE date extraction function for indexes (must be created early)
+CREATE OR REPLACE FUNCTION extract_date_immutable(ts TIMESTAMPTZ)
+RETURNS DATE AS $$
+BEGIN
+    RETURN ts::DATE;
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
 
 -- Create ENUMs
 CREATE TYPE status_type AS ENUM (
@@ -155,6 +167,97 @@ CREATE TYPE quota_type AS ENUM (
     'channels',
     'knowledge_articles',
     'ai_requests'
+);
+
+CREATE TYPE workflow_status AS ENUM (
+    'active',
+    'inactive',
+    'paused',
+    'error',
+    'testing'
+);
+
+CREATE TYPE execution_status AS ENUM (
+    'running',
+    'success',
+    'failed',
+    'cancelled',
+    'waiting',
+    'timeout'
+);
+
+CREATE TYPE transaction_status AS ENUM (
+    'pending',
+    'processing',
+    'completed',
+    'failed',
+    'cancelled',
+    'refunded',
+    'disputed',
+    'expired'
+);
+
+CREATE TYPE log_level AS ENUM (
+    'debug',
+    'info',
+    'warn',
+    'error',
+    'fatal'
+);
+
+CREATE TYPE metric_type AS ENUM (
+    'counter',
+    'gauge',
+    'histogram',
+    'summary'
+);
+
+CREATE TYPE permission_scope AS ENUM (
+    'global',
+    'organization',
+    'department',
+    'team',
+    'personal'
+);
+
+CREATE TYPE resource_type AS ENUM (
+    'users',
+    'agents',
+    'customers',
+    'chat_sessions',
+    'messages',
+    'knowledge_articles',
+    'knowledge_categories',
+    'bot_personalities',
+    'channel_configs',
+    'ai_models',
+    'workflows',
+    'analytics',
+    'billing',
+    'subscriptions',
+    'api_keys',
+    'webhooks',
+    'system_logs',
+    'organizations',
+    'roles',
+    'permissions'
+);
+
+CREATE TYPE permission_action AS ENUM (
+    'create',
+    'read',
+    'update',
+    'delete',
+    'execute',
+    'approve',
+    'publish',
+    'export',
+    'import',
+    'manage',
+    'view_all',
+    'view_own',
+    'edit_all',
+    'edit_own'
 );
 
 -- Subscription Plans table
@@ -857,7 +960,7 @@ CREATE TABLE chat_sessions (
     agent_id UUID REFERENCES agents(id),
     
     -- Session Information
-    session_token VARCHAR(255) UNIQUE NOT NULL,
+    session_token VARCHAR(255) NOT NULL,
     session_type VARCHAR(20) DEFAULT 'customer_initiated',
     
     -- Timing
@@ -1286,6 +1389,522 @@ CREATE TABLE webhook_deliveries (
     PRIMARY KEY (id, created_at)
 ) PARTITION BY RANGE (created_at);
 
+-- N8N Workflows table
+CREATE TABLE n8n_workflows (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    
+    -- Workflow Identity
+    workflow_id VARCHAR(255) UNIQUE NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    category VARCHAR(100),
+    tags TEXT[],
+    
+    -- Workflow Definition
+    workflow_data JSONB NOT NULL,
+    nodes JSONB DEFAULT '[]',
+    connections JSONB DEFAULT '{}',
+    settings JSONB DEFAULT '{}',
+    
+    -- Execution Configuration
+    trigger_type VARCHAR(50), -- 'webhook', 'schedule', 'manual', 'event'
+    trigger_config JSONB DEFAULT '{}',
+    schedule_expression VARCHAR(100), -- cron expression
+    
+    -- Version Control
+    version INTEGER DEFAULT 1,
+    previous_version_id UUID REFERENCES n8n_workflows(id),
+    is_latest_version BOOLEAN DEFAULT TRUE,
+    
+    -- Status & Health
+    status workflow_status DEFAULT 'inactive',
+    is_enabled BOOLEAN DEFAULT FALSE,
+    last_execution_at TIMESTAMPTZ,
+    next_execution_at TIMESTAMPTZ,
+    
+    -- Performance Metrics
+    total_executions INTEGER DEFAULT 0,
+    successful_executions INTEGER DEFAULT 0,
+    failed_executions INTEGER DEFAULT 0,
+    avg_execution_time INTEGER, -- milliseconds
+    
+    -- Access Control
+    created_by UUID REFERENCES users(id),
+    shared_with JSONB DEFAULT '[]', -- array of user IDs with access
+    permissions JSONB DEFAULT '{"read": [], "write": [], "execute": []}',
+    
+    -- Integration
+    webhook_url VARCHAR(500),
+    webhook_secret VARCHAR(255),
+    api_endpoints JSONB DEFAULT '[]',
+    
+    -- System fields
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- N8N Executions table (partitioned for performance)
+CREATE TABLE n8n_executions (
+    id UUID DEFAULT uuid_generate_v4(),
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    workflow_id UUID NOT NULL REFERENCES n8n_workflows(id) ON DELETE CASCADE,
+    
+    -- Execution Identity
+    execution_id VARCHAR(255) NOT NULL,
+    parent_execution_id VARCHAR(255), -- for sub-workflows
+    
+    -- Execution Details
+    status execution_status DEFAULT 'running',
+    mode VARCHAR(20) DEFAULT 'trigger', -- 'trigger', 'manual', 'retry'
+    
+    -- Timing
+    started_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    finished_at TIMESTAMPTZ,
+    duration_ms INTEGER,
+    
+    -- Data Flow
+    input_data JSONB DEFAULT '{}',
+    output_data JSONB DEFAULT '{}',
+    execution_data JSONB DEFAULT '{}',
+    
+    -- Error Handling
+    error_message TEXT,
+    error_details JSONB DEFAULT '{}',
+    retry_count INTEGER DEFAULT 0,
+    max_retries INTEGER DEFAULT 3,
+    
+    -- Node Execution Details
+    node_executions JSONB DEFAULT '[]',
+    failed_nodes JSONB DEFAULT '[]',
+    
+    -- Performance
+    memory_usage_mb INTEGER,
+    cpu_usage_percent DECIMAL(5,2),
+    
+    -- Webhook/Trigger Info
+    trigger_data JSONB DEFAULT '{}',
+    webhook_response JSONB DEFAULT '{}',
+    
+    -- System fields
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    
+    PRIMARY KEY (id, created_at)
+) PARTITION BY RANGE (created_at);
+
+-- Payment Transactions table
+CREATE TABLE payment_transactions (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    subscription_id UUID REFERENCES subscriptions(id),
+    invoice_id UUID REFERENCES billing_invoices(id),
+    
+    -- Transaction Identity
+    transaction_id VARCHAR(255) UNIQUE NOT NULL,
+    external_transaction_id VARCHAR(255), -- Gateway transaction ID
+    reference_number VARCHAR(100),
+    
+    -- Payment Details
+    amount DECIMAL(12,2) NOT NULL,
+    currency VARCHAR(3) DEFAULT 'IDR',
+    exchange_rate DECIMAL(10,6) DEFAULT 1.0,
+    amount_original DECIMAL(12,2), -- in original currency
+    currency_original VARCHAR(3),
+    
+    -- Payment Method
+    payment_method VARCHAR(50) NOT NULL, -- 'credit_card', 'bank_transfer', 'e_wallet', 'crypto'
+    payment_gateway VARCHAR(50) NOT NULL, -- 'midtrans', 'xendit', 'stripe', 'paypal'
+    payment_channel VARCHAR(50), -- specific channel like 'bca_va', 'gopay', etc.
+    
+    -- Card/Account Details (encrypted)
+    card_last_four VARCHAR(4),
+    card_brand VARCHAR(20),
+    account_name VARCHAR(255),
+    account_number_masked VARCHAR(50),
+    
+    -- Transaction Flow
+    status transaction_status DEFAULT 'pending',
+    payment_type VARCHAR(20) DEFAULT 'one_time', -- 'one_time', 'recurring', 'refund'
+    
+    -- Timing
+    initiated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    authorized_at TIMESTAMPTZ,
+    captured_at TIMESTAMPTZ,
+    settled_at TIMESTAMPTZ,
+    failed_at TIMESTAMPTZ,
+    
+    -- Gateway Response
+    gateway_response JSONB DEFAULT '{}',
+    gateway_fee DECIMAL(10,2) DEFAULT 0,
+    gateway_status VARCHAR(50),
+    gateway_message TEXT,
+    
+    -- Fraud & Security
+    fraud_score DECIMAL(3,2),
+    risk_assessment JSONB DEFAULT '{}',
+    ip_address INET,
+    user_agent TEXT,
+    
+    -- Fees & Charges
+    platform_fee DECIMAL(10,2) DEFAULT 0,
+    processing_fee DECIMAL(10,2) DEFAULT 0,
+    tax_amount DECIMAL(10,2) DEFAULT 0,
+    net_amount DECIMAL(12,2),
+    
+    -- Refund Information
+    refund_amount DECIMAL(12,2) DEFAULT 0,
+    refunded_at TIMESTAMPTZ,
+    refund_reason TEXT,
+    
+    -- System fields
+    notes TEXT,
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Realtime Metrics table (partitioned for high-volume data)
+CREATE TABLE realtime_metrics (
+    id UUID DEFAULT uuid_generate_v4(),
+    organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
+    
+    -- Metric Identity
+    metric_name VARCHAR(255) NOT NULL,
+    metric_type metric_type NOT NULL,
+    namespace VARCHAR(100) DEFAULT 'default',
+    
+    -- Metric Value
+    value DECIMAL(15,6) NOT NULL,
+    unit VARCHAR(20),
+    
+    -- Dimensions/Labels
+    labels JSONB DEFAULT '{}',
+    dimensions JSONB DEFAULT '{}',
+    
+    -- Source Information
+    source VARCHAR(100), -- 'system', 'application', 'external'
+    component VARCHAR(100), -- specific component that generated the metric
+    instance_id VARCHAR(100), -- server/container instance
+    
+    -- Aggregation Support
+    aggregation_period VARCHAR(20), -- '1m', '5m', '1h', '1d'
+    aggregation_type VARCHAR(20), -- 'sum', 'avg', 'min', 'max', 'count'
+    
+    -- Time Information
+    timestamp TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Additional Context
+    context JSONB DEFAULT '{}',
+    metadata JSONB DEFAULT '{}',
+    
+    -- System fields
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    
+    PRIMARY KEY (id, created_at)
+) PARTITION BY RANGE (created_at);
+
+-- System Logs table (partitioned for high-volume logging)
+CREATE TABLE system_logs (
+    id UUID DEFAULT uuid_generate_v4(),
+    organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
+    
+    -- Log Identity
+    level log_level NOT NULL,
+    logger_name VARCHAR(255),
+    
+    -- Message Content
+    message TEXT NOT NULL,
+    formatted_message TEXT,
+    
+    -- Context Information
+    component VARCHAR(100), -- 'api', 'worker', 'scheduler', 'webhook'
+    service VARCHAR(100), -- specific service name
+    instance_id VARCHAR(100), -- server/container instance
+    
+    -- Request Context
+    request_id VARCHAR(255),
+    session_id VARCHAR(255),
+    user_id UUID REFERENCES users(id),
+    ip_address INET,
+    user_agent TEXT,
+    
+    -- Error Details
+    error_code VARCHAR(50),
+    error_type VARCHAR(100),
+    stack_trace TEXT,
+    
+    -- Performance
+    duration_ms INTEGER,
+    memory_usage_mb INTEGER,
+    cpu_usage_percent DECIMAL(5,2),
+    
+    -- Additional Data
+    extra_data JSONB DEFAULT '{}',
+    tags TEXT[],
+    
+    -- System fields
+    timestamp TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    
+    PRIMARY KEY (id, created_at)
+) PARTITION BY RANGE (created_at);
+
+-- Create partitions for new tables (2024 partitions)
+CREATE TABLE n8n_executions_2024_01 PARTITION OF n8n_executions
+    FOR VALUES FROM ('2024-01-01') TO ('2024-02-01');
+CREATE TABLE n8n_executions_2024_02 PARTITION OF n8n_executions
+    FOR VALUES FROM ('2024-02-01') TO ('2024-03-01');
+CREATE TABLE n8n_executions_2024_03 PARTITION OF n8n_executions
+    FOR VALUES FROM ('2024-03-01') TO ('2024-04-01');
+CREATE TABLE n8n_executions_2024_04 PARTITION OF n8n_executions
+    FOR VALUES FROM ('2024-04-01') TO ('2024-05-01');
+CREATE TABLE n8n_executions_2024_05 PARTITION OF n8n_executions
+    FOR VALUES FROM ('2024-05-01') TO ('2024-06-01');
+CREATE TABLE n8n_executions_2024_06 PARTITION OF n8n_executions
+    FOR VALUES FROM ('2024-06-01') TO ('2024-07-01');
+CREATE TABLE n8n_executions_2024_07 PARTITION OF n8n_executions
+    FOR VALUES FROM ('2024-07-01') TO ('2024-08-01');
+CREATE TABLE n8n_executions_2024_08 PARTITION OF n8n_executions
+    FOR VALUES FROM ('2024-08-01') TO ('2024-09-01');
+CREATE TABLE n8n_executions_2024_09 PARTITION OF n8n_executions
+    FOR VALUES FROM ('2024-09-01') TO ('2024-10-01');
+CREATE TABLE n8n_executions_2024_10 PARTITION OF n8n_executions
+    FOR VALUES FROM ('2024-10-01') TO ('2024-11-01');
+CREATE TABLE n8n_executions_2024_11 PARTITION OF n8n_executions
+    FOR VALUES FROM ('2024-11-01') TO ('2024-12-01');
+CREATE TABLE n8n_executions_2024_12 PARTITION OF n8n_executions
+    FOR VALUES FROM ('2024-12-01') TO ('2025-01-01');
+
+CREATE TABLE realtime_metrics_2024_01 PARTITION OF realtime_metrics
+    FOR VALUES FROM ('2024-01-01') TO ('2024-02-01');
+CREATE TABLE realtime_metrics_2024_02 PARTITION OF realtime_metrics
+    FOR VALUES FROM ('2024-02-01') TO ('2024-03-01');
+CREATE TABLE realtime_metrics_2024_03 PARTITION OF realtime_metrics
+    FOR VALUES FROM ('2024-03-01') TO ('2024-04-01');
+CREATE TABLE realtime_metrics_2024_04 PARTITION OF realtime_metrics
+    FOR VALUES FROM ('2024-04-01') TO ('2024-05-01');
+CREATE TABLE realtime_metrics_2024_05 PARTITION OF realtime_metrics
+    FOR VALUES FROM ('2024-05-01') TO ('2024-06-01');
+CREATE TABLE realtime_metrics_2024_06 PARTITION OF realtime_metrics
+    FOR VALUES FROM ('2024-06-01') TO ('2024-07-01');
+CREATE TABLE realtime_metrics_2024_07 PARTITION OF realtime_metrics
+    FOR VALUES FROM ('2024-07-01') TO ('2024-08-01');
+CREATE TABLE realtime_metrics_2024_08 PARTITION OF realtime_metrics
+    FOR VALUES FROM ('2024-08-01') TO ('2024-09-01');
+CREATE TABLE realtime_metrics_2024_09 PARTITION OF realtime_metrics
+    FOR VALUES FROM ('2024-09-01') TO ('2024-10-01');
+CREATE TABLE realtime_metrics_2024_10 PARTITION OF realtime_metrics
+    FOR VALUES FROM ('2024-10-01') TO ('2024-11-01');
+CREATE TABLE realtime_metrics_2024_11 PARTITION OF realtime_metrics
+    FOR VALUES FROM ('2024-11-01') TO ('2024-12-01');
+CREATE TABLE realtime_metrics_2024_12 PARTITION OF realtime_metrics
+    FOR VALUES FROM ('2024-12-01') TO ('2025-01-01');
+
+CREATE TABLE system_logs_2024_01 PARTITION OF system_logs
+    FOR VALUES FROM ('2024-01-01') TO ('2024-02-01');
+CREATE TABLE system_logs_2024_02 PARTITION OF system_logs
+    FOR VALUES FROM ('2024-02-01') TO ('2024-03-01');
+CREATE TABLE system_logs_2024_03 PARTITION OF system_logs
+    FOR VALUES FROM ('2024-03-01') TO ('2024-04-01');
+CREATE TABLE system_logs_2024_04 PARTITION OF system_logs
+    FOR VALUES FROM ('2024-04-01') TO ('2024-05-01');
+CREATE TABLE system_logs_2024_05 PARTITION OF system_logs
+    FOR VALUES FROM ('2024-05-01') TO ('2024-06-01');
+CREATE TABLE system_logs_2024_06 PARTITION OF system_logs
+    FOR VALUES FROM ('2024-06-01') TO ('2024-07-01');
+CREATE TABLE system_logs_2024_07 PARTITION OF system_logs
+    FOR VALUES FROM ('2024-07-01') TO ('2024-08-01');
+CREATE TABLE system_logs_2024_08 PARTITION OF system_logs
+    FOR VALUES FROM ('2024-08-01') TO ('2024-09-01');
+CREATE TABLE system_logs_2024_09 PARTITION OF system_logs
+    FOR VALUES FROM ('2024-09-01') TO ('2024-10-01');
+CREATE TABLE system_logs_2024_10 PARTITION OF system_logs
+    FOR VALUES FROM ('2024-10-01') TO ('2024-11-01');
+CREATE TABLE system_logs_2024_11 PARTITION OF system_logs
+    FOR VALUES FROM ('2024-11-01') TO ('2024-12-01');
+CREATE TABLE system_logs_2024_12 PARTITION OF system_logs
+    FOR VALUES FROM ('2024-12-01') TO ('2025-01-01');
+
+-- Roles table for RBAC system
+CREATE TABLE roles (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    
+    -- Role Identity
+    name VARCHAR(100) NOT NULL,
+    code VARCHAR(50) NOT NULL,
+    display_name VARCHAR(255),
+    description TEXT,
+    
+    -- Role Configuration
+    scope permission_scope DEFAULT 'organization',
+    level INTEGER DEFAULT 1, -- hierarchy level (1 = highest)
+    is_system_role BOOLEAN DEFAULT FALSE, -- system-defined vs custom
+    is_default BOOLEAN DEFAULT FALSE,
+    
+    -- Inheritance
+    parent_role_id UUID REFERENCES roles(id),
+    inherits_permissions BOOLEAN DEFAULT TRUE,
+    
+    -- Access Control
+    max_users INTEGER, -- limit number of users with this role
+    current_users INTEGER DEFAULT 0,
+    
+    -- UI/UX
+    color VARCHAR(7) DEFAULT '#6B7280',
+    icon VARCHAR(50),
+    badge_text VARCHAR(20),
+    
+    -- System fields
+    metadata JSONB DEFAULT '{}',
+    status status_type DEFAULT 'active',
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    
+    UNIQUE(organization_id, code)
+);
+
+-- Permissions table for granular access control
+CREATE TABLE permissions (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
+    
+    -- Permission Identity
+    name VARCHAR(100) NOT NULL,
+    code VARCHAR(100) NOT NULL,
+    display_name VARCHAR(255),
+    description TEXT,
+    
+    -- Permission Details
+    resource resource_type NOT NULL,
+    action permission_action NOT NULL,
+    scope permission_scope DEFAULT 'organization',
+    
+    -- Conditions & Constraints
+    conditions JSONB DEFAULT '{}', -- JSON conditions for dynamic permissions
+    constraints JSONB DEFAULT '{}', -- field-level constraints
+    
+    -- Grouping
+    category VARCHAR(100), -- 'user_management', 'content', 'billing', etc.
+    group_name VARCHAR(100),
+    
+    -- System fields
+    is_system_permission BOOLEAN DEFAULT FALSE,
+    is_dangerous BOOLEAN DEFAULT FALSE, -- requires extra confirmation
+    requires_approval BOOLEAN DEFAULT FALSE,
+    
+    -- UI/UX
+    sort_order INTEGER DEFAULT 0,
+    is_visible BOOLEAN DEFAULT TRUE,
+    
+    -- System fields
+    metadata JSONB DEFAULT '{}',
+    status status_type DEFAULT 'active',
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    
+    UNIQUE(organization_id, code),
+    UNIQUE(resource, action, scope, organization_id)
+);
+
+-- Role Permissions junction table
+CREATE TABLE role_permissions (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    role_id UUID NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
+    permission_id UUID NOT NULL REFERENCES permissions(id) ON DELETE CASCADE,
+    
+    -- Permission Configuration
+    is_granted BOOLEAN DEFAULT TRUE,
+    is_inherited BOOLEAN DEFAULT FALSE, -- inherited from parent role
+    
+    -- Conditions & Overrides
+    conditions JSONB DEFAULT '{}', -- role-specific conditions
+    constraints JSONB DEFAULT '{}', -- role-specific constraints
+    
+    -- Audit
+    granted_by UUID REFERENCES users(id),
+    granted_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    
+    -- System fields
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    
+    UNIQUE(role_id, permission_id)
+);
+
+-- User Roles junction table (enhanced)
+CREATE TABLE user_roles (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    role_id UUID NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
+    
+    -- Assignment Details
+    is_active BOOLEAN DEFAULT TRUE,
+    is_primary BOOLEAN DEFAULT FALSE, -- primary role for the user
+    
+    -- Scope & Context
+    scope permission_scope DEFAULT 'organization',
+    scope_context JSONB DEFAULT '{}', -- department_id, team_id, etc.
+    
+    -- Temporal Control
+    effective_from TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    effective_until TIMESTAMPTZ, -- for temporary role assignments
+    
+    -- Assignment Audit
+    assigned_by UUID REFERENCES users(id),
+    assigned_reason TEXT,
+    
+    -- System fields
+    metadata JSONB DEFAULT '{}',
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    
+    UNIQUE(user_id, role_id, scope)
+);
+
+-- Permission Groups table (for organizing permissions)
+CREATE TABLE permission_groups (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    organization_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
+    
+    -- Group Identity
+    name VARCHAR(100) NOT NULL,
+    code VARCHAR(50) NOT NULL,
+    display_name VARCHAR(255),
+    description TEXT,
+    
+    -- Grouping
+    category VARCHAR(100),
+    parent_group_id UUID REFERENCES permission_groups(id),
+    
+    -- UI/UX
+    icon VARCHAR(50),
+    color VARCHAR(7) DEFAULT '#6B7280',
+    sort_order INTEGER DEFAULT 0,
+    
+    -- System fields
+    status status_type DEFAULT 'active',
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    
+    UNIQUE(organization_id, code)
+);
+
+-- Permission Group Permissions junction table
+CREATE TABLE permission_group_permissions (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    group_id UUID NOT NULL REFERENCES permission_groups(id) ON DELETE CASCADE,
+    permission_id UUID NOT NULL REFERENCES permissions(id) ON DELETE CASCADE,
+    
+    -- System fields
+    created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+    
+    UNIQUE(group_id, permission_id)
+);
+
 -- Create comprehensive indexes for better performance
 CREATE INDEX CONCURRENTLY idx_organizations_status ON organizations(status) WHERE status = 'active';
 CREATE INDEX CONCURRENTLY idx_organizations_subscription ON organizations(subscription_plan_id, subscription_status);
@@ -1323,15 +1942,19 @@ CREATE INDEX CONCURRENTLY idx_knowledge_articles_keywords ON knowledge_articles 
 -- Note: Vector similarity search would require pgvector extension
 -- For now, embeddings are stored as JSONB for compatibility
 
-CREATE INDEX CONCURRENTLY idx_chat_sessions_org_date ON chat_sessions(organization_id, date(started_at));
-CREATE INDEX CONCURRENTLY idx_chat_sessions_customer ON chat_sessions(customer_id);
-CREATE INDEX CONCURRENTLY idx_chat_sessions_agent ON chat_sessions(agent_id);
-CREATE INDEX CONCURRENTLY idx_chat_sessions_active ON chat_sessions(is_active) WHERE is_active = TRUE;
+-- Note: For true uniqueness across partitions, we'll add application-level checks
+-- Partitioned tables cannot have unique constraints that don't include the partition key
 
-CREATE INDEX CONCURRENTLY idx_messages_session_created ON messages(session_id, created_at);
-CREATE INDEX CONCURRENTLY idx_messages_sender_type ON messages(sender_type);
-CREATE INDEX CONCURRENTLY idx_messages_intent ON messages(intent) WHERE intent IS NOT NULL;
-CREATE INDEX CONCURRENTLY idx_messages_org_date ON messages(organization_id, date(created_at));
+CREATE INDEX idx_chat_sessions_session_token ON chat_sessions(session_token);
+CREATE INDEX idx_chat_sessions_org_date ON chat_sessions(organization_id, extract_date_immutable(started_at));
+CREATE INDEX idx_chat_sessions_customer ON chat_sessions(customer_id);
+CREATE INDEX idx_chat_sessions_agent ON chat_sessions(agent_id);
+CREATE INDEX idx_chat_sessions_active ON chat_sessions(is_active) WHERE is_active = TRUE;
+
+CREATE INDEX idx_messages_session_created ON messages(session_id, created_at);
+CREATE INDEX idx_messages_sender_type ON messages(sender_type);
+CREATE INDEX idx_messages_intent ON messages(intent) WHERE intent IS NOT NULL;
+CREATE INDEX idx_messages_org_date ON messages(organization_id, extract_date_immutable(created_at));
 
 CREATE INDEX CONCURRENTLY idx_customers_org_channel ON customers(organization_id, channel);
 CREATE INDEX CONCURRENTLY idx_customers_email ON customers(email) WHERE email IS NOT NULL;
@@ -1340,17 +1963,70 @@ CREATE INDEX CONCURRENTLY idx_customers_phone ON customers(phone) WHERE phone IS
 CREATE INDEX CONCURRENTLY idx_agents_org_availability ON agents(organization_id, availability_status);
 CREATE INDEX CONCURRENTLY idx_agents_active_chats ON agents(current_active_chats) WHERE current_active_chats > 0;
 
-CREATE INDEX CONCURRENTLY idx_ai_conversations_org_date ON ai_conversations_log(organization_id, date(created_at));
-CREATE INDEX CONCURRENTLY idx_ai_conversations_model ON ai_conversations_log(ai_model_id);
+CREATE INDEX idx_ai_conversations_org_date ON ai_conversations_log(organization_id, extract_date_immutable(created_at));
+CREATE INDEX idx_ai_conversations_model ON ai_conversations_log(ai_model_id);
 
-CREATE INDEX CONCURRENTLY idx_audit_logs_org_date ON audit_logs(organization_id, date(created_at));
-CREATE INDEX CONCURRENTLY idx_audit_logs_user_action ON audit_logs(user_id, action);
-CREATE INDEX CONCURRENTLY idx_audit_logs_resource ON audit_logs(resource_type, resource_id);
+CREATE INDEX idx_audit_logs_org_date ON audit_logs(organization_id, extract_date_immutable(created_at));
+CREATE INDEX idx_audit_logs_user_action ON audit_logs(user_id, action);
+CREATE INDEX idx_audit_logs_resource ON audit_logs(resource_type, resource_id);
 
 CREATE INDEX CONCURRENTLY idx_api_rate_limits_key_window ON api_rate_limits(api_key_id, window_start);
 CREATE INDEX CONCURRENTLY idx_api_rate_limits_ip_window ON api_rate_limits(ip_address, window_start);
 
+-- Indexes for new tables
+CREATE INDEX CONCURRENTLY idx_n8n_workflows_org_status ON n8n_workflows(organization_id, status);
+CREATE INDEX CONCURRENTLY idx_n8n_workflows_enabled ON n8n_workflows(is_enabled) WHERE is_enabled = TRUE;
+CREATE INDEX CONCURRENTLY idx_n8n_workflows_trigger_type ON n8n_workflows(trigger_type);
+CREATE INDEX CONCURRENTLY idx_n8n_workflows_next_execution ON n8n_workflows(next_execution_at) WHERE next_execution_at IS NOT NULL;
+
+CREATE INDEX idx_n8n_executions_workflow_status ON n8n_executions(workflow_id, status);
+CREATE INDEX idx_n8n_executions_org_date ON n8n_executions(organization_id, extract_date_immutable(created_at));
+CREATE INDEX idx_n8n_executions_status ON n8n_executions(status);
+CREATE INDEX idx_n8n_executions_started ON n8n_executions(started_at);
+
+CREATE INDEX CONCURRENTLY idx_payment_transactions_org_status ON payment_transactions(organization_id, status);
+CREATE INDEX CONCURRENTLY idx_payment_transactions_subscription ON payment_transactions(subscription_id);
+CREATE INDEX CONCURRENTLY idx_payment_transactions_gateway ON payment_transactions(payment_gateway, status);
+CREATE INDEX CONCURRENTLY idx_payment_transactions_external_id ON payment_transactions(external_transaction_id);
+CREATE INDEX CONCURRENTLY idx_payment_transactions_date ON payment_transactions(extract_date_immutable(created_at));
+
+CREATE INDEX idx_realtime_metrics_name_time ON realtime_metrics(metric_name, created_at);
+CREATE INDEX idx_realtime_metrics_org_name ON realtime_metrics(organization_id, metric_name);
+CREATE INDEX idx_realtime_metrics_type ON realtime_metrics(metric_type);
+CREATE INDEX idx_realtime_metrics_timestamp ON realtime_metrics(timestamp);
+
+CREATE INDEX idx_system_logs_level_time ON system_logs(level, created_at);
+CREATE INDEX idx_system_logs_org_component ON system_logs(organization_id, component);
+CREATE INDEX idx_system_logs_request_id ON system_logs(request_id) WHERE request_id IS NOT NULL;
+CREATE INDEX idx_system_logs_user_id ON system_logs(user_id) WHERE user_id IS NOT NULL;
+
+-- RBAC Indexes
+CREATE INDEX CONCURRENTLY idx_roles_org_status ON roles(organization_id, status) WHERE status = 'active';
+CREATE INDEX CONCURRENTLY idx_roles_parent ON roles(parent_role_id) WHERE parent_role_id IS NOT NULL;
+CREATE INDEX CONCURRENTLY idx_roles_system ON roles(is_system_role) WHERE is_system_role = TRUE;
+
+CREATE INDEX CONCURRENTLY idx_permissions_org_resource ON permissions(organization_id, resource);
+CREATE INDEX CONCURRENTLY idx_permissions_resource_action ON permissions(resource, action);
+CREATE INDEX CONCURRENTLY idx_permissions_category ON permissions(category);
+CREATE INDEX CONCURRENTLY idx_permissions_system ON permissions(is_system_permission) WHERE is_system_permission = TRUE;
+
+CREATE INDEX CONCURRENTLY idx_role_permissions_role ON role_permissions(role_id);
+CREATE INDEX CONCURRENTLY idx_role_permissions_permission ON role_permissions(permission_id);
+CREATE INDEX CONCURRENTLY idx_role_permissions_granted ON role_permissions(is_granted) WHERE is_granted = TRUE;
+
+CREATE INDEX CONCURRENTLY idx_user_roles_user_active ON user_roles(user_id, is_active) WHERE is_active = TRUE;
+CREATE INDEX CONCURRENTLY idx_user_roles_role ON user_roles(role_id);
+CREATE INDEX CONCURRENTLY idx_user_roles_primary ON user_roles(user_id, is_primary) WHERE is_primary = TRUE;
+CREATE INDEX CONCURRENTLY idx_user_roles_effective ON user_roles(effective_from, effective_until);
+
+CREATE INDEX CONCURRENTLY idx_permission_groups_org_category ON permission_groups(organization_id, category);
+CREATE INDEX CONCURRENTLY idx_permission_groups_parent ON permission_groups(parent_group_id) WHERE parent_group_id IS NOT NULL;
+
+CREATE INDEX CONCURRENTLY idx_permission_group_permissions_group ON permission_group_permissions(group_id);
+CREATE INDEX CONCURRENTLY idx_permission_group_permissions_permission ON permission_group_permissions(permission_id);
+
 -- Create functions and triggers
+
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -1373,10 +2049,17 @@ CREATE TRIGGER update_bot_personalities_updated_at BEFORE UPDATE ON bot_personal
 CREATE TRIGGER update_channel_configs_updated_at BEFORE UPDATE ON channel_configs FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_customers_updated_at BEFORE UPDATE ON customers FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_agents_updated_at BEFORE UPDATE ON agents FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_chat_sessions_updated_at BEFORE UPDATE ON chat_sessions FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- Note: Triggers for partitioned tables need to be created on each partition individually
 CREATE TRIGGER update_ai_training_data_updated_at BEFORE UPDATE ON ai_training_data FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_api_rate_limits_updated_at BEFORE UPDATE ON api_rate_limits FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_webhooks_updated_at BEFORE UPDATE ON webhooks FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_n8n_workflows_updated_at BEFORE UPDATE ON n8n_workflows FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_payment_transactions_updated_at BEFORE UPDATE ON payment_transactions FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_roles_updated_at BEFORE UPDATE ON roles FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_permissions_updated_at BEFORE UPDATE ON permissions FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_role_permissions_updated_at BEFORE UPDATE ON role_permissions FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_user_roles_updated_at BEFORE UPDATE ON user_roles FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_permission_groups_updated_at BEFORE UPDATE ON permission_groups FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Function to update search vector for knowledge articles
 CREATE OR REPLACE FUNCTION update_knowledge_article_search_vector()
@@ -1520,6 +2203,67 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Function to check user permissions
+CREATE OR REPLACE FUNCTION check_user_permission(
+    p_user_id UUID,
+    p_resource resource_type,
+    p_action permission_action,
+    p_scope permission_scope DEFAULT 'organization'
+)
+RETURNS BOOLEAN AS $$
+DECLARE
+    has_permission BOOLEAN := FALSE;
+BEGIN
+    -- Check if user has the permission through any active role
+    SELECT EXISTS(
+        SELECT 1
+        FROM user_roles ur
+        JOIN role_permissions rp ON ur.role_id = rp.role_id
+        JOIN permissions p ON rp.permission_id = p.id
+        WHERE ur.user_id = p_user_id
+        AND ur.is_active = TRUE
+        AND (ur.effective_until IS NULL OR ur.effective_until > CURRENT_TIMESTAMP)
+        AND rp.is_granted = TRUE
+        AND p.resource = p_resource
+        AND p.action = p_action
+        AND p.scope = p_scope
+        AND p.status = 'active'
+    ) INTO has_permission;
+    
+    RETURN has_permission;
+END;
+$$ LANGUAGE plpgsql STABLE;
+
+-- Function to get user permissions
+CREATE OR REPLACE FUNCTION get_user_permissions(p_user_id UUID)
+RETURNS TABLE(
+    permission_code VARCHAR(100),
+    resource resource_type,
+    action permission_action,
+    scope permission_scope,
+    role_name VARCHAR(100)
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        p.code,
+        p.resource,
+        p.action,
+        p.scope,
+        r.name
+    FROM user_roles ur
+    JOIN roles r ON ur.role_id = r.id
+    JOIN role_permissions rp ON r.id = rp.role_id
+    JOIN permissions p ON rp.permission_id = p.id
+    WHERE ur.user_id = p_user_id
+    AND ur.is_active = TRUE
+    AND (ur.effective_until IS NULL OR ur.effective_until > CURRENT_TIMESTAMP)
+    AND rp.is_granted = TRUE
+    AND p.status = 'active'
+    AND r.status = 'active';
+END;
+$$ LANGUAGE plpgsql STABLE;
+
 -- Create materialized views for analytics
 CREATE MATERIALIZED VIEW mv_organization_analytics AS
 SELECT 
@@ -1570,6 +2314,49 @@ INSERT INTO knowledge_categories (organization_id, name, slug, description, icon
 ((SELECT id FROM organizations WHERE org_code = 'DEMO001'), 'General FAQ', 'general-faq', 'Frequently asked questions', 'help-circle', '#3B82F6'),
 ((SELECT id FROM organizations WHERE org_code = 'DEMO001'), 'Technical Support', 'technical-support', 'Technical help and troubleshooting', 'settings', '#10B981');
 
+-- Insert sample RBAC data
+INSERT INTO roles (organization_id, name, code, display_name, description, level, is_system_role, color, icon) VALUES
+((SELECT id FROM organizations WHERE org_code = 'DEMO001'), 'Super Administrator', 'super_admin', 'Super Admin', 'Full system access with all permissions', 1, TRUE, '#DC2626', 'shield'),
+((SELECT id FROM organizations WHERE org_code = 'DEMO001'), 'Organization Administrator', 'org_admin', 'Org Admin', 'Organization-level administrative access', 2, TRUE, '#EA580C', 'settings'),
+((SELECT id FROM organizations WHERE org_code = 'DEMO001'), 'Agent Manager', 'agent_manager', 'Agent Manager', 'Manage agents and customer interactions', 3, FALSE, '#0EA5E9', 'users'),
+((SELECT id FROM organizations WHERE org_code = 'DEMO001'), 'Customer Agent', 'customer_agent', 'Customer Agent', 'Handle customer conversations and support', 4, FALSE, '#10B981', 'headphones'),
+((SELECT id FROM organizations WHERE org_code = 'DEMO001'), 'Content Manager', 'content_manager', 'Content Manager', 'Manage knowledge base and bot personalities', 4, FALSE, '#8B5CF6', 'edit'),
+((SELECT id FROM organizations WHERE org_code = 'DEMO001'), 'Analyst', 'analyst', 'Analyst', 'View analytics and generate reports', 5, FALSE, '#F59E0B', 'bar-chart'),
+((SELECT id FROM organizations WHERE org_code = 'DEMO001'), 'Viewer', 'viewer', 'Viewer', 'Read-only access to basic information', 6, FALSE, '#6B7280', 'eye');
+
+INSERT INTO permission_groups (organization_id, name, code, display_name, description, category, icon, color) VALUES
+((SELECT id FROM organizations WHERE org_code = 'DEMO001'), 'User Management', 'user_mgmt', 'User Management', 'User and role management permissions', 'administration', 'users', '#DC2626'),
+((SELECT id FROM organizations WHERE org_code = 'DEMO001'), 'Content Management', 'content_mgmt', 'Content Management', 'Knowledge base and content permissions', 'content', 'edit', '#8B5CF6'),
+((SELECT id FROM organizations WHERE org_code = 'DEMO001'), 'Customer Service', 'customer_service', 'Customer Service', 'Chat and customer interaction permissions', 'operations', 'headphones', '#10B981'),
+((SELECT id FROM organizations WHERE org_code = 'DEMO001'), 'Analytics & Reports', 'analytics', 'Analytics & Reports', 'Analytics and reporting permissions', 'insights', 'bar-chart', '#F59E0B'),
+((SELECT id FROM organizations WHERE org_code = 'DEMO001'), 'System Administration', 'system_admin', 'System Administration', 'System configuration and management', 'administration', 'settings', '#EA580C');
+
+INSERT INTO permissions (organization_id, name, code, display_name, description, resource, action, category, is_system_permission) VALUES
+-- User Management Permissions
+((SELECT id FROM organizations WHERE org_code = 'DEMO001'), 'Create Users', 'users.create', 'Create Users', 'Create new user accounts', 'users', 'create', 'user_management', TRUE),
+((SELECT id FROM organizations WHERE org_code = 'DEMO001'), 'View All Users', 'users.view_all', 'View All Users', 'View all user accounts in organization', 'users', 'view_all', 'user_management', TRUE),
+((SELECT id FROM organizations WHERE org_code = 'DEMO001'), 'Edit All Users', 'users.edit_all', 'Edit All Users', 'Edit any user account', 'users', 'edit_all', 'user_management', TRUE),
+((SELECT id FROM organizations WHERE org_code = 'DEMO001'), 'Delete Users', 'users.delete', 'Delete Users', 'Delete user accounts', 'users', 'delete', 'user_management', TRUE),
+
+-- Content Management Permissions  
+((SELECT id FROM organizations WHERE org_code = 'DEMO001'), 'Manage Knowledge Articles', 'articles.manage', 'Manage Articles', 'Full access to knowledge articles', 'knowledge_articles', 'manage', 'content_management', TRUE),
+((SELECT id FROM organizations WHERE org_code = 'DEMO001'), 'Publish Articles', 'articles.publish', 'Publish Articles', 'Publish knowledge articles', 'knowledge_articles', 'publish', 'content_management', TRUE),
+((SELECT id FROM organizations WHERE org_code = 'DEMO001'), 'Manage Bot Personalities', 'bots.manage', 'Manage Bots', 'Configure bot personalities', 'bot_personalities', 'manage', 'content_management', TRUE),
+
+-- Customer Service Permissions
+((SELECT id FROM organizations WHERE org_code = 'DEMO001'), 'Handle Chats', 'chats.handle', 'Handle Chats', 'Participate in customer chat sessions', 'chat_sessions', 'update', 'customer_service', TRUE),
+((SELECT id FROM organizations WHERE org_code = 'DEMO001'), 'View All Chats', 'chats.view_all', 'View All Chats', 'View all chat sessions', 'chat_sessions', 'view_all', 'customer_service', TRUE),
+((SELECT id FROM organizations WHERE org_code = 'DEMO001'), 'Export Chat Data', 'chats.export', 'Export Chats', 'Export chat session data', 'chat_sessions', 'export', 'customer_service', TRUE),
+
+-- Analytics Permissions
+((SELECT id FROM organizations WHERE org_code = 'DEMO001'), 'View Analytics', 'analytics.view', 'View Analytics', 'Access analytics dashboards', 'analytics', 'read', 'analytics', TRUE),
+((SELECT id FROM organizations WHERE org_code = 'DEMO001'), 'Export Reports', 'analytics.export', 'Export Reports', 'Export analytics reports', 'analytics', 'export', 'analytics', TRUE),
+
+-- System Administration Permissions
+((SELECT id FROM organizations WHERE org_code = 'DEMO001'), 'Manage API Keys', 'api_keys.manage', 'Manage API Keys', 'Create and manage API keys', 'api_keys', 'manage', 'system_administration', TRUE),
+((SELECT id FROM organizations WHERE org_code = 'DEMO001'), 'Manage Webhooks', 'webhooks.manage', 'Manage Webhooks', 'Configure webhook endpoints', 'webhooks', 'manage', 'system_administration', TRUE),
+((SELECT id FROM organizations WHERE org_code = 'DEMO001'), 'View System Logs', 'logs.view', 'View System Logs', 'Access system logs and audit trails', 'system_logs', 'read', 'system_administration', TRUE);
+
 -- Create scheduled jobs (requires pg_cron extension)
 -- SELECT cron.schedule('clean-expired-sessions', '0 2 * * *', 'SELECT chatbot.clean_expired_sessions();');
 -- SELECT cron.schedule('refresh-analytics-mv', '*/5 * * * *', 'REFRESH MATERIALIZED VIEW CONCURRENTLY chatbot.mv_organization_analytics;');
@@ -1601,6 +2388,17 @@ COMMENT ON TABLE api_rate_limits IS 'API rate limiting with IP and key-based con
 COMMENT ON TABLE analytics_daily IS 'Enhanced daily analytics with AI metrics';
 COMMENT ON TABLE webhooks IS 'Webhook configuration for real-time event notifications';
 COMMENT ON TABLE webhook_deliveries IS 'Webhook delivery tracking with retry logic (partitioned)';
+COMMENT ON TABLE n8n_workflows IS 'N8N workflow automation configurations with version control';
+COMMENT ON TABLE n8n_executions IS 'N8N workflow execution history with performance metrics (partitioned)';
+COMMENT ON TABLE payment_transactions IS 'Detailed payment transaction tracking with gateway integration';
+COMMENT ON TABLE realtime_metrics IS 'Real-time system metrics for monitoring and alerting (partitioned)';
+COMMENT ON TABLE system_logs IS 'Comprehensive system logging with structured data (partitioned)';
+COMMENT ON TABLE roles IS 'RBAC role definitions with hierarchy and inheritance support';
+COMMENT ON TABLE permissions IS 'Granular permission definitions with resource-action mapping';
+COMMENT ON TABLE role_permissions IS 'Role-permission assignments with inheritance tracking';
+COMMENT ON TABLE user_roles IS 'User-role assignments with temporal and scope control';
+COMMENT ON TABLE permission_groups IS 'Permission grouping for organized access control management';
+COMMENT ON TABLE permission_group_permissions IS 'Permission group membership for bulk permission management';
 
 -- Final optimizations
 ANALYZE;
@@ -1610,12 +2408,16 @@ DO $$
 BEGIN
     RAISE NOTICE '🎉 Enhanced ChatBot SAAS Database Schema Created Successfully!';
     RAISE NOTICE '📊 Schema: chatbot';
-    RAISE NOTICE '📋 Tables: 25+ core tables with SAAS features';
+    RAISE NOTICE '📋 Tables: 35+ core tables with SAAS features';
     RAISE NOTICE '🔍 Indexes: Performance indexes with concurrent creation';
     RAISE NOTICE '⚡ Triggers: Auto-update and usage tracking triggers';
     RAISE NOTICE '📈 Partitioning: Enabled for high-volume tables';
     RAISE NOTICE '🤖 AI Features: Model management, training data, conversation logs';
     RAISE NOTICE '💰 SAAS Features: Subscriptions, billing, usage tracking, API management';
+    RAISE NOTICE '🔄 Automation: N8N workflow management and execution tracking';
+    RAISE NOTICE '💳 Payments: Detailed transaction tracking with gateway integration';
+    RAISE NOTICE '📊 Monitoring: Real-time metrics and comprehensive system logging';
+    RAISE NOTICE '🔐 RBAC System: Role-based access control with granular permissions';
     RAISE NOTICE '🔒 Security: Enhanced with audit logs, rate limiting, session management';
     RAISE NOTICE '✅ PostgreSQL 15 Ready!';
 END $$;
